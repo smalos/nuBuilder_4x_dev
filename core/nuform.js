@@ -279,7 +279,7 @@ function nuBuildForm(f) {
 
 	window.nuPORTRAITSCREEN = false;
 	if (!nuIsMobile()) {
-		$('#nuSearchField').focus();
+		$('#nuSearchField').trigger("focus");
 	} else {
 		nuMobileView(b.mobile_view);
 	}
@@ -442,7 +442,7 @@ function nuCloseAfterSave() {
 
 function nuBrowseStickyColumns($record) {
 
-	$record.bind("scroll", function () {
+	$record.on("scroll", function () {
 
 		const scrollLeft = $record.scrollLeft();
 		const scrollTop = $record.scrollTop();
@@ -541,7 +541,7 @@ function nuAddHomeLogout() {
 			$(div)
 				.addClass('nuBreadcrumb')
 				.css('cursor', "pointer")
-				.css('font-size', 16)
+				.css('font-size', '16px')
 				.attr('onclick', "nuGetBreadcrumb(0)")
 				.html('<i class="fa fa-home" style="font-size:17px;padding:0px 5px 0px 0px"></i>')
 				.attr('title', nuTranslate('Home'));
@@ -1079,8 +1079,8 @@ function nuINPUTInput(inp, inputType, obj, objectType) {
 	
 	if (obj.datalist !== null && obj.datalist !== '' && typeof obj.datalist !== "undefined") {
 		let dl = obj.datalist;
-		if (!$.isArray(dl)) dl = JSON.parse(dl);
-		if (!$.isArray(dl)) dl = eval(dl);
+		if (!Array.isArray(dl)) dl = JSON.parse(dl);
+		if (!Array.isArray(dl)) dl = eval(dl);
 		nuAddDatalist(inp.id, dl);
 	}
 
@@ -1560,7 +1560,7 @@ function nuLookupFocus(e) {
 	window.nuSubformRow = Number(p.substr(p.length - 3));
 
 	if (t != 'textarea') {
-		objT.select();
+		objT.trigger( "select" );
 	}
 
 }
@@ -2241,7 +2241,7 @@ function nuSubformFocusLastRow(id, f) {
 	const c = f === undefined ? sf.fields[1] : sf.fields.indexOf(f);
 	const r = sf.rows.length - 1;
 
-	$('#' + id + nuPad3(r) + c).focus();
+	$('#' + id + nuPad3(r) + c).trigger("focus");
 
 }
 
@@ -2373,7 +2373,7 @@ function nuSubformMoveFocus(activeElement, d) {
 
 	let row = activeElement.attr('data-nu-prefix').slice(-3);
 	let nextRow = $('#' + activeElement.attr('data-nu-form') + nuPad3(Number(row) + d) + activeElement.attr('id').substr(activeElement.attr('data-nu-form').length + 3));
-	if (nextRow.length == 1 && !nextRow.prop('disabled')) nextRow.focus();
+	if (nextRow.length == 1 && !nextRow.prop('disabled')) nextRow.trigger("focus");
 
 	return true;
 
@@ -3112,7 +3112,7 @@ function nuAddSubformRow(t, e) {
 
 	let ts = $('.nuTabSelected');
 	ts.attr('nu-data-clicked-by-system', '');
-	ts.click();
+	ts.trigger( "click" );
 
 	$('#' + o.form + nuPad3(o.rows) + 'nuRECORD > .nuLookupButton')
 		.on("click", function () {
@@ -3344,7 +3344,7 @@ function nuBuildSubformDeleteTitle(l, id, subform_id) {
 		'width': 52,
 		'height': 50,
 		'text-align': 'center',
-		'font-size': 10,
+		'font-size': '10px',
 		'padding': 0,
 		'position': 'absolute'
 	})
@@ -3401,7 +3401,7 @@ function nuAddBreadcrumb(i) {
 	}
 	*/
 
-	$id.css('font-size', 14)
+	$id.css('font-size', '14px')
 		.html(h + nuTranslate(title));
 
 	if (isLast) {
@@ -3532,7 +3532,7 @@ function nuGetStartingTab() {
 		ts.addClass('nuTabSelected');
 		ts.attr('nu-data-clicked-by-system', '');
 
-		ts.click();
+		ts.trigger( "click" );
 
 	}
 
@@ -3551,7 +3551,7 @@ function nuSetTab(pthis) {
 			ts.classList.add('nuTabSelected');
 			ts.setAttribute('nu-data-clicked-by-system', '');
 
-			ts.click();
+			ts.trigger( "click" );
 
 			break;
 		}
@@ -3677,7 +3677,7 @@ function nuGetOptionsList(f, t, p, a, type) {
 		ArrangeObjects : ['Arrange Objects', 'nuPopup("' + f + '", "-2")', 'fas fa-arrows-alt', 'A'],
 		FormProperties : ['Form Properties', 'nuOptionsListAction("nuform", "' + f + '")', 'fa-cog', 'F'],
 		SearchableColumns : ['Searchable Columns', 'nuGetSearchList()', 'fa-columns', 'C'],
-		SubformObject : [nuTranslate('Subform Object'), '$("' + labelId + '").dblclick()', 'fa-cog', ''],
+		SubformObject : [nuTranslate('Subform Object'), '$("' + labelId + '").trigger("dblclick");', 'fa-cog', ''],
 		FormObjectList : ['Form Object List', 'nuOptionsListAction("nuobject", "", "' + f + '")', 'fa-th-list', 'O'],
 		Search : ['Search', 'nuSearchAction();', 'fas fa-search', 'S'],
 		Add : ['Add', 'nuAddAction();', 'fas fa-plus', 'A'],
@@ -4111,7 +4111,7 @@ function nuBrowseTitle(b, i, l, m) {
 
 	div.setAttribute('id', id);
 
-	var sp = '<span id="nusort_' + i + '" class="nuSort" onclick="nuSortBrowse(' + i + ')" ontouchstart="nuSortBrowse(' + i + ')"> ' + nuTranslate(b[i].title) + ' </span>';
+	var sp = `<span id="nusort_${i}" class="nuSort" onclick="nuSortBrowse(${i})" ontouchstart="(function(event) { nuSortBrowse(${i}); event.preventDefault(); })({ passive: true })"> ${nuTranslate(b[i].title)} </span>`;
 
 	if (bc.sort == i) {
 
@@ -4585,7 +4585,7 @@ function nuBrowseAdditionalNavButtons() {
 function nuClickSearchColumn(e) {
 
 	var c = e.target.id.substr(12);
-	$('#nuSearchList' + c).click();
+	$('#nuSearchList' + c).trigger( "click" );
 	nuSetSearchColumn();
 
 }
@@ -4666,7 +4666,7 @@ function nuSearchPressed(e) {
 	e.preventDefault();
 
 	if (window.nuBROWSEROW === -1) {
-		$('#nuSearchButton').click();
+		$('#nuSearchButton').trigger( "click" );
 		return;
 	}
 
@@ -4844,7 +4844,7 @@ function nuPopulateLookup(fm, target, setFocus) {
 		}
 
 		if (i == 1 && setFocus !== false) {
-			$id.focus();
+			$id.trigger("focus");
 		}
 
 	}
@@ -4855,7 +4855,7 @@ function nuPopulateLookup(fm, target, setFocus) {
 
 	eval(fm.lookup_javascript);
 
-	$('#dialogClose').click();
+	$('#dialogClose').trigger( "click" );
 
 	if (window.nuaction == 'save' && !nuLookingUp()) {
 		nuSaveAction();
@@ -5623,7 +5623,7 @@ function nuMessage(o, timeout, callback) {
 
 	if (o.length == 0) { return; }
 
-	if (!$.isArray(o)) {
+	if (!Array.isArray(o)) {
 		let tmp = o;
 		o = [];
 		o.push(tmp);
@@ -6562,11 +6562,11 @@ function nuPromptModal() {
 
 		let value1 = document.getElementById("prompt_value1");
 		value1.value = defaultValue === undefined ? '' : defaultValue;
-		value1.focus();
+		value1.trigger("focus");
 
 	}
 
-	$('#prompt_value1').focus();
+	$('#prompt_value1').trigger("focus");
 
 	this.inputkeyup = function (e, fctn) {
 		if (e.which == 13) {			//-- Enter
@@ -6620,7 +6620,7 @@ function nuPrompt(text, caption, defaultValue, format, fctn) {
 
 function nuAddBrowseTitleSelect(index, data, w) {
 
-	if (!$.isArray(data)) return;
+	if (!Array.isArray(data)) return;
 
 	var id = "nuBrowseTitle" + index + "_select";
 	var list = document.createElement('select');

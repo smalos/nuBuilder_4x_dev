@@ -146,15 +146,15 @@ String.prototype.nuFormat = function () {
 // "This is an example from {name}".format({name:"Blaine"});
 // "This is an example from {0}".format("Blaine");
 
-$.fn.enterKey = function (fnc) {
-	return this.each(function () {
-		$(this).keypress(function (e) {
-			if (e.key == 'Enter') {
+$.fn.enterKey = function(fnc) {
+	return this.each(function() {
+		$(this).on('keydown', function(e) { 
+			if (e.key === 'Enter' || e.keyCode === 13) {
 				fnc.call(this, e);
 			}
-		})
-	})
-}
+		});
+	});
+};
 
 $.fn.nuFocusWithoutScrolling = function () {
 
@@ -166,7 +166,7 @@ $.fn.nuFocusWithoutScrolling = function () {
 
 	let x = t.scrollX, y = t.scrollY;
 
-	this.focus();
+	this.trigger("focus");
 	t.scrollTo(x, y);
 	return this;
 
@@ -287,7 +287,7 @@ function nuGlobalAccess() {
 
 function loginInputKeyup(event) {
 	if (event.key == 'Enter') {
-		$('input#submit').click();
+		$('input#submit').trigger( "click" );
 	}
 }
 
@@ -516,13 +516,13 @@ function nuLogin(loginTopRow, nuconfigNuWelcomeBodyInnerHTML, logonMode='normal'
 	}
 
 	if (window.nuLoginU == '' && window.nuLoginP == '') {
-		$('#nuusername').focus();
+		$('#nuusername').trigger("focus");
 	}
 
 	if (window.nuLoginU != '' && window.nuLoginP == '') {
 
 		$('#nuusername').val(window.nuLoginU);
-		$('#nupassword').focus();
+		$('#nupassword').trigger("focus");
 
 	}
 
@@ -546,7 +546,7 @@ function nuLogin(loginTopRow, nuconfigNuWelcomeBodyInnerHTML, logonMode='normal'
 function nuSubmit(e) {
 
 	if (e.key == 'Enter') {
-		$('#submit').click();
+		$('#submit').trigger( "click" );
 	}
 
 }
@@ -882,8 +882,8 @@ function nuBindCtrlEvents() {
 		}
 
 	}
-
-	$(document).keydown(function (e) {
+	
+	$(document).on('keydown', function (e) {
 
 		if((e.key === 'PageDown' || e.key === 'PageUp') && nuFormType() == 'browse'){
 			const $nuRecord = $("#nuRECORD");
@@ -899,8 +899,7 @@ function nuBindCtrlEvents() {
 				$('#nuOptionsListBox').remove();
 			} else if (parent.$('#nuModal').length == 1) {
 				let ae = document.activeElement;
-				$(ae).blur();
-				$(ae).focus();
+				$(ae).trigger("blur").trigger("focus");
 				if (nuFormsUnsaved() == 0) {
 					nuClosePopup();
 				} else {
@@ -980,7 +979,7 @@ function nuBindCtrlEvents() {
 				} else if (e.code == 'KeyG' && g) {					//-- G		Object Grid
 					nuForm("nuobjectgrid", formId, "", "", 2);
 				} else if (e.code == 'KeyS') {						//-- s		Save
-					$(":focus").blur();
+					$(":focus").trigger("blur");
 					nuSaveAction();
 				} else if (e.code == 'KeyC') {						//-- c		Clone
 					nuCloneAction();
@@ -1260,7 +1259,7 @@ function nuReadonly(i) {
 function nuShow(i, visible, openTab) {
 
 	var arr = [];
-	if (!$.isArray(i)) {
+	if (!Array.isArray(i)) {
 		arr.push(i);
 	} else {
 		arr = i;
@@ -1308,7 +1307,7 @@ function nuShow(i, visible, openTab) {
 function nuHide(i) {
 
 	var arr = [];
-	if (!$.isArray(i)) {
+	if (!Array.isArray(i)) {
 		arr.push(i);
 	} else {
 		arr = i;
@@ -1543,7 +1542,7 @@ function nuAddSlashes(s) {
 
 
 function nuOpenTab(i) {
-	$('#nuTab' + i).click();
+	$('#nuTab' + i).trigger( "click" );
 }
 
 function nuSelectedTabNumber(parent = null) {
@@ -1762,7 +1761,7 @@ function nuAddRow(id, setFocus = true) {
 	if (setFocus) {
 		const newIndex = nuPad3(o.rows.length) + o.fields[1];
 		const $newInput = $(`#${id}${newIndex}`);
-		$newInput.focus();
+		$newInput.trigger("focus");
 	}
 
 }
@@ -2011,7 +2010,8 @@ function nuIsIframe() {
 
 function nuPreventButtonDblClick() {
 
-	$('.nuActionButton, .nuButton, #nuLogout').not(".nuAllowDblClick").click(function () {
+	$('.nuActionButton, .nuButton, #nuLogout').not(".nuAllowDblClick").on("click", function () {
+
 		const button = $(this);
 		if (button.hasClass('nuReadonly') || button.hasClass('nuAllowDblClick')) {
 			return;
@@ -2077,21 +2077,27 @@ function nuSetPlaceholder(i, placeholder = null, translate = true) {
 function nuSetToolTip(i, message, labelHover) {
 
 	// Show tooltip on object hover
-	$("#" + i).hover(function () {
+	$("#" + i).on("mouseenter", function () {
 		$(this).attr("title", message);
+	}).on("mouseleave", function () {
+		$(this).removeAttr("title");
 	});
 
 	if (labelHover === true) {
 		// Show tooltip on label hover
-		$("#label_" + i).hover(function () {
+		$("#label_" + i).on("mouseenter", function () {
 			$(this).attr("title", message);
+		}).on("mouseleave", function () {
+			$(this).removeAttr("title");
 		});
+
 	}
+
 }
 
 function nuAddDatalist(i, arr, showAllOnArrowClick) {
 
-	if (!$.isArray(arr)) {
+	if (!Array.isArray(arr)) {
 		console.error('Argument #2 is not an array in nuAddDatalist() for object ' + i);
 		return;
 	}
@@ -2111,8 +2117,8 @@ function nuAddDatalist(i, arr, showAllOnArrowClick) {
 	arr.forEach(function (data) {
 
 		var option = document.createElement('option');
-		option.value = $.isArray(data) ? data[0] : data;
-		if (data.length == 2) option.text = $.isArray(data) ? data[1] : data;
+		option.value = Array.isArray(data) ? data[0] : data;
+		if (data.length == 2) option.text = Array.isArray(data) ? data[1] : data;
 		datalist.appendChild(option);
 	});
 
@@ -2268,7 +2274,7 @@ function nuSelectMultiWithoutCtrl(i, active) {
 	$(id + "[multiple] option").on('mousedown.selectmultinoctrl', function (event) {
 		if (event.shiftKey) return;
 		event.preventDefault();
-		this.focus();
+		this.trigger("focus");
 		var scroll = this.scrollTop;
 		event.target.selected = !event.target.selected;
 		this.scrollTop = scroll;
@@ -2759,7 +2765,7 @@ function nuInsertAtCaret(id, string) {
 	const value = txt.val();
 
 	txt.val(value.substring(0, caretPos) + string + value.substring(caretPos));
-	txt.focus();
+	txt.trigger("focus");
 
 	const endOfText = caretPos + string.length;
 	txt.prop('selectionStart', endOfText);

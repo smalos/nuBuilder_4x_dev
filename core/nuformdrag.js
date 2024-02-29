@@ -1132,7 +1132,7 @@ function nuMoveNuDrag() {
 	});
 
 	//go to new tab
-	$('#nuWindow').contents().find('#nuTab'+moveToTab).click();
+	$('#nuWindow').contents().find('#nuTab'+moveToTab).trigger( "click" );
 
 }
 
