@@ -1821,7 +1821,7 @@ function nuUserHasPermission(item, userOnly = false) {
 		return true;
 	}
 
-	return false;
+	return hasPermission;
 
 }
 
@@ -2669,27 +2669,6 @@ function nuObjectClassList(i) {
 
 	let c = $('#' + i).attr('class');
 	return c === undefined ? '' : c.split(/\s+/).join(' ');
-
-}
-
-function nuGetStorageItem(key, storage) {
-
-	var storage = storage === undefined || storage === 'session' ? window.sessionStorage : window.localStorage;
-
-	const itemStr = storage.getItem(key)
-
-	if (!itemStr) {
-		return null
-	}
-
-	const item = JSON.parse(itemStr)
-	const now = new Date()
-
-	if (now.getTime() > item.expiry && item.expiry !== null) {
-		storage.removeItem(key)
-		return null
-	}
-	return item.value;
 
 }
 
