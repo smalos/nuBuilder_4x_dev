@@ -2805,7 +2805,7 @@ function nuSortSubform(sfName, c, e) {
 	newRecord.css('top', top).data('nu-top-position', top);
 
 	if (objSf.data('nu-filtered') === true) {
-		objSf.find('.nuSubformFilter').first().change();
+		objSf.find('.nuSubformFilter').first().trigger("change");
 	}
 
 }
@@ -2872,7 +2872,7 @@ function nuSubformUndoPaste(t) {
 	if (confirm(nuTranslate("Undo the last paste? (The values before the insertion will be restored)?"))) {
 		$("[data-prevalue]").each(function () {
 			var v = $(this).attr("data-prevalue");
-			$(this).val(v).change();
+			$(this).val(v).trigger("change");
 		});
 		nuHide($(this).attr('id'));
 	}
@@ -2897,9 +2897,9 @@ function nuSubformPaste(e, jsonObj) {
 	for (let c = dColStart; c < (dColStart + sNumCols); c++) {
 		var sr = 0;
 		for (let r = dRow; r < parseInt(dRow + sNumRows, 10); r++) {
-			var dest = $('#' + sfId + nuPad3(r) + obj.fields[c]);
+			let dest = $('#' + sfId + nuPad3(r) + obj.fields[c]);
 			dest.attr("data-prevalue", dest.val());
-			dest.val(jsonObj[sr][sc]).change();
+			dest.val(jsonObj[sr][sc]).trigger("change");
 			modifiedObjects.push(dest);
 			sr++;
 		}
@@ -4110,7 +4110,9 @@ function nuBrowseTitle(b, i, l, m) {
 
 	div.setAttribute('id', id);
 
-	var sp = `<span id="nusort_${i}" class="nuSort" onclick="nuSortBrowse(${i})" ontouchstart="(function(event) { nuSortBrowse(${i}); event.preventDefault(); })({ passive: true })"> ${nuTranslate(b[i].title)} </span>`;
+	// var sp = `<span id="nusort_${i}" class="nuSort" onclick="nuSortBrowse(${i})" ontouchstart="(function(event) { nuSortBrowse(${i}); event.preventDefault(); })({ passive: true })"> ${nuTranslate(b[i].title)} </span>`;
+	
+	var sp = `<span id="nusort_${i}" class="nuSort" onclick="nuSortBrowse(${i})" > ${nuTranslate(b[i].title)} </span>`;
 
 	if (bc.sort == i) {
 
@@ -4305,7 +4307,7 @@ function nuDownBrowseResize(e, source) {
 		return;
 	}
 
-	e.preventDefault();
+	// e.preventDefault();
 
 	id = e.target.id.replace('nusort_', 'nuBrowseTitle');
 	
@@ -4334,7 +4336,7 @@ function nuDragBrowseColumn(e, p) {
 		return; 	
 	}	
 
-	e.preventDefault();
+	// e.preventDefault();
 
 	if (window.nuBROWSERESIZE.mouse_down) {
 
@@ -4475,7 +4477,8 @@ function nuBrowseTable() {
 				$div.html(value)
 					.attr('data-nu-primary-key', browseRows[rowIndex][0])
 					.on('click', (event) => nuSelectBrowse(event, $div[0]))
-					.hover(nuBrowseTableHoverIn, nuBrowseTableHoverOut);
+					.on('mouseenter', nuBrowseTableHoverIn)
+					.on('mouseleave', nuBrowseTableHoverOut); 
 
 			}
 
@@ -4891,39 +4894,39 @@ function nuChooseOneLookupRecord(e, fm) {
 
 function nuLookupObject(id, set, value) {
 
-    const el = $('#' + id);
+	const el = $('#' + id);
 
-    if (!el.length) {
-        nuReesetLookupProperties(this);
-        return;
-    }
+	if (!el.length) {
+		nuReesetLookupProperties(this);
+		return;
+	}
 
-    const i = nuValidLookupId(nuValidLookupId(id, 'code'), 'description');
-    nuUpdateLookupProperties(this, i);
+	const i = nuValidLookupId(nuValidLookupId(id, 'code'), 'description');
+	nuUpdateLookupProperties(this, i);
 
-    if (nuLookupShouldSetValue(value)) {
-        $('#' + this[set]).val(value);
-    }
+	if (nuLookupShouldSetValue(value)) {
+		$('#' + this[set]).val(value);
+	}
 
-    function nuReesetLookupProperties(obj) {
-        const props = ['id_id', 'code_id', 'description_id', 'id_value', 'code_value', 'description_value'];
-        props.forEach(prop => obj[prop] = '');
-    }
+	function nuReesetLookupProperties(obj) {
+		const props = ['id_id', 'code_id', 'description_id', 'id_value', 'code_value', 'description_value'];
+		props.forEach(prop => obj[prop] = '');
+	}
 
-    function nuUpdateLookupProperties(obj, i) {
-        Object.assign(obj, {
-            id_id: i,
-            code_id: i + 'code',
-            description_id: i + 'description',
-            id_value: $('#' + i).val(),
-            code_value: $('#' + i + 'code').val(),
-            description_value: $('#' + i + 'description').val()
-        });
-    }
+	function nuUpdateLookupProperties(obj, i) {
+		Object.assign(obj, {
+			id_id: i,
+			code_id: i + 'code',
+			description_id: i + 'description',
+			id_value: $('#' + i).val(),
+			code_value: $('#' + i + 'code').val(),
+			description_value: $('#' + i + 'description').val()
+		});
+	}
 
-    function nuLookupShouldSetValue(value) {
-        return value !== undefined && ['id', 'code', 'description'].includes(set);
-    }
+	function nuLookupShouldSetValue(value) {
+		return value !== undefined && ['id', 'code', 'description'].includes(set);
+	}
 
 }
 
@@ -5248,7 +5251,7 @@ function nuEmptyNoClone() {
 		} else {
 
 			if ($('#' + c[i].id).length == 1) {
-				$('#' + c[i].id).val('').change();
+				$('#' + c[i].id).val('').trigger("change");
 			}
 
 		}
@@ -6561,7 +6564,7 @@ function nuPromptModal() {
 
 		let value1 = document.getElementById("prompt_value1");
 		value1.value = defaultValue === undefined ? '' : defaultValue;
-		value1.trigger("focus");
+		value1.focus();
 
 	}
 
@@ -6913,7 +6916,7 @@ function nuUppyGetLanguageCodeAndLocale(language) {
 		{ language: 'Armenian', code: 'hy_AM', locale: Uppy.locales.hy_AM },
 		{ language: 'Arabic', code: 'ar_SA', locale: Uppy.locales.ar_SA },
 		{ language: 'Afrikaans', code: 'af_ZA', locale: Uppy.locales.af_ZA }
-    ];
+	];
 
 	const languageData = languagesData.find(data => data.language === language);
 

@@ -51,6 +51,25 @@ function menuNotesClick(element, event) {
 
 }
 
+function menuUserClick(element, event) {
+
+    const menu = [{
+        text: nuTranslate("User")
+    },
+
+        {
+            text: nuContextMenuItemText("Add", "fa fas fa-plus"),
+            action: () => openForm('nuuser', '-1', event)
+        },
+        {
+            text: nuContextMenuItemText("Permission Items", "fa-solid fa-list"),
+            action: () => openForm('nupermissionitem', '', event)
+        }]
+
+    openMenu(event, menu, element);
+
+}
+
 function menuReportClick(element, event) {
 
     const menu = [{

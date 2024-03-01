@@ -291,6 +291,17 @@ function loginInputKeyup(event) {
 	}
 }
 
+function nuTriggerEvent(element, event = 'change') {
+
+	if (element instanceof jQuery) {
+		element.trigger(event);
+	} else {
+		let ev = new Event(event);
+		element.dispatchEvent(ev);
+	}
+
+}
+
 function nuOpener(t, f, r, filter, parameters) {
 
 	nuSetSuffix();
@@ -1756,7 +1767,7 @@ function nuAddRow(id, setFocus = true) {
 
 	const o = nuSubformObject(id);
 	const index = nuPad3(o.rows.length - 1) + o.fields[1];
-	$(`#${id}${index}`).change();
+	$(`#${id}${index}`).trigger("change");
 
 	if (setFocus) {
 		const newIndex = nuPad3(o.rows.length) + o.fields[1];
@@ -1965,22 +1976,45 @@ function nuDisableBrowseResize() {
 function nuDragTitleEvents() {
 
 	if (nuFormType() != 'browse') { 
-	return; 
+		return; 
 	}
     
 	let colWidths = nuFORM.getCurrent().column_widths || nuGetColumWidths();
 
 	nuSetBrowseColumns(colWidths);
 
-	$('#nubody').on('mousemove.nuresizecolumn', function (event) { nuDragBrowseColumn(event, 'pointer'); });
-	$browseTitle = $('.nuBrowseTitle');
- 
-	$('#nubody').on('mouseup.nuresizecolumn', function (event) { nuEndBrowseResize(); });
-	$browseTitle.on('mousedown.nuresizecolumn', function (event) { nuDownBrowseResize(event, 'pointer') });
-	$browseTitle.on('touchstart.nuresizecolumn', function (event) { nuDownBrowseResize(event, 'finger_touch'); });
-	$browseTitle.on('touchmove.nuresizecolumn', function (event) { nuDragBrowseColumn(event, 'finger_touch'); });
-	$browseTitle.on('touchend.nuresizecolumn', function (event) { nuEndBrowseResize(event); });
-	$browseTitle.on('touchcancel.nuresizecolumn', function (event) { nuEndBrowseResize(event); });
+	document.getElementById('nubody').addEventListener('mousemove', function(event) {
+	  nuDragBrowseColumn(event, 'pointer');
+	}, {passive: true});
+
+	var browseTitle = document.querySelectorAll('.nuBrowseTitle');
+
+	document.getElementById('nubody').addEventListener('mouseup', function(event) {
+	  nuEndBrowseResize();
+	}, {passive: true});
+
+	browseTitle.forEach(function(elem) {
+	  elem.addEventListener('mousedown', function(event) {
+		nuDownBrowseResize(event, 'pointer');
+	  }, {passive: true});
+
+	  elem.addEventListener('touchstart', function(event) {
+		nuDownBrowseResize(event, 'finger_touch');
+	  }, {passive: true});
+
+	  elem.addEventListener('touchmove', function(event) {
+		nuDragBrowseColumn(event, 'finger_touch');
+	  }, {passive: true});
+
+	  elem.addEventListener('touchend', function(event) {
+		nuEndBrowseResize(event);
+	  }, {passive: true});
+
+	  elem.addEventListener('touchcancel', function(event) {
+		nuEndBrowseResize(event);
+	  }, {passive: true});
+	});
+
 
 }
 
@@ -2213,7 +2247,7 @@ function nuInsertTextAtCaret(i, text) {
 		'end'
 	);
 
-	o.change();
+	o.trigger("change");
 
 }
 
@@ -2274,11 +2308,11 @@ function nuSelectMultiWithoutCtrl(i, active) {
 	$(id + "[multiple] option").on('mousedown.selectmultinoctrl', function (event) {
 		if (event.shiftKey) return;
 		event.preventDefault();
-		this.trigger("focus");
+		this.focus();
 		var scroll = this.scrollTop;
 		event.target.selected = !event.target.selected;
 		this.scrollTop = scroll;
-		$(this).parent().change();
+		$(this).parent().trigger("change");
 	});
 
 }
@@ -2322,9 +2356,10 @@ function nuSelectRemoveMultiple(i) {
 function nuSelectSelectAll(id, value) {
 
 	if (value === undefined) var value = true;
-
-	$("#" + id).find('option:not(:empty)').prop('selected', value);
-	$("#" + id).change();
+	
+	const $id = $("#" + id);
+	$id.find('option:not(:empty)').prop('selected', value);
+	$id.trigger("change");
 
 }
 
@@ -2490,12 +2525,12 @@ function nuSetValue(i, v, method, change) {
 	if (method === undefined && obj.is(':button')) {
 		obj.text(v);
 	} else if (obj.is(':checkbox')) {
-		if (change) obj.prop('checked', v).change();
+		if (change) obj.prop('checked', v).trigger("change");
 	} else if (obj.is('select') && method === 'text') {
 		$('#' + i + ' option').each(function () {
 			if ($(this).text().fixNbsp() === v) {
 				$(this).prop("selected", "selected");
-				if (change) obj.change();
+				if (change) obj.trigger("change");
 				return true;
 			}
 		});
@@ -2511,7 +2546,7 @@ function nuSetValue(i, v, method, change) {
 				break;
 			default:
 				obj.val(v);
-				if (change) obj.change();
+				if (change) obj.trigger("change");
 		}
 	}
 
@@ -2573,7 +2608,7 @@ function nuSetDateValue(i, d) {
 	var df = d.getFullYear() + '-' + nuPad2(d.getMonth() + 1) + '-' + nuPad2(d.getDate());
 
 	var format = obj.attr('data-nu-format');
-	obj.val(nuFORM.addFormatting(df, format)).change();
+	obj.val(nuFORM.addFormatting(df, format)).trigger("change");
 
 	return true;
 

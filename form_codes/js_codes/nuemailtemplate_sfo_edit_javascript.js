@@ -12,8 +12,9 @@ if (isTemplate() && !nuDevMode()) {
 setPreviewText();
 
 function selectSingle(f) {
-    $('#' + f).removeAttr('multiple');
-    $('#' + f).attr('size', '5');
+  const $selectElement = $('#' + f);
+  $selectElement.prop('size', 5);
+  $selectElement.prop('multiple', false);
 }
 
 function addSelectedField() {

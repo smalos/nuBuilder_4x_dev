@@ -14,8 +14,8 @@ $("#sse_edit option[value='']").remove();
 $('#sse_sql')
 .css('font-size', '10px')
 .addClass('sql')
-.dblclick(function() {
-	nuOpenAce('SQL', this.id);
+.on('dblclick', function() {
+    nuOpenAce('SQL', this.id);
 });
 
 $('#label_sse_sql').remove();
