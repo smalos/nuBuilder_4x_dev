@@ -4053,12 +4053,6 @@ function nuRemoveTabById(id) {
 
 }
 
-function nuRemoveTabByTitle(title) {
-	const index = getTabIndexByTitle(title);
-	if (index > -1) {
-		$('#nuTab' + index).remove();
-	}
-}
 function nuHideTabById(id) {
 	nuShowTabById(id, false);
 }
@@ -4307,9 +4301,7 @@ function nuDownBrowseResize(e, source) {
 		return;
 	}
 
-	// e.preventDefault();
-
-	id = e.target.id.replace('nusort_', 'nuBrowseTitle');
+	const id = e.target.id.replace('nusort_', 'nuBrowseTitle');
 	
 	window.nuBROWSERESIZE.mouse_down = true;
 	window.nuBROWSERESIZE.pointer = source;

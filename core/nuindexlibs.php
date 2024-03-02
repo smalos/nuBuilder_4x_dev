@@ -1,17 +1,7 @@
 <?php
 
-function nuLoadBody($debug = false) {
-
-		if ( !$debug ) {
-				echo "<body id='nubody' onload='nuLoad()' onresize='nuResize()'>";
-		} else {
-				echo "<body>";
-				echo "<pre>";
-				print_r($_SESSION);
-				print_r($_SERVER);
-				print('<br>' . session_id());
-				echo "</pre>";
-		}
+function nuLoadBody() {
+	echo "<body id='nubody' onload='nuLoad()' onresize='nuResize()'>";
 }
 
 
@@ -66,7 +56,7 @@ function nuUseUP($nuBrowseFunction, $target, $welcome, $u, $p) {
 	return $h2;
 }
 
-function nuGetJS_action_screen($nuBrowseFunction, $target, $welcome, $opener, $search, $like) {
+function nuGetJSActionScreen($nuBrowseFunction, $target, $welcome, $opener, $search, $like) {
 
 	$h2 = "function nuLoad(){
 		if(nuIsOpener(window)){
