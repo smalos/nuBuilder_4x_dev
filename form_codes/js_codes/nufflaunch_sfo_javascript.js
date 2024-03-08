@@ -275,7 +275,7 @@ function nuSelectFFObjects(e) {
 
     nuSetPlaceholder(sfrow.substring(1) + 'ff_label', label);
 
-    $(sfrow + 'ff_label').val(label).nuEnable().change();
+    $(sfrow + 'ff_label').val(label).nuEnable().trigger('change');
     $(sfrow + 'ff_id').val(id);
     $(sfrow + 'ff_type').val(id).nuEnable();
     $(sfrow + 'ff_field').nuEnable().attr('data-nu-picked', true);
@@ -290,7 +290,7 @@ function nuSelectFFObjects(e) {
         $(sfrow + 'ff_browse').show().removeAttr('data-nu-no-browse');
     }
 
-    $('#fastform_type').change();
+    $('#fastform_type').trigger('change');
 
     nuSetFFDataType(sfrow + 'ff_datatype', h);
 
@@ -432,7 +432,7 @@ function nuAvailableFieldsOnClick(event, t) {
     if (selectedField !== null) {
 
         let v = t.value;
-        $(selectedField).val(v).change();
+        $(selectedField).val(v).trigger('change');
 
         let label = $('#' + $(selectedField).attr('id').replace('field', 'label'));
         if (label.is('[data-user-modified]')) {
@@ -468,7 +468,7 @@ function nuChangePrefix(prefix) {
 
             var f = $('#obj_sf' + nuPad3(i) + 'ff_field');
             if (f.val() !== '') {
-                f.val(prefix + nuGetStringAfterSubstring(f.val(), '_')).change();
+                f.val(prefix + nuGetStringAfterSubstring(f.val(), '_')).trigger('change');
             }
 
         }
@@ -530,7 +530,7 @@ function nuOnBlurFFLabel(t, event) {
             let v = $(t).val();
             if (v !== '') {
                 let prefix = $('#fastform_prefix').val();
-                ff_field.val((prefix === '' ? '': prefix + '_') + v.toLowerCase().replaceAll(' ', '_')).change();
+                ff_field.val((prefix === '' ? '': prefix + '_') + v.toLowerCase().replaceAll(' ', '_')).trigger('change');
             }
         }
     }

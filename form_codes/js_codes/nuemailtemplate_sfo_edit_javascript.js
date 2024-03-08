@@ -2,7 +2,7 @@ nuLabelOnTop(['emt_form_id']);
 activeObj = $('#emt_body');
 
 $('#emt_avail_fields').nuLabelOnTop();
-selectSingle('emt_avail_fields');
+nuSelectRemoveMultiple('emt_avail_fields');
 
 if (isTemplate() && !nuDevMode()) {
     nuDisableAllObjects();
@@ -10,12 +10,6 @@ if (isTemplate() && !nuDevMode()) {
 }
 
 setPreviewText();
-
-function selectSingle(f) {
-  const $selectElement = $('#' + f);
-  $selectElement.prop('size', 5);
-  $selectElement.prop('multiple', false);
-}
 
 function addSelectedField() {
     const selObjectId = nuGetValue('emt_avail_fields', 'text');
@@ -25,7 +19,7 @@ function addSelectedField() {
         const isBody = activeObjectId == 'emt_body';
         const label = isBody ? '<b>' + selObjectLabel + ': </b>': '';
         nuInsertAtCaret(activeObjectId, label + "#" + selObjectId + "#" + (isBody ? '\n': ''));
-        $('#' + activeObjectId).change();
+        $('#' + activeObjectId).trigger('change');
     }
 }
 
@@ -38,7 +32,7 @@ function wrapText(elementID, openTag, closeTag) {
     if (start !== end) {
         var selectedText = textArea.val().substring(start, end);
         var replacement = openTag + selectedText + closeTag;
-        textArea.val(textArea.val().substring(0, start) + replacement + textArea.val().substring(end, len)).change();
+        textArea.val(textArea.val().substring(0, start) + replacement + textArea.val().substring(end, len)).trigger('change');
     }
 }
 
@@ -64,6 +58,11 @@ function isTemplate() {
     return $('#emt_group').val() == 'nubuilder' && code.nuEndsWith('Template', true);
 }
 
+function isTemplate() {
+    return nuGetValue('emt_template');
+}
+
+
 
 function nuOnClone() {
 
@@ -72,6 +71,7 @@ function nuOnClone() {
     if (isTemplate()) {
         nuSetValue('emt_code', code.substring(0, code.length-8));
         nuSetValue('emt_group', '');
+        nuSetValue('emt_template', false);
         nuEnableAllObjects();
     }
 

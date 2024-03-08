@@ -1,4 +1,4 @@
-nuDebug('load');
+
 function getCSVFiles() {
 
     $f = [];

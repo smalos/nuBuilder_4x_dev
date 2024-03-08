@@ -136,8 +136,7 @@ function nuUpdateAclCount() {
 }
 
 function isTemplate() {
-    let code = sph_code.value;
-    return $('#sph_group').val() == 'nubuilder' && code.nuEndsWith('Template', true);
+    return nuGetValue('sph_template');
 }
 
 
@@ -149,6 +148,7 @@ function onCloneTemplate() {
         code = code == 'NUSENDWELCOMEEMAIL_Template' ? 'nuSendWelcomeEmail' : code.substring(0, code.length-9);   
         nuSetValue('sph_code', code);
         nuSetValue('sph_group', '');
+        nuSetValue('sph_template', false);
         nuEnableAllObjects();
     }
 

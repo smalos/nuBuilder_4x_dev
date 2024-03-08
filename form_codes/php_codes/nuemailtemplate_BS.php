@@ -1,3 +1,3 @@
-if ('#nuDevMode#' != 1 && substr('#RECORD_ID#', 0, 2) === 'nu' ) {
-        nuDisplayError(nuTranslate("Templates cannot be saved. Clone it instead."));
+if ('#nuDevMode#' != 1 && '#emt_template#' == '1') {
+    nuDisplayError(nuTranslate("Templates cannot be saved. Clone it instead."));
 }

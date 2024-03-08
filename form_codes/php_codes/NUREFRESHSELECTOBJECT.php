@@ -85,17 +85,19 @@ function nuPopulateSelectObject($formId, $selectId, $removeBlank, $prefix) {
 
 }
 
-function nuRefreshSelectObject($selectId, $formId, $removeBlank, $prefix) {
+function nuRefreshSelectObject($selectId, $formIdHk, $removeBlank, $prefixHK) {
 
-    if (hashCookieNotSetOrEmpty($formId)) {
+    if (!nuHasProperty($formIdHk, $formId, false)) {
         $formId = '#form_id#';
     }
 
-    $prefix = hashCookieNotSetOrEmpty($prefix) ? '' : $prefix;
+    if (!nuHasProperty($prefixHK, $prefix, false)) {
+        $prefix = '';
+    }
 
     $js = nuPopulateSelectObject($formId, $selectId, $removeBlank, $prefix);
     nuJavaScriptCallback($js);
 
 }
 
-nuRefreshSelectObject('#NUREFRESHSELECTOBJECT_selectid#', '#NUREFRESHSELECTOBJECT_formid#', '#NUREFRESHSELECTOBJECT_removeblank#','#NUREFRESHSELECTOBJECT_prefix#');
+nuRefreshSelectObject('#NUREFRESHSELECTOBJECT_selectid#', 'NUREFRESHSELECTOBJECT_formid', '#NUREFRESHSELECTOBJECT_removeblank#','NUREFRESHSELECTOBJECT_prefix');

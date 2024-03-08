@@ -31,7 +31,7 @@ $('#nuBreadcrumb2')
 $('#deb_message').val(m);
 
 
-$("[data-nu-column='1']").each(function(index) {
+$("[data-nu-column='2']").each(function(index) {
 
     if ($(this).html().trim() !== '') {
 
@@ -48,6 +48,6 @@ if (nuFORM.getCurrent().record_id !== '') {
     $('.nuActionButton').remove();
     nuAddActionButton('Delete');
 
-} 
+}
 
 nuAddActionButton('DeleteAll', 'Delete All', 'nuDeleteAllAction()');

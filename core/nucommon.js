@@ -51,6 +51,7 @@ String.prototype.nuEndsWith = function(substr, ignoreCase) {
 
 String.prototype.nuStartsWith = function(substr, ignoreCase) {
 
+
 	if (ignoreCase === undefined || ignoreCase === false) return this.startsWith(substr);
 	return this.toLowerCase().startsWith(substr.toLowerCase());
 
@@ -1973,51 +1974,56 @@ function nuDisableBrowseResize() {
 
 }
 
-function nuDragTitleEvents() {
-
-	if (nuFormType() != 'browse') { 
-		return; 
+function nuAddEventListenerOnce(target, eventType, eventFunction, options, eventClass) {
+	if (!target.classList.contains(eventClass)) {
+		target.addEventListener(eventType, eventFunction, options);
+		target.classList.add(eventClass);
 	}
-    
-	let colWidths = nuFORM.getCurrent().column_widths || nuGetColumWidths();
-
-	nuSetBrowseColumns(colWidths);
-
-	document.getElementById('nubody').addEventListener('mousemove', function(event) {
-	  nuDragBrowseColumn(event, 'pointer');
-	}, {passive: true});
-
-	var browseTitle = document.querySelectorAll('.nuBrowseTitle');
-
-	document.getElementById('nubody').addEventListener('mouseup', function(event) {
-	  nuEndBrowseResize();
-	}, {passive: true});
-
-	browseTitle.forEach(function(elem) {
-	  elem.addEventListener('mousedown', function(event) {
-		nuDownBrowseResize(event, 'pointer');
-	  }, {passive: true});
-
-	  elem.addEventListener('touchstart', function(event) {
-		nuDownBrowseResize(event, 'finger_touch');
-	  }, {passive: true});
-
-	  elem.addEventListener('touchmove', function(event) {
-		nuDragBrowseColumn(event, 'finger_touch');
-	  }, {passive: true});
-
-	  elem.addEventListener('touchend', function(event) {
-		nuEndBrowseResize(event);
-	  }, {passive: true});
-
-	  elem.addEventListener('touchcancel', function(event) {
-		nuEndBrowseResize(event);
-	  }, {passive: true});
-	});
-
-
 }
 
+function nuDragTitleEvents() {
+
+	if (nuFormType() != 'browse') {
+		return;
+	}
+
+	let colWidths = nuFORM.getCurrent().column_widths || nuGetColumWidths();
+	nuSetBrowseColumns(colWidths);
+
+	const body = document.getElementById('nubody');
+	const browseTitle = document.querySelectorAll('.nuBrowseTitle');
+
+	nuAddEventListenerOnce(body, 'mousemove', function(event) {
+		nuDragBrowseColumn(event, 'pointer');
+	}, {passive: true}, 'nu-mousemove-added');
+
+	nuAddEventListenerOnce(body, 'mouseup', function(event) {
+		nuEndBrowseResize();
+	}, {passive: true}, 'nu-mouseup-added');
+
+	browseTitle.forEach(elem => {
+		nuAddEventListenerOnce(elem, 'mousedown', function(event) {
+			nuDownBrowseResize(event, 'pointer');
+		}, {passive: true}, 'nu-mousedown-added');
+
+		nuAddEventListenerOnce(elem, 'touchstart', function(event) {
+			nuDownBrowseResize(event, 'finger_touch');
+		}, {passive: true}, 'nu-touchstart-added');
+
+		nuAddEventListenerOnce(elem, 'touchmove', function(event) {
+			nuDragBrowseColumn(event, 'finger_touch');
+		}, {passive: true}, 'nu-touchmove-added');
+
+		nuAddEventListenerOnce(elem, 'touchend', function(event) {
+			nuEndBrowseResize(event);
+		}, {passive: true}, 'nu-touchend-added');
+
+		nuAddEventListenerOnce(elem, 'touchcancel', function(event) {
+			nuEndBrowseResize(event);
+		}, {passive: true}, 'nu-touchcancel-added');
+	});
+
+}
 
 function nuRemovePX(s) {
 	return Number(String(s).split('px')[0]);
@@ -2347,9 +2353,9 @@ function nuSelectRemoveOption(id, value) {
 }
 
 function nuSelectRemoveMultiple(i) {
-
-	var id = i === undefined || i === null ? 'select' : '#' + i;
-	$(id + "[multiple]").removeAttr('multiple').attr('size', '5');
+	
+    var id = i ? '#' + i : 'select';
+    $(id + "[multiple]").prop('multiple', false).attr('size', '5');
 
 }
 

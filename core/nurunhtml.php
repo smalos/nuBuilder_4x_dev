@@ -1,5 +1,5 @@
 <?php
-require_once ('nuchoosesetup.php');
+require_once ('nusessiondata.php');
 require_once ('nucommon.php');
 require_once ('nudata.php');
 	
@@ -16,7 +16,11 @@ if ($jsonData) {
 	$hash = nuHash();
 	$_POST['nuHash']['TABLE_ID'] = $hash['browse_table_id'];
 	nuEval($hash['form_id'] . '_BB');
-
+	
+	if (nuHasErrors()) {
+		echo implode("<br>",$_POST['nuErrors']);
+	}
+	
 	$data = nuExecuteQueryAndFetchData($sqlQuery);
 	$tableHtml = nuRunHTMLGenerateHTMLTable($columns, $data, $hash);
 

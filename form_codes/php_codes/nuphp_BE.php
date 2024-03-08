@@ -1,3 +1,4 @@
+
 $rid    = '#RECORD_ID#';
 
 if($rid != '-1' and $rid != '-2'){ 

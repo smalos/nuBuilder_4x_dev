@@ -10,11 +10,11 @@ function writeVersionToFile($dbVersion, $filesVersion) {
 }
 
 
-$nuDevOde = '#nuDevMode#' == '1';
+$nuDevMode = '#nuDevMode#' == '1';
 
 // Write Version Info
 
-if ($nuDevOde) {
+if ($nuDevMode) {
     
     nuSetConfigOrder();
 
@@ -48,6 +48,8 @@ if ($nuDevOde) {
         $lang = array('["Afrikaans","Arabic","Armenian","Catalan","Chinese","Czech","Danish","Dutch","French","German","Greek","Hindi","Italian","Japanese","Malay","Polish","Portuguese","Romanian","Russian","Spanish","Tamil","Vietnamese"]');
         nuRunQuery('UPDATE zzzzsys_setup SET set_languages_included = ?, set_language = NULL WHERE zzzzsys_setup_id = 1', $lang);
 
+        nuResetEmailSettings();
+
         $q = "
             DELETE FROM zzzzsys_user;
             DELETE FROM zzzzsys_access;
@@ -66,6 +68,7 @@ if ($nuDevOde) {
             DELETE FROM zzzzsys_translate;
             DELETE FROM zzzzsys_permission_item;
             DELETE FROM zzzzsys_user_permission;
+            DELETE FROM `zzzzsys_email_log`;
             UPDATE `zzzzsys_object` SET `sob_input_attribute` = NULL WHERE `sob_input_attribute` = '';
             UPDATE `zzzzsys_form` SET `sfo_browse_redirect_form_id` = '' WHERE `sfo_browse_redirect_form_id` IS NULL;
             UPDATE `zzzzsys_form` SET sfo_browse_javascript = NULL  WHERE TRIM(`sfo_browse_javascript`) = '';
@@ -82,6 +85,26 @@ if ($nuDevOde) {
 
 
     }
+
+}
+
+function nuResetEmailSettings() {
+    
+    $update = 
+    
+        "UPDATE zzzzsys_setup
+        SET
+           set_smtp_username = '1',
+          set_smtp_password = '1',
+          set_smtp_host = '1',
+          set_smtp_from_address = '1',
+          set_smtp_from_name = '1',
+          set_smtp_port = '1',
+          set_smtp_use_authentication = '1',
+          set_smtp_use_ssl = '1';
+       ";
+       
+   nuRunQuery($update); 
 
 }
 

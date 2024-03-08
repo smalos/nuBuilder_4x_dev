@@ -23,19 +23,16 @@ function nuGetDisplayValue($formId, $obj) {
     return false;
 }
 
-function nuRefreshDisplayObject($displayId, $formId, $prefix) {
+function nuRefreshDisplayObject($displayId, $formIdHk, $prefixHK) {
 
-    if (hashCookieNotSetOrEmpty($formId)) {
+    if (!nuHasProperty($formIdHk, $formId, false)) {
         $formId = '#form_id#';
     }
 
-    $prefix = hashCookieNotSetOrEmpty($prefix) ? '' : $prefix;
-	$formId = '#nurefreshdisplayobject_formid#';
+    if (!nuHasProperty($prefixHK, $prefix, false)) {
+        $prefix = '';
+    }
 
-	if (hashCookieNotSetOrEmpty($formId)) {
-		$formId = '#form_id#';
-	}
-    
 	$value = nuGetDisplayValue($formId, $displayId);
 	$displayId = $prefix.$displayId;
 		
@@ -59,4 +56,4 @@ function nuRefreshDisplayObject($displayId, $formId, $prefix) {
 
 }
 
-nuRefreshDisplayObject('#NUREFRESHDISPLAYOBJECT_displayid#', '#NUREFRESHDISPLAYOBJECT_formid#','#NUREFRESHDISPLAYOBJECT_prefix#');
+nuRefreshDisplayObject('#NUREFRESHDISPLAYOBJECT_displayid#', 'NUREFRESHDISPLAYOBJECT_formid','NUREFRESHDISPLAYOBJECT_prefix');

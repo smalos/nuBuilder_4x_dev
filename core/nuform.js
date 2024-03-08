@@ -127,10 +127,12 @@ function nuBuildForm(f) {
 		nuAddHolder('nuTabHolder');
 	}
 
-	nuAddHolder('nuRECORD')
+	const nuRecordDiv = nuAddHolder('nuRECORD')
 		.attr('data-nu-table', f.table)
 		.attr('data-nu-primary-key-name', f.primary_key);
 
+	// DEV: 
+	// nuWrapWithForm(nuRecordDiv[0], '#', ''); 
 	nuAddBreadcrumbs();
 
 	nuAddEditTabs('', f);
@@ -2080,7 +2082,7 @@ function nuGetSubformDimensions(SF) {
 
 		prefix = id + nuPad3(c);
 		const frmId = prefix + 'nuRECORD';
-		nuCreateElementWithId('div', frmId, scrId);
+		const recordDiv = nuCreateElementWithId('div', frmId, scrId);
 
 		nuSUBFORMnuRECORDAddCSS(frmId, rowTop, rowWidth, rowHeight, c%2 == 0 ? '1' : '0');
 		nuBuildEditObjects(subformRows.forms[c], prefix, SF, SF.forms[0]);
@@ -2108,6 +2110,29 @@ function nuGetSubformDimensions(SF) {
 	return Number(SF.width);
 
 }
+
+// DEV:
+function nuWrapWithForm(element,  formAction, formMethod) {
+  // 1. Create the form element
+  const form = document.createElement('form');
+  // form.onsubmit = function() { return false; }; // Add the onsubmit handler
+  form.setAttribute('onsubmit', 'return false'); // Add onsubmit attribute
+
+  form.id = 'myForm'; // Set the desired ID
+
+ // form.action = formAction;
+//  form.method = formMethod;
+
+  // 2. Get the element's parent (to insert the form before it)
+  const parent = element.parentNode;
+
+  // 3. Insert the form before the original element
+  parent.insertBefore(form, element);
+
+  // 4. Move the original element inside the form
+  form.appendChild(element);
+}
+
 
 function nuNewRowObject(p) {
 
@@ -4036,7 +4061,7 @@ function nuShowTabByTitle(title, visible) {
 
 function nuRemoveTabs(t) {
 
-	for (var i = 0; i < arguments.length; i++) {
+	for (let i = 0; i < arguments.length; i++) {
 		$('#nuTab' + arguments[i]).remove();
 	}
 
@@ -4084,81 +4109,66 @@ function nuHideTabs() {
 
 }
 
-function nuAddDataTab(i, t, p) {
+function nuAddDataTab(id, tabNr, formIdPrefix) {
 
-	var P = String(p);
-	var f = P.substr(0, P.length - 3);
-	$('#' + i).attr('data-nu-tab', t).attr('data-nu-form', f);
+	let formId = '';
+	if (formIdPrefix) {
+		let formIdPrefixStr = String(formIdPrefix);
+		formId = formIdPrefixStr.substr(0, formIdPrefixStr.length - 3);
+	} 
+
+	$('#' + id).attr('data-nu-tab', tabNr).attr('data-nu-form', formId);
 
 }
 
-function nuBrowseTitle(b, i, l, m) {
+function nuAlignmentStyle(alignment) {
 
-	var bc = window.nuFORM.getCurrent();
-	var un = bc.nosearch_columns.indexOf(i);
-	var id = 'nuBrowseTitle' + i;
-	var w = Number(b[i].width);
-	var a = b[i].align;
-	var div = document.createElement('div');
-	var ar = { l: 'left', c: 'center', r: 'right' };
+    const alignmentOptions = { l: 'left', c: 'center', r: 'right' };
+    return alignmentOptions[alignment];
 
-	div.setAttribute('id', id);
+}
 
-	// var sp = `<span id="nusort_${i}" class="nuSort" onclick="nuSortBrowse(${i})" ontouchstart="(function(event) { nuSortBrowse(${i}); event.preventDefault(); })({ passive: true })"> ${nuTranslate(b[i].title)} </span>`;
-	
-	var sp = `<span id="nusort_${i}" class="nuSort" onclick="nuSortBrowse(${i})" > ${nuTranslate(b[i].title)} </span>`;
+function nuBrowseTitle(columns, index, left, multiline) {
 
-	if (bc.sort == i) {
+	function nuGenerateSortSpan(index, title, sortDirection) {
+		const sortIconClass = sortDirection === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
 
-		if (a == 'l') {
-
-			if (bc.sort_direction == 'asc') {
-				sp = '<span id="nusort_' + i + '" class="nuSort" onclick="nuSortBrowse(' + i + ')"> ' + nuTranslate(b[i].title) + ' <i id="nuSortIcon" class="fa fa-caret-up"></i></span>';
-			} else {
-				sp = '<span id="nusort_' + i + '" class="nuSort" onclick="nuSortBrowse(' + i + ')"> ' + nuTranslate(b[i].title) + ' <i id="nuSortIcon" class="fa fa-caret-down"></i></span>';
-			}
-
-		} else {
-
-			if (bc.sort_direction == 'asc') {
-				sp = '<span id="nusort_' + i + '" class="nuSort" onclick="nuSortBrowse(' + i + ')"><i id="nuSortIcon" class="fa fa-caret-up"></i> ' + nuTranslate(b[i].title) + ' </span>';
-			} else {
-				sp = '<span id="nusort_' + i + '" class="nuSort" onclick="nuSortBrowse(' + i + ')"><i id="nuSortIcon" class="fa fa-caret-down"></i> ' + nuTranslate(b[i].title) + ' </span>';
-			}
-
-		}
-
+		return `<span id="nusort_${index}" class="nuSort" onclick="nuSortBrowse(${index})"> 
+				 ${nuTranslate(title)} 
+				 <i id="nuSortIcon" class="fa ${sortIconClass}"></i>
+			  </span>`;
 	}
 
-	$('#nuRECORD').append(div);
-
-	var titleClass = m == '1' ? 'nuBrowseTitleMultiline nuBrowseTitle' : 'nuBrowseTitle';
-
-	var obj = $('#' + id);
-
-	obj
-		.html(sp)
+	const currentForm = window.nuFORM.getCurrent();
+	const columnIndex = currentForm.nosearch_columns.indexOf(index);
+	const elementId = 'nuBrowseTitle' + index;
+	const container = nuCreateElementWithId('div', elementId, 'nuRECORD');
+	const spanContent = `<span id="nusort_${index}" class="nuSort" onclick="nuSortBrowse(${index})" > ${nuTranslate(columns[index].title)} </span>`;
+	const sortedSpan = currentForm.sort === index ? nuGenerateSortSpan(index, columns[index].title, currentForm.sort_direction) : spanContent;
+	const titleClass = multiline === '1' ? 'nuBrowseTitleMultiline nuBrowseTitle' : 'nuBrowseTitle';
+	const columnWidth = Number(columns[index].width);
+	
+	const element = $(container);
+	element
+		.html(sortedSpan)
 		.addClass(titleClass)
 		.css({
-			'text-align': ar[a],
+			'text-align': nuAlignmentStyle(columns[index].align),
 			'overflow': 'visible',
-			'width': w,
-			'left': l
-		});
+			'width': columnWidth,
+			'left': left
+		})
+		.attr('data-nu-title-id', columns[index].id);
 
-	obj.attr('data-nu-title-id', b[i].id);
-
-	if (w == 0) {
-		obj.hide();
+	if (columnWidth === 0) {
+		element.hide();
 	}
 
-	// $('#nusort_' + i)[0].addEventListener('touchstart', function(event) { nuSortBrowse(i);}, { passive: true });
+	$('#nusearch_' + index).attr('checked', columnIndex === -1);
 
-	$('#nusearch_' + i).attr('checked', un == -1);
-
-	return l + nuTotalWidth(id);
-
+	return left + nuTotalWidth(elementId);
 }
+
 
 function nuTitleDrag(i) {
 
@@ -5001,6 +5011,7 @@ function nuChange(e) {
 	nuAddSubformRow(t, e);
 
 }
+
 function nuChooseEventList() {
 
 	if ($('#sob_all_type').val() == 'subform') {
@@ -6397,41 +6408,46 @@ function nuPortraitLabelWidth(o) {
 }
 
 function nuGetBrowsePaginationInfo() {
+	// Number of rows displayed per page
+	const rowsPerPage = $("div[id^='nucell_']" + "[id$='_1']").length; 
 
-	const r = $("div[id^='nucell_']" + "[id$='_1']").length; // Number of Rows per page
+	// Get current form data
+	const currentFormData = nuFORM.getCurrent();
 
-	const cf = nuFORM.getCurrent();
+	// Extract relevant pagination details
+	const currentPageNumber = currentFormData.page_number;
+	const totalFilteredRows = currentFormData.browse_filtered_rows;
+	const totalPages = currentFormData.pages;
 
-	const c = cf.page_number; 							// Current page number
-	const f = cf.browse_filtered_rows; 					// Number of records in the table after filtering
-	const p = cf.pages; 								// Total number of pages
+	// Variables to hold calculated values
+	let startRow;
+	let endRow;
 
-	var e; 												// Row number of the last record on the current page
-	var s; 												// Row number of the first record on the current page
+	// Logic to determine start and end rows based on pagination state
+	if (currentPageNumber == 0 && totalFilteredRows > 0 && totalPages == 1) {
+		// Special case: Single page with results
+		startRow = 1;
+		endRow = totalFilteredRows;
+	} else if (totalPages == currentPageNumber + 1 || totalFilteredRows == 0) {
+		// Last page or no results
+		startRow = totalFilteredRows == 0 ? 0 : currentPageNumber * rowsPerPage + 1;
+		endRow = totalFilteredRows;
+	} else if (currentPageNumber == 0 && totalPages > 1) {
+		// First page with multiple pages
+		startRow = 1;
+		endRow = rowsPerPage;
+	} else if (currentPageNumber > 0 && currentPageNumber < totalPages) {
+		// Any middle page 
+		endRow = (currentPageNumber + 1) * rowsPerPage;
+		startRow = endRow - rowsPerPage + 1;
+	}
 
-	if (c == 0 && f > 0 && p == 1) {
-		s = 1;
-		e = f;
-	} else
-		if (p == c + 1 || f == 0) {
-			s = f == 0 ? 0 : c * r + 1;
-			e = f;
-		} else
-			if (c == 0 && p > 1) {
-				s = 1;
-				e = r;
-			} else
-				if (c > 0 && c < p) {
-					e = (c + 1) * r;
-					s = e - r + 1;
-				}
-
+	// Return the calculated pagination details
 	return {
-		startRow: s,
-		endRow: e,
-		totalRows: f // filtered rows
+		startRow: startRow,
+		endRow: endRow,
+		totalRows: totalFilteredRows 
 	};
-
 }
 
 function nuShowBrowsePaginationInfo(f) {
@@ -6920,17 +6936,26 @@ function nuUppyGetLanguageCodeAndLocale(language) {
 
 }
 
-function nuUppyCreate(language) {
+function nuUppyCreate(language, languageFallback = null) {
 
 	let uppy = new Uppy.Uppy();
-	nuUppySetLanguage(uppy, language)
+	nuUppySetLanguage(uppy, language, languageFallback)
 	return uppy;
+
 }
 
-function nuUppySetLanguage(uppy, language) {
+function nuUppySetLanguage(uppy, language, languageFallback) {
 
-	const userLanguage = language || nuUserLanguage();
+	let userLanguage = language || nuUserLanguage();
+	if (!userLanguage) {
+		userLanguage = languageFallback;
+	}	
+
+	if (!userLanguage) return;
+
 	let langResult = nuUppyGetLanguageCodeAndLocale(userLanguage);
+	
+	if (!langResult) return;
 
 	const setUppyLanguage = (locale) => {
 		if (locale) {
@@ -6938,13 +6963,13 @@ function nuUppySetLanguage(uppy, language) {
 		}
 	};
 
-	if (langResult && !langResult.locale) {
-		$.getScript(`/core/libs/uppy/locales/${langResult.code}.min.js`, function (data, textStatus, jqxhr) {
+	if (!langResult.locale) {
+		$.getScript(`core/libs/uppy/locales/${langResult.code}.min.js`, function (data, textStatus, jqxhr) {
 			langResult = nuUppyGetLanguageCodeAndLocale(userLanguage);
 			setUppyLanguage(langResult.locale);
 		});
 	} else {
-		setUppyLanguage(langResult.locale);
+			setUppyLanguage(langResult.locale);
 	}
 
 	return langResult;

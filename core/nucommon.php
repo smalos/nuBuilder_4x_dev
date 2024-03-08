@@ -2,7 +2,7 @@
 
 error_reporting( error_reporting() & ~E_NOTICE );
 
-require_once('nuchoosesetup.php');
+require_once('nusessiondata.php');
 require_once('nubuilders.php');
 require_once('nuemailer.php');
 
@@ -660,9 +660,9 @@ function nuReplaceHashVariables($s){
 
 }
 
-function hex2rgb($hexOrColor) {
+function nuHex2rgb($hexOrColor) {
 
-	$hex = ColorToHex($hexOrColor);
+	$hex = nuColorToHex($hexOrColor);
 	$hex = str_replace("#", "", $hex);
 
 	if(strlen($hex) == 3) {
@@ -680,7 +680,7 @@ function hex2rgb($hexOrColor) {
 
 }
 
-function ColorToHex($pColor){
+function nuColorToHex($pColor){
 
 	$vColor	= strtoupper($pColor);
 	$colors = [
@@ -912,7 +912,7 @@ function nuGetUserPermissions($userId = null){
 function nuUserHasPermission($item, $userId = null) {
 
 	$permissions = nuGetUserPermissions($userId);
-	return nuArrayContains($item, $permissions);
+	return nuArrayContains($item, $permissions) || nuGlobalAccess();
 
 }
 
@@ -1610,7 +1610,7 @@ function nuIsValidEmail($email){
 
 function nuSendEmail($args1, $args2 = "", $from_name = '', $body = '', $subject = '', $attachments = [], $html = false, $cc = '', $bcc = '', $reply_to = [] , $priority = '', $smtp_options = []) {
 
-	if (is_array($args1) && is_array($args2)) {
+	if (is_array($args1) && (is_array($args2) || is_bool($args2))) {
 		return nuSendEmailEx($args1, $args2);
 	}
 
@@ -1648,31 +1648,30 @@ function nuSendEmail($args1, $args2 = "", $from_name = '', $body = '', $subject 
 
 }
 
-
-function nuStripEscapes($str) {
+function nuUnescapeQuotes($str) {
 	$str = str_replace('\"', '"', $str);
 	return str_replace("\'", "'", $str);
 }
 
 function nuSendEmailEx($args, $emailLogOptions) {
 
-	if (!is_array($emailLogOptions)) {
-		$tableName = null;
+	if (!is_array($emailLogOptions) || $emailLogOptions === true) {
+		$tableName = nuFormTable();
 		$tag = null;
-		$formId = null;
-		$userId = null;
-		$recordId = null;
+		$formId = nuFormId();
+		$userId = nuUserId();
+		$recordId = nuRecordId();
 		$json = null;
 	}
 	else {
-		$defaultLogOptions = ['table_name' => null, 'tag' => null, 'form_id' => null, 'user_id' => null, 'record_id' => null, 'json' => null];
+		$defaultLogOptions = ['table_name' => nuFormTable(), 'tag' => null, 'form_id' => nuFormId(), 'user_id' => nuUserId(), 'record_id' => nuRecordId(), 'json' => null];
 
 		$emailLogOptions = array_merge($defaultLogOptions, array_intersect_key($emailLogOptions, $defaultLogOptions));
 		list($tableName, $tag, $formId, $userId, $recordId, $json) = array_values($emailLogOptions);
 	}
 
-	$args['subject'] = nuStripEscapes($args['subject']);
-	$args['body'] = nuStripEscapes($args['body']);
+	$args['subject'] = nuUnescapeQuotes($args['subject']);
+	$args['body'] = nuUnescapeQuotes($args['body']);
 	$sendResult = nuSendEmail($args);
 
 	$state = 'sent';
@@ -2208,16 +2207,37 @@ function nuGetRecordURL($origin = null, $subFolder = null, $homepageId = null, $
 		$formId = $hash['form_id'] == '' ? $hash['FORM_ID'] : $hash['form_id'];
 	}
 
-	$recordIdL = nuReplaceHashVariables('#record_id#');
-	$recordIdC = nuReplaceHashVariables('#RECORD_ID#');
-	$recordId = $recordIdL && $recordIdL != '-1'  ? $recordIdL : $recordIdC;
-
-	return $origin. $subFolder . '/index.php?f=' . $formId . '&r=' . $recordId . $homepageId;
+	return $origin. $subFolder . '/index.php?f=' . $formId . '&r=' . nuRecordId() . $homepageId;
 
 }
 
-function hashCookieNotSetOrEmpty($h) {
-	return (preg_match('/\#(.*)\#/', $h) || nuTrim($h) == "");
+function nuRecordId() {
+
+    $recordIdLower = nuReplaceHashVariables('#record_id#');
+    $recordIdUpper = nuReplaceHashVariables('#RECORD_ID#');
+
+	$recordId = $recordIdLower && $recordIdLower != '-1'  ? $recordIdLower : $recordIdUpper;
+
+	return $recordId; 
+
+}
+
+function nuUserId() {
+
+    $userId = function_exists('nuHash') ? nuObjKey(nuHash(), 'USER_ID') ?? null : null;
+	return $userId ?? nuObjKey($_POST, 'USER_ID'); 
+
+}
+
+function nuFormId() {
+	return nuReplaceHashVariables('#form_id#');
+}
+
+function nuFormTable() {
+
+  $nuFormData = function_exists('nuHash') ? nuObjKey(nuHash(), 'nuFORMdata') ?? null : null;
+  return $nuFormData ? nuHash()['nuFORMdata'][0]->table ?? null : null;
+
 }
 
 function nuTranslateWriteSQL($f, $row, $counter, $total) {
@@ -2400,6 +2420,24 @@ function nuGetProperty($p, $a = null) {
 	}
 
 	return array_key_exists($p, $a) ? $a[$p] : null;
+
+}
+
+function nuHasProperty($property, &$value = null, $allowEmpty = true) {
+
+	$value = nuGetProperty($property);
+
+	if ($value) {
+
+		if (!$allowEmpty & nuTrim($value) === '') { 
+			return false;
+		}
+
+		return $value; 
+
+	}
+
+	return false;
 
 }
 
