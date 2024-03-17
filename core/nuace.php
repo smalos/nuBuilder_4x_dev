@@ -40,25 +40,31 @@ function nuLoad(){
 		enableLiveAutocompletion: true
 	});
 
-	editor.on('change', function() {
-		$('#copy_to_nubuilder').css('background-color', 'red');
-		$('#copy_to_nubuilder_no_close').css('background-color', 'red');
-	});
-
 	window.startValue = opener.window.document.getElementById(window.o).value;
 	editor.setFontSize(14);
 	var cl			= '';
 
 	var language = window.c.toUpperCase();
 
-	if ( language == 'HTML' ) {editor.getSession().setMode({path:"ace/mode/html", inline:true});cl='html';}
-	if ( language == 'JAVASCRIPT' ) {editor.getSession().setMode({path:"ace/mode/javascript", inline:true});cl='js';}
-	if ( language == 'MYSQL' ){editor.getSession().setMode({path:"ace/mode/mysql", inline:true});cl='sql';}
-	if ( language == 'PHP' ) {editor.getSession().setMode({path:"ace/mode/php", inline:true});cl='php';}
-	if ( language == 'SQL' ) {editor.getSession().setMode({path:"ace/mode/sql", inline:true});cl='sql';}
-	if ( language == 'CSS' ) {editor.getSession().setMode({path:"ace/mode/css", inline:true});cl='css';}
+	const languageModes = {
+	  'HTML': {mode: 'html', cl: 'html'},
+	  'JAVASCRIPT': {mode: 'javascript', cl: 'js'},
+	  'MYSQL': {mode: 'mysql', cl: 'sql'},
+	  'PHP': {mode: 'php', cl: 'php'},
+	  'SQL': {mode: 'sql', cl: 'sql'},
+	  'CSS': {mode: 'css', cl: 'css'},
+	};
+
+	if (languageModes[language]) {
+	  const { mode, cl } = languageModes[language];
+	  editor.getSession().setMode({path:`ace/mode/${mode}`, inline:true});
+	}
 
 	document.getElementById('nu_language').innerHTML	= window.l + " (" + c  + ")";
+	
+	if (language.includes('SQL')) {
+		document.getElementById('nuACEBeautifyButton').style.display = 'none';
+	}
 
 	if($('#' + o, window.opener.document)[0].id == 'deb_message'){
 		$('#copy_to_nubuilder').remove();
@@ -73,6 +79,10 @@ function nuLoad(){
 	editor.setValue(window.startValue);
 	editor.focus();
 	editor.navigateFileStart();
+
+	editor.on('change', function() {
+		nuSetEdited(true);
+	});
 	
 	// Disable Ace Ctrl+, shortcut
 	editor.commands.addCommand({
@@ -83,7 +93,8 @@ function nuLoad(){
 
 	document.addEventListener('keydown', handleCtrlComma);
 
-	nuRemoveButtonBgColor();
+	nuSetEdited(false);
+	editor.getSession().getUndoManager().reset();
 
 }
 
@@ -100,19 +111,20 @@ function handleCtrlComma(event) {
   }
 }
 
-function nuRemoveButtonBgColor() {
-
-	$('#copy_to_nubuilder').css('background-color', '');
-	$('#copy_to_nubuilder_no_close').css('background-color', '');
-
+function nuSetEdited(edited = true) {
+    $('.nuCopyBackButton').toggleClass('red', edited);	
+	$('.undo').toggleClass('nuReadonly', ! edited);	
+	$(".undo").prop("disabled", !edited);
 }
 
-function nuResize(){
+function nuResize() {
+  const editorPad = document.getElementById('nu_editor_pad');
+  const editor = document.getElementById('nu_editor');
+  const windowWidth = `${window.innerWidth}px`;
+  const windowHeight = `${window.innerHeight - 75}px`;
 
-	document.getElementById('nu_editor_pad').style.width	= String(Number(window.innerWidth)) 		+ 'px';
-	document.getElementById('nu_editor').style.width		= String(Number(window.innerWidth)) 		+ 'px';
-	document.getElementById('nu_editor').style.height		= String(Number(window.innerHeight) - 75) 	+ 'px';
-
+  editorPad.style.width = editor.style.width = windowWidth;
+  editor.style.height = windowHeight;
 }
 
 function nuAceBeautify() {
@@ -180,6 +192,11 @@ window.onbeforeunload = nuWarning;
 </head>
 
   <style>
+		
+		.nuCopyBackButton.red {
+			background-color: red !important;
+		}
+
 		button.btn.beautify::before {
 			content: "\f0d0";
 			font-family: "Font Awesome 5 Free";
@@ -226,14 +243,14 @@ window.onbeforeunload = nuWarning;
 
 <body onload='nuLoad()' onresize='nuResize()'>
 
-	<input type='button' id='copy_to_nubuilder' class='nuActionButton' style='top:8px;left:8px;position:absolute' onclick='nuAceSave(true)'>
-	<input type='button' id='copy_to_nubuilder_no_close' class='nuActionButton' style='top:8px;left:230px;position:absolute' onclick='nuAceSave(false)'>
+	<input type='button' id='copy_to_nubuilder' class='nuActionButton nuCopyBackButton' style='top:8px;left:8px;position:absolute' onclick='nuAceSave(true)'>
+	<input type='button' id='copy_to_nubuilder_no_close' class='nuActionButton nuCopyBackButton' style='top:8px;left:230px;position:absolute' onclick='nuAceSave(false)'>
 
-	<button class="btn undo nuActionButton" title='Undo' style='top:8px;left:370px;width:30px;position:absolute' onclick='editor.undo()' ></button>
+	<button class="btn undo nuActionButton nuReadonly" title='Undo' style='top:8px;left:370px;width:30px;position:absolute' onclick='editor.undo()' disabled></button>
 	<button class="btn find nuActionButton" title='Find' style='top:8px;left:410px;width:30px;position:absolute' onclick='editor.execCommand("find");' ></button>
 	<button class="btn searchreplace nuActionButton" title='Search and Replace' style='top:8px;left:450px;width:30px;position:absolute' onclick='editor.execCommand("replace");' ></button>
 	<button class="btn commentout nuActionButton" title='Toggle Comment Lines' style='top:8px;left:500px;width:30px;position:absolute' onclick='editor.toggleCommentLines()' ></button>
-	<button class="btn beautify nuActionButton" title='Beautify' style='top:8px;left:540px;width:30px;position:absolute' onclick='nuAceBeautify()' ></button>
+	<button id = "nuACEBeautifyButton" class="btn beautify nuActionButton" title='Beautify' style='top:8px;left:540px;width:30px;position:absolute' onclick='nuAceBeautify()' ></button>
 	<button class="btn showinvisibles nuActionButton" title='Show invisible characters' style='top:8px;left:580px;width:30px;position:absolute' onclick='nuAceShowInvisibles();' ></button>
 
 	<span id='nu_language' 	 class="nuNotBreadcrumb" style='top:35px;left:18px;position:absolute;font-weight:500;color:black'></span>

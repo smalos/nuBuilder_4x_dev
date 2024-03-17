@@ -69,6 +69,22 @@ function nuErrorFound(){
 
 }
 
+function nuSQLRemoveComments($sql) {
+
+	if (empty($sql)) {
+		return '';
+	}
+
+	// Remove single line // comments
+	$sql = preg_replace('/\/\/[^\r\n]*/', '', $sql);
+
+	// Remove block comments /* */
+	$sql = preg_replace('/\/\*[\s\S]*?\*\//', '', $sql);
+
+	return $sql;
+
+}
+
 class nuSqlString{
 
 	public  $from			= '';
@@ -88,7 +104,7 @@ class nuSqlString{
 
 	public function __construct($sql){
 
-		$sql				= preg_replace('%(/\*)(.*?)(\*/)%s',"",$sql); 	//-- remove  / * * / style comments
+		$sql				= nuSQLRemoveComments($sql);
 		$sql				= str_replace(chr(13), ' ', $sql);				//-- remove carrige returns
 		$sql				= str_replace(chr(10), ' ', $sql);				//-- remove line feeds
 		$sql				= rtrim($sql,';'); 								//-- strip trailing ;
@@ -235,8 +251,8 @@ function nuSQLTrim($s, $noCR = 0){
 
 }
 
-function nuObjKey($o, $k, $d = null) {
-	return isset($o[$k]) ? $o[$k] : $d;
+function nuObjKey($object, $key, $default = null) {
+	return $object[$key] ?? $default;
 }
 
 function nuStrPos($haystack, $needle, $offset = 0) {
@@ -1430,6 +1446,12 @@ function nuGetPHP($phpid) {
 
 }
 
+
+
+function nuFailIfUnsetHashCookies($string) {
+	return preg_match('/#[^#]+#/', $string);
+}
+
 function nuEval($phpid){
 
 	$r						= nuGetPHP($phpid);
@@ -1437,7 +1459,8 @@ function nuEval($phpid){
 
 	$code					= $r->sph_code;
 	$php					= nuReplaceHashVariables($r->sph_php);
-	if($php == ''){return;}
+	
+	if(trim($php) == ''){return;}
 
 	$_POST['nuSystemEval']	= nuEvalMessage($phpid, $code);
 
@@ -1445,10 +1468,19 @@ function nuEval($phpid){
 	$nudata = $nuDataSet ? $_POST['nudata'] : '';
 
 	try{
+
 		$result = eval($php);
 		if ($result === false) {
+			$e = new Exception('Eval failed');
 			nuExceptionHandler($e, $code);
 		}
+
+		if (($nuFailIfUnsetHashCookies ?? false) === true && nuFailIfUnsetHashCookies($php)) {
+			$e = new Exception('nuEval failed, unset Hash Cookies.');
+			nuExceptionHandler($e, $code);
+			return;
+		}
+	
 	}catch(Throwable $e){
 		nuExceptionHandler($e, $code);
 	}catch(Exception $e){
@@ -2213,8 +2245,8 @@ function nuGetRecordURL($origin = null, $subFolder = null, $homepageId = null, $
 
 function nuRecordId() {
 
-    $recordIdLower = nuReplaceHashVariables('#record_id#');
-    $recordIdUpper = nuReplaceHashVariables('#RECORD_ID#');
+	$recordIdLower = nuReplaceHashVariables('#record_id#');
+	$recordIdUpper = nuReplaceHashVariables('#RECORD_ID#');
 
 	$recordId = $recordIdLower && $recordIdLower != '-1'  ? $recordIdLower : $recordIdUpper;
 
@@ -2224,7 +2256,7 @@ function nuRecordId() {
 
 function nuUserId() {
 
-    $userId = function_exists('nuHash') ? nuObjKey(nuHash(), 'USER_ID') ?? null : null;
+	$userId = function_exists('nuHash') ? nuObjKey(nuHash(), 'USER_ID') ?? null : null;
 	return $userId ?? nuObjKey($_POST, 'USER_ID'); 
 
 }

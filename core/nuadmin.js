@@ -68,7 +68,6 @@ function nuDevMode(m) {
 	const d = localStorage.getItem("nuDevMode");
 	if ((d === '1' || m) && nuGlobalAccess()) {
 		nuSetProperty('nuDevMode', '1', true);
-		nuConsoleErrorsToMessage();
 		return true;
 	}
 	if (!m) {
@@ -322,7 +321,14 @@ function nuShowObjectTooltip() {
 	}
 }
 
-function nuConsoleErrorsToMessage() {
+function nuConsoleErrorsToMessage(cancel = false) {
+
+	if (cancel) {
+		window.onerror = () => true;
+		return;
+	}
+
+	if (window.onerror) return;
 
 	window.onerror = function (msg, url, lineNo, columnNo, error) {
 
@@ -598,7 +604,7 @@ function nuContextMenuPositionText(id, position) {
 		id = 'content_' + id;
 	}
 
-	return nuContextMenuItemPosition(position, $('#' + id).cssNumber(position));
+	return nuContextMenuItemPosition(position, $('#' + id).nuCSSNumber(position));
 
 }
 
@@ -656,7 +662,7 @@ function nuContextMenuBeforeRender(menu, event) {
 }
 
 function nuContextMenuItemText(label, iconClass) {
-	return '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i> <span style="padding-left:8px; white-space:nowrap; display: inline;">' + nuTranslate(label) + '</span>';
+	return '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i> <span style="padding-left:8px; white-space:nowrap; display: inline;">' + label + '</span>';
 }
 
 function nuContextMenuGetWordWidth(w) {
@@ -696,16 +702,16 @@ function nuContextMenuItemPositionChanged(t, update) {
 					$('#' + id + 'code').css(prop, t.value + 'px');
 
 					if (prop == 'left') {
-						$('#' + id + 'button').css(prop, Number(t.value) + obj.cssNumber('width') + 6 + 'px');
-						$('#' + id + 'description').css(prop, Number(t.value) + obj.cssNumber('width') + 25 + 'px');
+						$('#' + id + 'button').css(prop, Number(t.value) + obj.nuCSSNumber('width') + 6 + 'px');
+						$('#' + id + 'description').css(prop, Number(t.value) + obj.nuCSSNumber('width') + 25 + 'px');
 					} else if (prop == 'top') {
 						$('#' + id + 'button').css(prop, t.value + 'px');
 						$('#' + id + 'description').css(prop, t.value + 'px');
 					} else if (prop == 'height') {
 						$('#' + id + 'description').css(prop, t.value + 'px');
 					} else if (prop == 'width') {
-						$('#' + id + 'button').css('left', Number(t.value) + obj.cssNumber('left') + 6 + 'px');
-						$('#' + id + 'description').css('left', Number(t.value) + obj.cssNumber('left') + 25 + 'px');
+						$('#' + id + 'button').css('left', Number(t.value) + obj.nuCSSNumber('left') + 6 + 'px');
+						$('#' + id + 'description').css('left', Number(t.value) + obj.nuCSSNumber('left') + 25 + 'px');
 					}
 
 				}
@@ -717,7 +723,7 @@ function nuContextMenuItemPositionChanged(t, update) {
 			nuContextMenuUpdateLabel(id);
 
 		} else {
-			nuSetBrowseColumnSize(Number(contextMenuCurrentTargetUpdateId().justNumbers()), Number(t.value));
+			nuSetBrowseColumnSize(Number(contextMenuCurrentTargetUpdateId().nuJustNumbers()), Number(t.value));
 		}
 	}
 
@@ -861,7 +867,12 @@ function nuContextMenuLabelPrompt() {
 	const id = contextMenuCurrentTargetId();
 	const obj = $('#' + contextMenuCurrentTarget.id);
 
-	let value = obj.is(":button") ? obj.val() : $('#' + label).html();
+	let value =  obj.attr('data-nu-org-label');
+	
+	if (typeof value === 'undefined') {
+		value = obj.is(":button") ? value : $('#' + label).html();
+	}
+	
 	value = obj.is(":button") && obj.attr('data-nu-label') ? obj.html() : value;
 
 	value = nuFormType() == 'edit' ? value : value.trim();
@@ -941,7 +952,7 @@ function nuContextMenuUpdateObject(value, column) {
 	if (nuFormType() == 'edit' && !isTab) {
 		id = contextMenuCurrentTargetUpdateId();
 	} else {
-		id = (Number(contextMenuCurrentTargetUpdateId().justNumbers()) + 1) * 10;
+		id = (Number(contextMenuCurrentTargetUpdateId().nuJustNumbers()) + 1) * 10;
 	}
 
 	let formId = isSfTitle ? nuContextMenuGetFormId('title_' + contextMenuCurrentTargetId()) : nuContextMenuGetFormId(id);
