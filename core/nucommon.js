@@ -1455,9 +1455,8 @@ function nuGetFunctionList() {
 
 	for (var k in window) {
 
-		if (window.hasOwnProperty(k)) {
-
-			if (String(k).substr(0, 2) === 'nu') {
+		if (Object.prototype.hasOwnProperty.call(window, k)) {
+			if (String(k).startsWith('nu')) {
 				f += k + "\n";
 			}
 
@@ -2909,7 +2908,7 @@ function nuConsoleErrorsToMessage(cancel = false) {
 			return; // ignore
 
 		if (msg.toLowerCase().indexOf('script error') > -1) {
-			nuMessage('<h1>JavaScript Error</h1>'. msgDevConsole);
+			nuMessage('<h1>JavaScript Error</h1>',  msgDevConsole);
 		} else { 
 			const message = [
 				'<h1>JavaScript Error</h1>',
