@@ -36,18 +36,21 @@ nuAddJavaScript ("
 
 //File Version
 
-
 function getFileVersion() {
     $f = __DIR__ . '/../version.txt';
     if (is_readable($f)) {
-        $lines = file($f) [3];
-        $lines = preg_replace("/\r|\n/", "", $lines);
-        $v = substr($lines, 15, strlen($lines) - 15);
-        return $v;
-
+        $lines = file($f);
+        if (count($lines) >= 4) {
+            $v = $lines[3];
+            $v = preg_replace("/\r|\n/", "", $v);
+            $v = substr($v, 15);
+            return $v;
+        } 
     }
     return "Unknown";
 }
+
+
 
 $v = getFileVersion();
 

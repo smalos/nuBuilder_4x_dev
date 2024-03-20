@@ -999,9 +999,9 @@ function nuBindCtrlEvents() {
 				} else if (e.code == 'KeyY') {						//-- y		Delete
 					nuDeleteAction();
 				} else if (e.code == 'ArrowRight') {				//-- ->		Select next tab
-					nuSelectNextTab(1, true);
+					nuSelectNextTab(1);
 				} else if (e.code == 'ArrowLeft') {					//-- <-		Select previous tab
-					nuSelectNextTab(-1, true);
+					nuSelectNextTab(-1);
 				}
 
 			}
@@ -1604,12 +1604,18 @@ function nuSelectedTabTitle(parent = null) {
 
 }
 
-function nuSelectNextTab(i, byUser) {
+function nuSelectNextTab(i, includeInvisible = false, byUser = true) {
 
 	const selectedTab = $('.nuTabSelected')[0];
 	const selectedTabId = selectedTab.id.substring(5);
-	const nextTabId = parseInt(selectedTabId, 10) + i;
-	const e = document.getElementById('nuTab' + nextTabId);
+	let nextTabId = parseInt(selectedTabId, 10) + i;
+	let e = document.getElementById('nuTab' + nextTabId);
+
+	while (!includeInvisible && e && !nuIsVisible(e.id)) {
+		nextTabId += i; // increment or decrement based on i's value
+		e = document.getElementById('nuTab' + nextTabId);
+	}
+
 	if (e) {
 		nuSelectTab(e, byUser);
 	}
@@ -1859,8 +1865,12 @@ function nuUserLogin() {
 }
 
 function nuUserLanguage() {
-	const l = nuSERVERRESPONSE.language;
-	return l === null ? '' : l;
+	if (typeof nuSERVERRESPONSE !== 'undefined') {
+		const l = nuSERVERRESPONSE.language;
+		return l === null ? '' : l;
+	} else {
+		return '';
+	}
 }
 
 function nuDatabase() {
@@ -2128,13 +2138,17 @@ function nuSetPlaceholder(i, placeholder = null, translate = true) {
 }
 
 function nuSetToolTip(i, message, labelHover) {
-
-	const setToolTip = selector => $(selector)
-		.hover(
-			function () { $(this).attr("title", message); },
-			function () { $(this).removeAttr("title"); }
-		);
-
+	
+	const setToolTip = selector => {
+		$(selector)
+			.on("mouseenter", function() {
+				$(this).attr("title", message);
+			})
+			.on("mouseleave", function() {
+				$(this).removeAttr("title");
+			});
+	};
+	
 	setToolTip("#" + i);
 	if (labelHover) setToolTip("#label_" + i);
 
@@ -2875,5 +2889,39 @@ function nuEventName(eventName = null) {
 	ev.AB = 'After Browse';
 
 	return ev[eventName];
+
+}
+
+function nuConsoleErrorsToMessage(cancel = false) {
+
+	if (cancel) {
+		window.onerror = () => true;
+		return;
+	}
+
+	if (window.onerror) return;
+
+	window.onerror = function (msg, url, lineNo, columnNo, error) {
+
+		const msgDevConsole = nuTranslate('Please check the browser developer console for details.');
+		
+		if (msg == "ResizeObserver loop limit exceeded")
+			return; // ignore
+
+		if (msg.toLowerCase().indexOf('script error') > -1) {
+			nuMessage('<h1>JavaScript Error</h1>'. msgDevConsole);
+		} else { 
+			const message = [
+				'<h1>JavaScript Error</h1>',
+				msg,
+				'',
+				msgDevConsole
+			];
+
+			nuMessage(message);
+		}
+
+		return false;
+	};
 
 }

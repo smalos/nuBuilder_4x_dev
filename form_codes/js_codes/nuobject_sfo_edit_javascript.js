@@ -20,7 +20,7 @@ nuSetToolTip('sob_all_id_create_button', nuTranslate('Add database column'));
 window.parentTabs = parent.$('.nuTab');
 
 
-var tabIdDescLeft = $('#sob_all_zzzzsys_tab_iddescription').cssNumber('left') + 11;
+var tabIdDescLeft = $('#sob_all_zzzzsys_tab_iddescription').nuCSSNumber('left') + 11;
 $('#sob_all_zzzzsys_tab_iddescription').css('left', tabIdDescLeft + 'px');
 
 $('#zzzzsys_event_sfsev_javascript').attr('id', 'jsfuntitle');
@@ -718,8 +718,8 @@ function addFileUploadScript() {
         uppy.use(Uppy.Dashboard, {
                 inline: true
                 , bundle: true
-                , height: $objId.cssNumber('height')
-                , width: $objId.cssNumber('width')
+                , height: $objId.nuCSSNumber('height')
+                , width: $objId.nuCSSNumber('width')
                 , target: target
                 , showProgressDetails: true
                 , replaceTargetContent: true

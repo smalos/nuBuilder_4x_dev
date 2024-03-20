@@ -1,25 +1,25 @@
-$justphp = nuObjKey(nuHash(),'filter') == 'justphp';
+$justphp = nuObjKey(nuHash(), 'filter') == 'justphp';
 
-if ('#nuDevMode#' != 1 && '#sph_template#' == '1' ) {
-   if (! $justphp) {
+if ('#nuDevMode#' != 1 && '#sph_template#' == '1') {
+    if (! $justphp) {
         nuDisplayError(nuTranslate("Templates cannot be saved. Clone it instead."));
         return;
-   } 
+    }
 }
 
 
 
-$rid    = '#RECORD_ID#';
+$rid = '#RECORD_ID#';
 
-if($rid != '-1' and $rid != '-2'){ 
-    
-    $s      = "SELECT * FROM zzzzsys_php WHERE zzzzsys_php_id = '$rid'";
-    $t      = nuRunQuery($s);
-    $r      = db_fetch_object($t);
-    
-    if(db_num_rows($t) == 0){
-    
-        $s              = "
+if ($rid != '-1' and $rid != '-2') {
+
+    $s = "SELECT * FROM zzzzsys_php WHERE zzzzsys_php_id = '$rid'";
+    $t = nuRunQuery($s);
+    $r = db_fetch_object($t);
+
+    if (db_num_rows($t) == 0) {
+
+        $s = "
         INSERT INTO zzzzsys_php
         (
             zzzzsys_php_id,
@@ -30,21 +30,16 @@ if($rid != '-1' and $rid != '-2'){
         )
         VALUES
         (
-            '$rid', 
-            '$rid', 
-            'System PHP', 
-            'nubuilder', 
+            '$rid',
+            '$rid',
+            'System PHP',
+            'nubuilder',
             '1'
         )
         ";
-        
+
         nuRunQuery($s);
-        
+
     }
-    
+
 }
-
-
-
-
-

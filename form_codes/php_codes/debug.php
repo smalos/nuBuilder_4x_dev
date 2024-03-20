@@ -1,0 +1,1 @@
+nuDebug::setTag('hello')->log('hello world');	

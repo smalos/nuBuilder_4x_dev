@@ -1,4 +1,13 @@
-return;
+$justphp = nuObjKey(nuHash(),'filter') == 'justphp';
+
+if ('#nuDevMode#' != 1 && '#sph_template#' == '1' ) {
+   if (! $justphp) {
+        nuDisplayError(nuTranslate("Templates cannot be saved. Clone it instead."));
+        return;
+   } 
+}
+
+
 $rid    = '#RECORD_ID#';
 
 if($rid != '-1' and $rid != '-2'){ 
@@ -33,4 +42,3 @@ if($rid != '-1' and $rid != '-2'){
     }
     
 }
-

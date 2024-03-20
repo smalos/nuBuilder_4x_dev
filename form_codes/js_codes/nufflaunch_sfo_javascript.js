@@ -154,11 +154,11 @@ function nuSetFFTable() {
     let title = '';
 
     if (tableExists) {
-        l = c.cssNumber('left') + c.cssNumber('width') + 30;
+        l = c.nuCSSNumber('left') + c.nuCSSNumber('width') + 30;
         rl = '1473px';
         title = $('#obj_sf000ff_field').attr('title');
     } else {
-        l = c.cssNumber('left');
+        l = c.nuCSSNumber('left');
     }
 
     $('#obj_sf').css('left', l);
@@ -310,7 +310,7 @@ function nuOnChangeFFType(t, event) {
     let dataType = nuSubformRowObject(i, 'ff_datatype');
     let objType = nuSubformRowObject(i, 'ff_type');
     let typeText = $(target).find("option:selected").text();
-    let number = $(label).attr('placeholder').justNumbers();
+    let number = $(label).attr('placeholder').nuJustNumbers();
 
     nuSetPlaceholder(label.attr('id'), typeText + number);
 

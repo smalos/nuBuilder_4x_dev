@@ -15,7 +15,7 @@ if (nuFormType() == 'edit') {
    nuSetProperty('IS_CUSTOM_CODE',1);
 
     // Disable nu-records
-    if (nuCurrentProperties().record_id.startsWith('nu')) {
+    if (nuRecordId().startsWith('nu')) {
       nuDisableAllObjects();
       $('#nuSaveButton').hide();
     }

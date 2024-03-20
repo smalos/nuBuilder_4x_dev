@@ -33,7 +33,7 @@ function nuInitJSOptions() {
 			'nuCalendarStartOfWeek': 'Sunday',			// nuCalendar: Start of Week: Sunday (default) or Monday
 			'nuSelect2Theme': 'default',				// select2 theme (default, classic) Default: default
 			'nuEditCloseAfterSave': 'None',				// Close forms after saving. Values: None, All, User, System
-			'nuConfigShowJSErrors' : 'None'					// Show JS errors in alert message
+			'nuShowJSErrors' : 'None'					// Show JS errors in alert message
 		};
 
 	}
@@ -304,11 +304,11 @@ function nuEditDoCloseAfterSave(formObj) {
 		return false;
 	}
 
-	const closeAfterSave = window.nuUXOptions.nuEditCloseAfterSave;
+	const closeAfterSave = window.nuUXOptions.nuEditCloseAfterSave.toLowerCase()
 	const isUserForm = !formObj.form_id.startsWith('nu');
-	const shouldCloseAllForms = closeAfterSave === 'AllForms';
-	const shouldCloseUserForms = closeAfterSave === 'UserForms' && isUserForm;
-	const shouldCloseSystemForms = closeAfterSave === 'SystemForms' && !isUserForm;
+	const shouldCloseAllForms = closeAfterSave === 'allforms';
+	const shouldCloseUserForms = closeAfterSave === 'userforms' && isUserForm;
+	const shouldCloseSystemForms = closeAfterSave === 'systemforms' && !isUserForm;
 
 	if (shouldCloseAllForms || shouldCloseUserForms || shouldCloseSystemForms) {
 		return nuCloseAfterSave();
@@ -320,23 +320,18 @@ function nuEditDoCloseAfterSave(formObj) {
 
 function nuInitShowJSErrors() {
 
-	if (window.nuUXOptions.nuConfigShowJSErrors) {
+	if (window.nuUXOptions.nuShowJSErrors) {
 
-		const nuConfigShowJSErrors = window.nuUXOptions.nuConfigShowJSErrors;
-		let enableShowJSErrors;
+		const nuShowJSErrors = window.nuUXOptions.nuShowJSErrors;
+		let enableShowJSErrors = false;
 
-		switch (nuConfigShowJSErrors) {
-			case "None":
-				enableShowJSErrors = false;
-				break;
-			case "Globeadmin":
+		switch (nuShowJSErrors.toLowerCase()) {
+			case "globeadmin":
 				enableShowJSErrors = nuGlobalAccess()
 				break;
-			case "All":
+			case "everyone":
 				enableShowJSErrors = true;
 				break;
-			default:
-				enableShowJSErrors = false;
 		}
 
 		if (enableShowJSErrors) {
@@ -1103,6 +1098,8 @@ function nuINPUTfileFileSystem($fromId, w, i, l, p, prop, id) {
 	html =  html.replaceAll('#uppy_div#', id + '_uppy_div');
 	html =  html.replaceAll('#this_object_id#', id);
 	html =  html.replaceAll('nuInitUppy()','nuInitUppy' + '_' + id + '()');
+	html =  html.replaceAll('.cssNumber(','nuCSSNumber(');
+	
 	html =  html.replaceAll('new Uppy.Core()','new Uppy.Uppy()');
 
 	nuSetObjectBounds($('#' + id), obj.top, obj.left, obj.width, obj.height)
@@ -2923,19 +2920,9 @@ function nuSubformRefreshDisplayObject(prefix, displayId, formId) {
 
 function nuGetClipboardText(e) {
 
-	let cb;
-	let clipText = '';
-	if (window.clipboardData && window.clipboardData.getData) {
-		cb = window.clipboardData;
-		clipText = cb.getData('Text');
-	} else if (e.clipboardData && e.clipboardData.getData) {
-		cb = e.clipboardData;
-		clipText = cb.getData('text/plain');
-	} else {
-		cb = e.originalEvent.clipboardData;
-		clipText = cb.getData('text/plain');
-	}
-	return clipText;
+    const cb = (e.clipboardData || e.originalEvent.clipboardData || window.clipboardData);
+    const dataFormat = cb && cb.getData ? (window.clipboardData ? 'Text' : 'text/plain') : '';
+    return cb && dataFormat ? cb.getData(dataFormat) : '';
 
 }
 
@@ -4413,9 +4400,7 @@ function nuDragBrowseColumn(e, p) {
 				nuFORM.breadcrumbs[nuFORM.breadcrumbs.length - 1].column_widths[c] = m;
 				nuSetBrowseColumns(nuFORM.breadcrumbs[nuFORM.breadcrumbs.length - 1].column_widths)
 
-			} else {
-				console.log('Offset size exceeds limit');
-			}
+			} 
 
 		}
 
@@ -4944,7 +4929,7 @@ function nuLookupObject(id, set, value) {
 	const el = $('#' + id);
 
 	if (!el.length) {
-		nuReesetLookupProperties(this);
+		nuResetLookupProperties(this);
 		return;
 	}
 
@@ -4955,7 +4940,7 @@ function nuLookupObject(id, set, value) {
 		$('#' + this[set]).val(value);
 	}
 
-	function nuReesetLookupProperties(obj) {
+	function nuResetLookupProperties(obj) {
 		const props = ['id_id', 'code_id', 'description_id', 'id_value', 'code_value', 'description_value'];
 		props.forEach(prop => obj[prop] = '');
 	}
@@ -6643,7 +6628,7 @@ class nuPromptModal {
 		this.promptElement.style.top = "5px";
 	}
 
-	render(text, caption, defaultValue = '', format, fctn) {
+	render(text, caption, defaultValue, format, fctn) {
 		this.setPosition();
 		this.displayModal(true);
 
@@ -6654,7 +6639,7 @@ class nuPromptModal {
 			`<button class="nuActionButton" onclick="nuPromptWindow.ok('${fctn}', true)">OK</button> <button class="nuActionButton" onclick="nuPromptWindow.cancel('${fctn}', false)">Cancel</button>`;
 
 		const inputElement = document.getElementById("prompt_value1");
-		inputElement.value = defaultValue;
+		inputElement.value = nuDefine(defaultValue,'')
 		inputElement.onkeyup = (e) => this.handleKeyup(e, fctn);
 		inputElement.focus();
 	}

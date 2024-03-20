@@ -25,7 +25,7 @@ function menuProcedureClick(element, event) {
         },
         {
             text: nuContextMenuItemText("Add", "fa fas fa-plus"),
-            action: () => openForm('nuphp', '-1', event)
+            action: () => openForm('nuprocedure', '-1', event)
         }]
 
     openMenu(event, menu, element);
@@ -64,6 +64,25 @@ function menuUserClick(element, event) {
         {
             text: nuContextMenuItemText("Permission Items", "fa-solid fa-list"),
             action: () => openForm('nupermissionitem', '', event)
+        }]
+
+    openMenu(event, menu, element);
+
+}
+
+function menuEmailClick(element, event) {
+
+    const menu = [{
+        text: nuTranslate("Email")
+    },
+
+        {
+            text: nuContextMenuItemText("Add Template", "fa fas fa-plus"),
+            action: () => openForm('nuemailtemplate', '-1', event)
+        },
+        {
+            text: nuContextMenuItemText("Email Templates", "fa-solid fa-list"),
+            action: () => openForm('nuemailtemplate', '', event)
         }]
 
     openMenu(event, menu, element);

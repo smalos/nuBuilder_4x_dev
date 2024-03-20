@@ -39,6 +39,7 @@ nuSetProperty('set_language_current', $('#set_language').val());
 nuSetSnippetFormFilter(0, 1, 0, 0);
 
 setConfigDatalist('$nuConfigGlobeadminHome', ['nuhome','nuhomecompact']);
+setConfigDatalist('nuShowJSErrors', ['none','globeadmin',"everyone"]);
 setConfigDatalist('nuEditCloseAfterSave', ['None','AllForms',"UserForms","SystemForms"]);
 setConfigDatalist('nuCalendarType', ['nuBuilder','VanillaJS']);
 
@@ -224,10 +225,10 @@ function changeObjectTypeToSelectBoolean(i) {
     let elSelect = $('#' + i);
 
     elSelect.css({
-        top: el.cssNumber('top'),
-        left: el.cssNumber('left'),
-        width:  el.cssNumber('width'),
-        height: el.cssNumber('height'),
+        top: el.nuCSSNumber('top'),
+        left: el.nuCSSNumber('left'),
+        width:  el.nuCSSNumber('width'),
+        height: el.nuCSSNumber('height'),
         position: 'absolute'
     });
 
