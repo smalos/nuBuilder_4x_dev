@@ -90,7 +90,7 @@ function nuRunQueryTest($query, $params = []){
 	try {
 		$stmt->execute($params);
 	}catch(PDOException $ex){
-		return $ex->getMessage();
+		return $ex;
 	}
 
 	return true;
@@ -420,18 +420,11 @@ function nuDBQuote($s) {
 function db_num_rows($obj) {
 
 	return is_object($obj) ? $obj->rowCount() : 0;
-		   
-  
-					   
-
 }
 
 function db_num_columns($obj) {
 
 	return is_object($obj) ? $obj->columnCount() : 0;
-		   
-  
-						  
 
 }
 
@@ -464,24 +457,18 @@ function nuViewExists($view) {
 
 function nuCanCreateView() {
 
-	$dbName = $_SESSION['nubuilder_session_data']['DB_NAME'];
+	$testViewName = "nu_test_view_" . mt_rand();
 
-	$qry = nuRunQuery("SHOW GRANTS FOR CURRENT_USER()");
-	while ($row = db_fetch_row($qry)) {
+	$createViewSql = "CREATE VIEW `$testViewName` AS SELECT `zzzzsys_debug_id` FROM `zzzzsys_debug` LIMIT 1";
+	$result = nuRunQueryTest($createViewSql);
 
-		$grants = $row[0];
-
-		$createView	= nuStringContains("CREATE VIEW", $grants, true);
-		$grant1		= nuStringContains("ALL PRIVILEGES ON `$dbName`.*", $grants, true);
-		$grant2		= nuStringContains("ALL PRIVILEGES ON *.*", $grants, true);
-		$grant3		= nuStringContains("ALL PRIVILEGES ON %", $grants, true);
-
-		if ($createView || $grant1 || $grant2 || $grant3) {
-			return true;
-		}
-
+	if ($result === true) {
+		// If the view creation succeeds, attempt to drop the view to clean up.
+		$dropViewSql = "DROP VIEW IF EXISTS `$testViewName`";
+		nuRunQueryNoDebug($dropViewSql);
+		return true;
 	}
-
+	
 	return false;
 
 }
@@ -574,7 +561,7 @@ function nuDebug(...$args) {
 
 }
 
-class nuDebug {
+final class nuDebug {
 
 	 public static $flag = '';
 
@@ -616,14 +603,14 @@ function nuID(){
 
 function nuID_DEV(){
 
-    global $DBUser;
+	global $DBUser;
 
-    $uniqueId = uniqid();
-    $randomBytes = random_bytes(16);
-    $hash = hash('sha256', $randomBytes);
+	$uniqueId = uniqid();
+	$randomBytes = random_bytes(16);
+	$hash = hash('sha256', $randomBytes);
 
-    $prefix = $DBUser == 'nudev' ? 'nu' : '';
-    return $prefix . $uniqueId . substr($hash, 0, 2);
+	$prefix = $DBUser == 'nudev' ? 'nu' : '';
+	return $prefix . $uniqueId . substr($hash, 0, 2);
 
 }
 

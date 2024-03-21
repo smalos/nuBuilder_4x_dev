@@ -1061,10 +1061,10 @@ function nuGetDBColumnLengh(tableName, id) {
 	
 }
 
-function nuINPUTfileDatabase($fromId, obj, id, p) {
+function nuINPUTfileDatabase($formId, obj, id, p) {
 
 	const newElement = nuCreateElementWithId('textarea', id);
-	$fromId.append(newElement);
+	$formId.append(newElement);
 
 	const $id = $(newElement);
 
@@ -1083,7 +1083,7 @@ function nuINPUTfileDatabase($fromId, obj, id, p) {
 
 }
 
-function nuINPUTfileFileSystem($fromId, w, i, l, p, prop, id) {
+function nuINPUTfileFileSystem($formId, w, i, l, p, prop, id) {
 
 	var obj = prop.objects[i];
 	id = id !== undefined ? id : p + obj.id;
@@ -1128,9 +1128,9 @@ function nuINPUTInput(inp, inputType, obj, objectType) {
 
 }
 
-function nuINPUTnuScroll($id, wi) {
+function nuINPUTnuScroll($id, thisObj) {
 
-	const inputJS = 'nuFORM.scrollList(event, ' + wi.scroll + ')';
+	const inputJS = 'nuFORM.scrollList(event, ' + thisObj.scroll + ')';
 
 	$id.addClass('nuScroll')
 		.attr('onkeydown', inputJS)
@@ -1138,24 +1138,24 @@ function nuINPUTnuScroll($id, wi) {
 
 }
 
-function nuINPUTnuDate($id, wi) {
+function nuINPUTnuDate($id, thisObj) {
 
 	$id.addClass('nuDate')
-		.attr('data-nu-format', wi.format)
+		.attr('data-nu-format', thisObj.format)
 		.attr('autocomplete', 'off');
 
 }
 
-function nuINPUTnuNumber($id, wi) {
+function nuINPUTnuNumber($id, thisObj) {
 
 	$id.addClass('nuNumber')
-		.attr('data-nu-format', wi.format);
+		.attr('data-nu-format', thisObj.format);
 
 }
 
-function nuINPUTCheckbox($id, obj, wi) {
+function nuINPUTCheckbox($id, thisObj, obj) {
 
-	document.getElementById($id.attr('id')).checked = (wi.value == '1');
+	document.getElementById($id.attr('id')).checked = (thisObj.value == '1');
 
 	if (obj.parent_type == 'g') {
 		$id.css('margin-top', '1px');
@@ -1164,19 +1164,16 @@ function nuINPUTCheckbox($id, obj, wi) {
 }
 
 function nuINPUTDisplay($id) {
-
-	$id.addClass('nuReadonly')
-		.prop('readonly', true);
-
+	nuDisable($id.attr('id'));
 }
 
-function nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis) {
+function nuINPUTLookup(id, objId, thisObj, obj, $formId, p, vis) {
 
 	let $id = $('#' + id);
 	$id.hide();
 	$id.attr('data-nu-lookup-id', '');
 
-	const luv = wi.values[0][1];
+	const luv = thisObj.values[0][1];
 	if (!nuIsNewRecord() || luv !== '') {
 		$('#' + id).val(luv);
 	}
@@ -1185,14 +1182,14 @@ function nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis) {
 	id = target + 'code';
 
 	const inp =  nuCreateElementWithId('input', id);
-	$fromId.append(inp);
+	$formId.append(inp);
 
 	nuAddDataTab(id, obj.tab, p);
 
 	$id = $('#' + id);
 	nuSetObjectBounds($id, obj.top, obj.left, obj.width, obj.height)
-		.attr('data-nu-form-id', wi.form_id)
-		.attr('data-nu-object-id', wi.object_id)
+		.attr('data-nu-form-id', thisObj.form_id)
+		.attr('data-nu-object-id', thisObj.object_id)
 		.attr("data-nu-prefix", p)
 		.attr('data-nu-target', target)
 		.attr('data-nu-type', 'lookup')
@@ -1213,14 +1210,14 @@ function nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis) {
 		}
 	});
 
-	wi.values[0][0] = p + obj.id;
-	wi.values[1][0] = p + obj.id + 'code';
-	wi.values[2][0] = p + obj.id + 'description';
+	thisObj.values[0][0] = p + obj.id;
+	thisObj.values[1][0] = p + obj.id + 'code';
+	thisObj.values[2][0] = p + obj.id + 'description';
 
 	id = target + 'button';
 
 	const div =  nuCreateElementWithId('div', id);
-	$fromId.append(div);
+	$formId.append(div);
 
 	nuAddDataTab(id, obj.tab, p);
 
@@ -1229,8 +1226,8 @@ function nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis) {
 	nuSetObjectBounds(div, obj.top, Number(obj.left) + Number(obj.width) + 6, 15, Number(obj.height - 2))
 		.attr('type', 'button')
 		.attr("data-nu-prefix", p)
-		.attr('data-nu-form-id', wi.form_id)
-		.attr('data-nu-object-id', wi.object_id)
+		.attr('data-nu-form-id', thisObj.form_id)
+		.attr('data-nu-object-id', thisObj.object_id)
 		.attr('data-nu-target', target)
 		.attr('data-nu-subform-sort', 1)
 		.attr('onfocus', 'nuLookupFocus(event)')
@@ -1245,9 +1242,9 @@ function nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis) {
 
 	id = p + obj.id + 'description';
 	const desc =  nuCreateElementWithId('input', id);
-	$fromId.append(desc);
+	$formId.append(desc);
 
-	$fromId.append(desc);
+	$formId.append(desc);
 	nuAddDataTab(id, obj.tab, p);
 	$('#' + id).css({
 		'top': obj.mobile ? Number(obj.top) + Number(obj.height) + 5 : Number(obj.top),
@@ -1256,13 +1253,12 @@ function nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis) {
 		'visibility': obj.description_width == 0 || obj.display == 0 ? 'hidden' : 'visible',
 		'height': Number(obj.height)
 	})
-		.attr('tabindex', '-1')
 		.attr("data-nu-prefix", p)
 		.addClass('nuLookupDescription')
-		.addClass('nuReadonly')
-		.prop('readonly', true);
+		.nuDisable();
 
-	nuPopulateLookup3(wi.values, p);
+
+	nuPopulateLookup3(thisObj.values, p);
 
 	nuSetAccess(objId, obj.read);
 
@@ -1274,8 +1270,7 @@ function nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis) {
 
 function nuINPUTnuAutoNumber($id, obj) {
 
-	$id.prop('readonly', true)
-		.addClass('nuReadonly');
+	nuDisable($id.attr('id'));
 
 	if (!nuIsNewRecord()) {
 		$id.val(obj.counter);
@@ -1283,15 +1278,15 @@ function nuINPUTnuAutoNumber($id, obj) {
 
 }
 
-function nuINPUTCalc($id, wi, p) {
+function nuINPUTCalc($id, thisObj, p) {
 
-	const formula = String(wi.formula).nuReplaceAll("al('", "al('" + p);
+	const formula = String(thisObj.formula).nuReplaceAll("al('", "al('" + p);
 
 	$id.addClass('nuCalculator')
-		.attr('data-nu-format', wi.format)
-		.attr('data-nu-calc-order', wi.calc_order)
+		.attr('data-nu-format', thisObj.format)
+		.attr('data-nu-calc-order', thisObj.calc_order)
 		.attr('data-nu-formula', formula)
-		.prop('readonly', true).prop('tabindex', -1);
+		.nuDisable();
 
 	if (p != '') {
 		$id.addClass('nuSubformObject');
@@ -1299,19 +1294,19 @@ function nuINPUTCalc($id, wi, p) {
 
 }
 
-function nuINPUTSetValue($id, wi, inputType) {
+function nuINPUTSetValue($id, thisObj, inputType) {
 
 	if (inputType == 'button') {
-		$id.html(nuTranslate(wi.value));
-		$id.attr("data-nu-org-label", wi.value);
+		$id.html(nuTranslate(thisObj.value));
+		$id.attr("data-nu-org-label", thisObj.value);
 	} else {
 
 		if (inputType == 'datetime-local') {													//-- replace ' ' between date and time with 'T'
-			wi.value = wi.value === null ? null : wi.value.replace(' ', 'T');
+			thisObj.value = thisObj.value === null ? null : thisObj.value.replace(' ', 'T');
 		}
 
-		if (!nuIsNewRecord() || wi.value !== '') {
-			$id.val(nuFORM.addFormatting(wi.value, wi.format));
+		if (!nuIsNewRecord() || thisObj.value !== '') {
+			$id.val(nuFORM.addFormatting(thisObj.value, thisObj.format));
 		}
 
 	}
@@ -1334,7 +1329,7 @@ function nuIPUTNuChangeEvent(obj, inputType, objectType) {
 
 }
 
-function nuINPUTSetProperties($id, obj, inputType, objectType, wi, p) {
+function nuINPUTSetProperties($id, obj, inputType, objectType, thisObj, p) {
 
 	const leftInc = inputType == 'button' && p != '' ? 3 : 0;
 
@@ -1348,12 +1343,12 @@ function nuINPUTSetProperties($id, obj, inputType, objectType, wi, p) {
 	})
 	.attr('onchange', nuIPUTNuChangeEvent(obj, inputType, objectType))
 	.attr('data-nu-field', inputType == 'button' || inputType == 'file' ? null : obj.id)
-	.attr('data-nu-object-id', wi.object_id)
+	.attr('data-nu-object-id', thisObj.object_id)
 	.attr('data-nu-format', '')
 	.attr('data-nu-prefix', p)
 	.attr('data-nu-type', objectType)
 	.attr('data-nu-subform-sort', 1)
-	.attr('data-nu-label', wi.label)
+	.attr('data-nu-label', thisObj.label)
 	.attr('onfocus', 'nuLookupFocus(event)');
 
 	if (inputType != 'button') {
@@ -1362,7 +1357,7 @@ function nuINPUTSetProperties($id, obj, inputType, objectType, wi, p) {
 		$id.addClass('nuButton');
 	}
 
-	if (wi.value != '' && nuRecordId() == '-1') {				//== check for Cannot be left blank
+	if (thisObj.value != '' && nuRecordId() == '-1') {				//== check for Cannot be left blank
 		$id.addClass('nuEdited');
 	}
 
@@ -1382,99 +1377,102 @@ function nuINPUTSetMaxLength($id, inputType, objectType, w) {
 
 }
 
-function nuINPUT(w, i, l, p, prop) {
+function nuINPUT(formObj, index, layer, prefix, properties) {
 
-	var obj = prop.objects[i];
-	var wi = w.objects[i];
+    var obj = properties.objects[index];
+    const thisObj = formObj.objects[index];
+    const objectId = prefix + obj.id;
+    const formId = $('#' + prefix + 'nuRECORD');
+    let inputElementType = obj.type !== 'textarea' ? 'input' : 'textarea';
+    const visibility = obj.display === 0 ? 'hidden' : 'visible';
+    const inputType = obj.input;
+    let objType = obj.type;
 
-	const objId = p + obj.id;
-	var id = p + obj.id;
-	const $fromId = $('#' + p + 'nuRECORD');									//-- Edit Form Id
-	var type = 'textarea';
-	var vis = obj.display == 0 ? 'hidden' : 'visible';
-	var inputType = obj.input;
-	var objectType = obj.type;
+    const isFileInputWithTarget = inputType === 'file' && obj.file_target === '1';
+    if (inputElementType === 'input' && isFileInputWithTarget) {
+        inputElementType = 'div';
+    }
 
-	if (objectType != 'textarea') {												//-- Input Object
-		type = 'input';
+    obj = nuLabelOrPosition(obj, formObj, index, layer, prefix, properties);
+
+    let elementId = objectId;
+    if (inputElementType === 'input' && inputType === 'file' && !isFileInputWithTarget) {
+        elementId = nuINPUTfileDatabase(formId, obj, objectId, prefix);
+    }
+
+	const htmlElementType = inputType === 'button' && objType === 'input' ? 'button' : inputElementType;
+	const element = nuCreateElementWithId(htmlElementType, elementId, formId.attr('id'));
+    const $id = $(element);
+
+    nuAddDataTab(elementId, obj.tab, prefix);
+    nuINPUTSetProperties($id, obj, inputType, objType, thisObj, prefix);
+
+    if (inputElementType === 'input' && !isFileInputWithTarget) {
+        nuINPUTInput(element, inputType, obj, objType);
+    }
+
+    if (isFileInputWithTarget) {
+        nuINPUTfileFileSystem(formId, formObj, index, layer, prefix, properties, elementId);
+    }
+
+    nuApplyInputTypeSpecificBehaviors($id, inputType, objType, thisObj, obj, prefix);
+
+    if (objType !== 'lookup') {
+        nuINPUTSetMaxLength($id, inputType, objType, formObj);
+        nuAddJSObjectEvents(elementId, obj.js);
+        nuSetAccess(objectId, obj.read);
+        nuAddStyle(elementId, obj);
+        return Number(obj.width) + (obj.read === 2 ? -2 : 4);
+    } else {
+        return nuINPUTLookup(elementId, objectId, thisObj, obj, formId, prefix, visibility);
+    }
+
+}
+
+function nuApplyInputTypeSpecificBehaviors($id, inputType, objType, thisObj, obj, prefix) {
+
+    switch (inputType) {
+        case 'nuScroll':
+            nuINPUTnuScroll($id, thisObj);
+            break;
+        case 'nuDate':
+            nuINPUTnuDate($id, thisObj);
+            $id.attr('onclick', 'nuPopupCalendar(this);');
+            break;
+        case 'nuNumber':
+            nuINPUTnuNumber($id, thisObj);
+            break;
+        case 'checkbox':
+            nuINPUTCheckbox($id, thisObj, obj);
+            break;
+        case 'text':
+            if (objType === 'display') {
+				nuINPUTDisplay($id);
+			} 
+            break;			
+        default:
+			// ...
+            break;
+    }
+
+	if (objType === 'calc') {
+		nuINPUTCalc($id, thisObj, prefix);
 	}
 
-	const inputSubType = inputType == 'file' && obj.file_target == '1' ? 'uppy' : '';
+	if (inputType !== 'file') {
+		nuINPUTSetValue($id, thisObj, inputType);
+    }
 
-	if (type == 'input' && inputSubType == 'uppy') {
-		type = 'div';
+	if (thisObj.input === 'nuAutoNumber') {
+		nuINPUTnuAutoNumber($id, thisObj);
 	}
 
-	obj = nuLabelOrPosition(obj, w, i, l, p, prop);
-
-	if (type == 'input' && inputType == 'file' && inputSubType != 'uppy') {
-		id = nuINPUTfileDatabase($fromId, obj, id, p);
-	}
-
-	const inp = document.createElement(inputType == 'button' && objectType == 'input' ? 'button': type);
-	inp.setAttribute('id', id);
-
-	let $id = $(inp);
-
-	$fromId.append(inp);
-
-	nuAddDataTab(id, obj.tab, p);
-	nuINPUTSetProperties($id, obj, inputType, objectType, wi, p);
-
-	if (type == 'input' && inputSubType != 'uppy') {				//-- Input Object
-		nuINPUTInput(inp, inputType, obj, objectType);
-	}
-
-	if (inputSubType == 'uppy') {
-		nuINPUTfileFileSystem($fromId, w, i, l, p, prop, id);
-	}
-
-	if (inputType == 'nuScroll') {
-		nuINPUTnuScroll($id, wi);
-	} else if (inputType == 'nuDate') {
-		nuINPUTnuDate($id, wi);
-		$id.attr('onclick', 'nuPopupCalendar(this);');
-	} else if (inputType == 'nuNumber') {
-		nuINPUTnuNumber($id, wi);
-	} else if (wi.input == 'checkbox') {
-		nuINPUTCheckbox($id, obj, wi);
-	} else if (objectType == 'display') {
-		nuINPUTDisplay($id);
-	} else if (objectType == 'calc') {
-		nuINPUTCalc($id, wi, p);
-	}
-
-	if (inputType != 'file') {
-		nuINPUTSetValue($id, wi, inputType);
-	}
-
-	if (objectType == 'input' && inputType == 'nuAutoNumber') {
-		nuINPUTnuAutoNumber($id, obj);
-	}
-
-	if (inputType == 'button' && objectType == 'input') {
-		nuAddInputIcon(id, obj.input_icon);
-	}
-
-	if (objectType == 'lookup') {
-
-		return nuINPUTLookup(id, objId, wi, obj, $fromId, p, vis);
-
-	} else {
-
-		nuINPUTSetMaxLength($id, inputType, objectType, w);
-
-		nuAddJSObjectEvents(id, obj.js);
-
-		nuSetAccess(objId, obj.read);
-
-		nuAddStyle(id, obj);
-
-		return Number(obj.width) + (obj.read == 2 ? -2 : 4);
-
+	if (inputType == 'button' && objType == 'input') {
+		nuAddInputIcon($id.attr('id'), thisObj.input_icon); console.log('button input');
 	}
 
 }
+
 
 function nuAddAttributes(id, attr) {
 
@@ -1613,11 +1611,11 @@ function nuCurrentRow() {
 	return window.nuSubformRow;
 }
 
-function nuSetAccess(i, r) {
+function nuSetAccess(id, r) {
 
-	if (r == 2 || r == 3 || r == 4) {									// hidden
+	if (r == 2 || r == 3 || r == 4) { // hidden
 
-		const o = [i, i + 'code', i + 'button', i + 'description', 'label_' + i];
+		const o = [id, id + 'code', id + 'button', id + 'description', 'label_' + id];
 
 		for (let c = 0; c < o.length; c++) {
 
@@ -1633,11 +1631,11 @@ function nuSetAccess(i, r) {
 
 	}
 
-	if (r == 1 || r == 4) {												// readonly
-		nuReadonly(i);
+	if (r == 1 || r == 4) {
+		nuDisable(id);
 	}
 
-	$('#' + i).attr('data-nu-access', r);
+	$('#' + id).attr('data-nu-access', r);
 
 }
 
@@ -2895,7 +2893,7 @@ function nuSubformRefreshSelectObject(prefix, selectId, formId, removeBlank) {
 	nuSetProperty(p + '_formid', formId);
 	nuSetProperty(p + '_removeblank', removeBlank === true ? '1' : '0');
 
-	nuRunPHPHidden(p, 0);
+	nuRunPHPHidden(p);
 
 }
 
@@ -2914,7 +2912,7 @@ function nuSubformRefreshDisplayObject(prefix, displayId, formId) {
 	nuSetProperty(p + '_displayid', displayId);
 	nuSetProperty(p + '_formid', formId);
 
-	nuRunPHPHidden(p, 0);
+	nuRunPHPHidden(p);
 
 }
 
@@ -3741,7 +3739,7 @@ function nuGetOptionsList(formId, subformId, globalAccess, type) {
 		Save : ['Save', 'nuSaveAction();', 'far fa-save', 'S'],
 		Delete : ['Delete', 'nuDeleteAction();', 'far fa-trash-alt', 'Y'],
 		Clone : ['Clone', 'nuCloneAction();', 'far fa-clone', 'C'],
-		Refresh : ['Refresh', 'if (nuGlobalAccess()) {nuRunPHPHidden("NUSETREFRESHCACHE", 0);} else {nuGetBreadcrumb();}', 'fas fa-sync-alt', 'R'],
+		Refresh : ['Refresh', 'if (nuGlobalAccess()) {nuRunPHPHidden("NUSETREFRESHCACHE");} else {nuGetBreadcrumb();}', 'fas fa-sync-alt', 'R'],
 		Help : ['Help', nuFORMHELP[subformId], 'fa-question-circle', '?'],
 		ChangePassword : ['Change Password', 'nuPopup("nupassword", "", "")', 'fa-password', 'Q'],
 		DebugResults : ['nuDebug Results', 'nuOptionsListAction("nudebug", "")', 'fa-bug', 'D'],

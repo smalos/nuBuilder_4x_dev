@@ -181,6 +181,11 @@ jQuery.fn.extend({
 			nuEnable(this.id, enable);
 		});
 	},
+	nuReadonly: function (readonly) {
+		return this.each(function () {
+			nuReadonly(this.id, readonly);
+		});
+	},	
 	nuDisable: function () {
 		return this.each(function () {
 			nuDisable(this.id);
@@ -933,7 +938,7 @@ function nuBindCtrlEvents() {
 			e.preventDefault();
 
 			var g = nuGlobalAccess();
-			var formId = window.nuFORM.getCurrent().form_id;
+			var formId = nuFormId();
 
 			if (nuFormType() == 'browse' || nuFormType() == 'edit') {
 
@@ -1265,16 +1270,16 @@ function nuDisable(id) { //-- Disable Edit Form Object
 
 }
 
-function nuReadonly(i) {
+function nuReadonly(id, readonly = true) {
 
-	const o = nuObjectComponents(i);
+	const objComponents = nuObjectComponents(id);
 
-	o.forEach((component, index) => {
-		if (index === 1) return; 		// Skip label
-		$('#' + component)
-			.addClass('nuReadonly')
-			.attr('onclick', "return false")
-			.prop('readonly', true);
+	objComponents.forEach((component, index) => {
+		// Skip label by index
+		if (index === 1) return;
+		$(`#${component}`)
+			.toggleClass('nuReadonly', readonly)
+			.prop('readonly', readonly);
 	});
 
 }
@@ -2682,7 +2687,7 @@ function nuRunBackup() {
 	const c = confirm(nuTranslate("Perform the Backup now?"));
 	if (c === true) {
 		nuMessage(nuTranslate("Backup is running") + "...");
-		nuRunPHPHidden("NUBACKUP", 0);
+		nuRunPHPHidden("NUBACKUP");
 	}
 
 }

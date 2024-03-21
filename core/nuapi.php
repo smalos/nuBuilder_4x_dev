@@ -51,9 +51,14 @@
 	$sessionData							= $_SESSION['nubuilder_session_data'];
 	$formId									= $formAndSessionData->form_id;
 	$recordId								= $formAndSessionData->record_id;
+	
+	if (nu2FAStatusPending($globalAccess, $sessionData, $callType, $recordId, $formId)) {
+		nuDisplayError(nuTranslate('Access denied. Authentication Pending.'));
+	}
 
-	nuCheck2FAAuthenticationPending($sessionData, $formAndSessionData, $callType);
-	nuCheckPasswordChangePending($sessionData, $formAndSessionData, $callType);
+	if (nuPasswordChangeStatusPending($globalAccess, $sessionData, $callType, $formId)) {
+		nuDisplayError(nuTranslate('Access denied. Password Change Pending.'));
+	}
 
 	$_POST['FORM_ID'] 						= $formId;
 	$_POST['nuHash']['PREVIOUS_RECORD_ID'] 	= $recordId;
