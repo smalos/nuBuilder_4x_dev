@@ -54,15 +54,8 @@ function setPreviewText() {
 
 
 function isTemplate() {
-    let code = emt_code.value;
-    return $('#emt_group').val() == 'nubuilder' && code.nuEndsWith('Template', true);
-}
-
-function isTemplate() {
     return nuGetValue('emt_template');
 }
-
-
 
 function nuOnClone() {
 

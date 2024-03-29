@@ -9,8 +9,7 @@ a = [["",""],["nuDate","nuDate"],["nuNumber","nuNumber"],["nuScroll","nuScroll"]
      ["reset","Reset"],["search","Search"],["tel","Telephone"],["text","Text"],["time","Time"],["url","URL"],["week","Week"]];
 
 nuAddBrowseTitleSelect(1, a);
-$('#nuBrowseTitle1_select').parent().unbind("touchstart");
-
+$('#nuBrowseTitle1_select').parent().off("touchstart");
 
 $("[data-nu-column='0']").each(function() {
     $(this).addClass('nu_' + this.textContent).addClass('nuCellColored');

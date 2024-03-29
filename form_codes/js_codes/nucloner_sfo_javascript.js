@@ -7,7 +7,7 @@ function nuSelectObjectRefreshed(o, f) {
 }
 
 function addRunButton() {
-    nuAddActionButton('nuRunPHPHidden', 'Run', 'runCloner()');
+    nuAddActionButton('nuRunCloner', 'Run', 'runCloner()');
     $('#nunuRunPHPHiddenButton').css('background-color', '#117A65');
 }
 
@@ -77,7 +77,7 @@ function runCloner() {
     nuSetProperty('cloner_form_dest', $('#clo_form_dest').val());
     nuSetProperty('cloner_notes', '#clo_notes#');
 
-    dump ? nuRunPHP('nucloner', '', 1) : nuRunPHPHidden('nucloner', 0);
+    dump ? nuRunPHP('nucloner', '', 1) : nuRunPHPHidden('nucloner');
     
     const tables = selectToValueArray('clo_tables_include');
     nuSetProperty('nubackup_tables_include', tables.length === 0 ? '' : JSON.stringify(tables));

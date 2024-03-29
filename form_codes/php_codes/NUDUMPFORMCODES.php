@@ -20,13 +20,18 @@ while ($r = db_fetch_object($t)) {
 
 
 function dumpFile($folder, $sfoCode, $code, $postfix, $extension) {
-
     $postfix = $postfix == '' ? '' : "_" . $postfix;
     $file = $sfoCode . $postfix . "." . $extension;
     $code = $code == NULL ? '' : $code;
 
     if (strlen($code) > 0) {
-        $dir = dirname(__DIR__, 1) . DIRECTORY_SEPARATOR. "form_codes". DIRECTORY_SEPARATOR .$folder . DIRECTORY_SEPARATOR . $file;
-        file_put_contents($dir, $code);
+        $dir = dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . "form_codes" . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR;
+        
+        if (!file_exists($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        
+        $file_path = $dir . $file;
+        file_put_contents($file_path, $code);
     }
 }

@@ -43,17 +43,13 @@ window.nuBROWSERESIZE = {
 };
 
 String.prototype.nuEndsWith = function(substr, ignoreCase) {
-
 	if (ignoreCase === undefined || ignoreCase === false) return this.endsWith(substr);
 	return this.toLowerCase().endsWith(substr.toLowerCase());
-
 }
 
 String.prototype.nuStartsWith = function(substr, ignoreCase) {
-
 	if (ignoreCase === undefined || ignoreCase === false) return this.startsWith(substr);
 	return this.toLowerCase().startsWith(substr.toLowerCase());
-
 }
 
 String.prototype.nuReplaceAll = function (str1, str2, ignore) {
@@ -61,10 +57,8 @@ String.prototype.nuReplaceAll = function (str1, str2, ignore) {
 };
 
 String.prototype.nuStringToArray = function (separator = ',', trim = true) {
-
 	const result = this.split(separator);
 	return trim ? result.map(item => item.trim()) : result;
-
 }
 
 String.prototype.nuLeftTrim = function () {
@@ -76,25 +70,23 @@ String.prototype.nuRightTrim = function () {
 }
 
 String.prototype.containsAny = String.prototype.containsAny || function (arr) {
-
 	for (var i = 0; i < arr.length; i++) {
 		if (this.indexOf(arr[i]) > -1) {
 			return true;
 		}
 	}
 	return false;
-
 };
 
 String.prototype.nuReplaceNonBreakingSpaces = function (replaceWith = ' ') {
 	return this.replace(/\xA0/g, replaceWith)
 }
 
-String.prototype.capitalise = function () {
+String.prototype.nuCapitalise = function () {
 	return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
-String.prototype.toTitleCase = function () {
+String.prototype.nuToTitleCase = function () {
 	return this.toLowerCase().replace(/^(\w)|\s(\w)/g, (grp) => grp.toUpperCase());
 }
 
@@ -1186,16 +1178,28 @@ function nuGetLookupFields(id) {
 
 }
 
-function nuObjectComponents(i) {
+function nuObjectComponents(id) {
 
-	let o = [i, 'label_' + i];
-	const obj = $('#' + i);
-	if (obj.attr('data-nu-type') == 'lookup') o.push(i + 'code', i + 'button', i + 'description')
-	if (obj.hasClass('select2-hidden-accessible')) o.push(i + '_select2');
+	let componentIds = [id, `label_${id}`];
+	let type = '';
+	const element = $(`#${id}`);
 
-	return o;
+	if (element.attr('data-nu-type') === 'lookup') {
+		componentIds.push(`${id}code`, `${id}button`, `${id}description`);
+		type = 'lookup';
+	} else 
+	if (element.hasClass('select2-hidden-accessible')) {
+		componentIds.push(`${id}_select2`);
+		type = 'select2'; 
+	}
+
+	return {
+		componentIds,
+		type
+	};
 
 }
+
 
 function nuEnable(i, enable) {
 
@@ -1209,23 +1213,23 @@ function nuEnable(i, enable) {
 	$.each(ids, function(index) {
 
 		const id = ids[index];
-		const components = nuObjectComponents(id);
-
-		for (let c = 0; c < components.length; c++) {
+		let {componentIds, type} = nuObjectComponents(id);
+		
+		for (let c = 0; c < componentIds.length; c++) {
 
 			if (c === 1) {
 				continue;
 			} // skip label
 
-			let $current = $('#' + components[c]);
+			let $current = $('#' + componentIds[c]);
 
 			$current
 				.removeClass('nuReadonly')
 				.prop('readonly', false)
 				.prop('disabled', false);
 
-			if (c === 2) { //-- button
-				$current.on("click", () => nuBuildLookup(components[c], ""));
+			if (type === 'Lookup' && c === 2) { //-- button
+				$current.on("click", () => nuBuildLookup(componentIds[c], ""));
 			}
 
 		}
@@ -1240,14 +1244,14 @@ function nuDisable(id) { //-- Disable Edit Form Object
 
 	$.each(ids, function(index) {
 		const id = ids[index];
-		const components = nuObjectComponents(id);
+		const {componentIds, type} = nuObjectComponents(id);
 
-		for (let c = 0; c < components.length; c++) {
+		for (let c = 0; c < componentIds.length; c++) {
 			if (c === 1) {
 				continue;
 			} // skip label
 
-			let $component = $('#' + components[c]);
+			let $component = $('#' + componentIds[c]);
 			$component.addClass('nuReadonly')
 
 			let result = true;
@@ -1272,9 +1276,9 @@ function nuDisable(id) { //-- Disable Edit Form Object
 
 function nuReadonly(id, readonly = true) {
 
-	const objComponents = nuObjectComponents(id);
+	let {componentIds, type} = nuObjectComponents(id);
 
-	objComponents.forEach((component, index) => {
+	componentIds.forEach((component, index) => {
 		// Skip label by index
 		if (index === 1) return;
 		$(`#${component}`)
@@ -1300,22 +1304,22 @@ function nuShow(i, visible, openTab) {
 			nuHide(arr[s]);
 		} else {
 
-			var o = nuObjectComponents(arr[s]);
+			let {componentIds, type} = nuObjectComponents(arr[s]);
 
-			for (var c = 0; c < o.length; c++) {
+			for (var c = 0; c < componentIds.length; c++) {
 
-				var t = String($('#' + o[c]).attr('data-nu-tab'));
+				var t = String($('#' + componentIds[c]).attr('data-nu-tab'));
 
-				if (nuIsHidden(o[c])) {
+				if (nuIsHidden(componentIds[c])) {
 					if (t[0] == 'x') {
 
-						$('#' + o[c])
+						$('#' + componentIds[c])
 							.attr('data-nu-tab', t.substr(1))
 							.show();
 
 					} else {
 
-						$('#' + o[c]).show();
+						$('#' + componentIds[c]).show();
 
 					}
 					counter++;
@@ -1341,21 +1345,22 @@ function nuHide(i) {
 		arr = i;
 	}
 
-	for (var s = 0; s < arr.length; s++) {
-		var o = nuObjectComponents(arr[s]);
+	for (let s = 0; s < arr.length; s++) {
 
-		for (var c = 0; c < o.length; c++) {
+		let {componentIds, type} = nuObjectComponents(arr[s]);
 
-			var t = String($('#' + o[c]).attr('data-nu-tab'));
+		for (let c = 0; c < componentIds.length; c++) {
+
+			const t = String($('#' + componentIds[c]).attr('data-nu-tab'));
 
 			if (t[0] == 'x') {
 
-				$('#' + o[c])
+				$('#' + componentIds[c])
 					.hide();
 
 			} else {
 
-				$('#' + o[c])
+				$('#' + componentIds[c])
 					.attr('data-nu-tab', 'x' + t)
 					.hide();
 
@@ -1373,9 +1378,9 @@ function nuRemove(i) {
 
 	for (const s of arr) {
 
-		const o = nuObjectComponents(s);
+		let {componentIds, type} = nuObjectComponents(s);
 
-		for (const c of o) {
+		for (const c of componentIds) {
 			$('#' + c).remove();
 		}
 	}

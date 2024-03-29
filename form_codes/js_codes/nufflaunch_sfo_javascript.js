@@ -30,7 +30,7 @@ function nuInit() {
     nuMoveFieldPrefixToSubform();
     nuSetValue('fastform_type', 'browseedit');
 
-    nuAddActionButton('nuRunPHPHidden', 'Build Fast Form', 'nuRunPHPHidden("RUNFF");');
+    nuAddActionButton('nuRunPHPHidden', 'Build Fast Form', 'nuRunPHPHidden("RUNFF", true);');
     nuSetToolTip('fastform_table', nuTranslate('Either pick an existing table or enter a new table name.'), true);
     nuSubformEnableMultiPaste("obj_sf", "#obj_sf000ff_label", null, callbackPasted);
     nuSetFFTypeOptionsColor('obj_sf000ff_type');
@@ -423,7 +423,7 @@ function nuSetLabel(field, label) {
         field = field.substring(i + 1);
     }
 
-    label.val(field.replaceAll('_', ' ').capitalise().toTitleCase()).change();
+    label.val(field.replaceAll('_', ' ').nuCapitalise().nuToTitleCase()).change();
 
 }
 

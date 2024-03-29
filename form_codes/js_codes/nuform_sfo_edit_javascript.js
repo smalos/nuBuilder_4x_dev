@@ -302,7 +302,7 @@ function onDisplayBlur(event) {
             dispValue = dispValue.substring(idx + 1);
         }
 
-        const title = dispValue.replaceAll('_', ' ').capitalise().toTitleCase();
+        const title = dispValue.replaceAll('_', ' ').nuCapitalise().nuToTitleCase();
 
         let objTitle = nuSubformRowObject(id, 'sbr_title');
         if (objTitle.val() == '') objTitle.val(title).change();

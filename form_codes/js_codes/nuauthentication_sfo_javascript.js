@@ -1,35 +1,35 @@
 function nuGet2FAProcedure() {
-    var d = nuDevMode();
-    var p = 'nuAuthentication2FA';
-    return d ? p + '_Template' : p;
+    const d = nuDevMode();
+    const p = 'nuAuthentication2FA';
+    return d ? p + '_Template': p;
 }
 
 function nu2FAVerify() {
-    nuSetProperty('auth_code_verify',  $('#auth_code').val());
-    nuSetProperty("nuauthcommand","verify");
-    var p = nuGet2FAProcedure();
-    nuRunPHPHidden(p ,0);
+    nuSetProperty('auth_code_verify', $('#auth_code').val());
+    nuSetProperty("nuauthcommand", "verify");
+    const p = nuGet2FAProcedure();
+    nuRunPHPHidden(p);
 }
 
 function nu2FASendToken() {
-    nuSetProperty("nuauthcommand","send");
-    var p = nuGet2FAProcedure();
-    nuRunPHPHidden(p ,0);
+    nuSetProperty("nuauthcommand", "send");
+    const p = nuGet2FAProcedure();
+    nuRunPHPHidden(p);
 }
 
 function handleEnterKey() {
 
     $('#auth_code').on('keydown', function(evt) {
-      if (evt.key === 'Enter') {
+        if (evt.key === 'Enter') {
             evt.preventDefault();
             nu2FAVerify();
-      }
+        }
     });
 
 }
 
 handleEnterKey();
-nuHideHolders(0,2);
+nuHideHolders(0, 2);
 
 
 

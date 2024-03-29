@@ -129,6 +129,7 @@ $('.css').on('dblclick', function() {
 nuHide('sob_input_format');
 var sit = nuGetValue('sob_input_type');
 nuShow('sob_input_format', sit == 'nuDate' || sit == 'nuNumber');
+debugger;
 nuShow('sob_input_javascript', sit == 'nuScroll');
 
 nuObjectColor();

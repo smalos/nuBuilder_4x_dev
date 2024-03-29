@@ -51,34 +51,35 @@ if ($nuDevMode) {
         nuResetEmailSettings();
 
         $q = "
-            DELETE FROM zzzzsys_user;
-            DELETE FROM zzzzsys_access;
-            DELETE FROM zzzzsys_access_form;
-            DELETE FROM zzzzsys_access_php;
-            DELETE FROM zzzzsys_access_report;
-            DELETE FROM zzzzsys_cloner;
-            DELETE FROM zzzzsys_file WHERE sfi_group <> 'nubuilder';
-            DELETE FROM zzzzsys_format WHERE zzzzsys_format_id  not like 'nu%';
-            DELETE FROM zzzzsys_note;
-            DELETE FROM zzzzsys_email_template WHERE zzzzsys_email_template_id  not like 'nu%';
-            DELETE FROM zzzzsys_note_category;
-            DELETE FROM zzzzsys_select WHERE zzzzsys_select_id not like 'nu%';
-            DELETE FROM zzzzsys_select_clause WHERE zzzzsys_select_clause_id not like 'nu%';
-            DELETE FROM zzzzsys_php WHERE IFNULL(sph_php,'') = '';
-            DELETE FROM zzzzsys_translate;
-            DELETE FROM zzzzsys_permission_item;
-            DELETE FROM zzzzsys_user_permission;
-            DELETE FROM `zzzzsys_email_log`;
-            UPDATE `zzzzsys_object` SET `sob_input_attribute` = NULL WHERE `sob_input_attribute` = '';
-            UPDATE `zzzzsys_form` SET `sfo_browse_redirect_form_id` = '' WHERE `sfo_browse_redirect_form_id` IS NULL;
-            UPDATE `zzzzsys_form` SET sfo_browse_javascript = NULL  WHERE TRIM(`sfo_browse_javascript`) = '';
-            UPDATE `zzzzsys_form` SET sfo_javascript = NULL  WHERE TRIM(`sfo_javascript`) = '';
-            UPDATE `zzzzsys_tab` SET `syt_access` = NULL  WHERE TRIM(`syt_access`) = '';
-            UPDATE `zzzzsys_form` SET `sfo_browse_row_height` = 0 WHERE `sfo_browse_row_height` IS NULL;
-            UPDATE `zzzzsys_form` SET `sfo_browse_rows_per_page` = 0 WHERE `sfo_browse_rows_per_page` IS NULL;
-            UPDATE  `zzzzsys_tab` SET syt_order = '-1' WHERE `zzzzsys_tab_id` = 'nufastforms';
-            DELETE FROM zzzzsys_debug;
-            DELETE FROM zzzzsys_session;
+                DELETE FROM `zzzzsys_user`;
+                DELETE FROM `zzzzsys_access`;
+                DELETE FROM `zzzzsys_access_form`;
+                DELETE FROM `zzzzsys_access_php`;
+                DELETE FROM `zzzzsys_access_report`;
+                DELETE FROM `zzzzsys_cloner`;
+                DELETE FROM `zzzzsys_file` WHERE `sfi_group` <> 'nubuilder';
+                DELETE FROM `zzzzsys_format` WHERE `zzzzsys_format_id` NOT LIKE 'nu%';
+                DELETE FROM `zzzzsys_note`;
+                DELETE FROM `zzzzsys_email_template` WHERE `zzzzsys_email_template_id` NOT LIKE 'nu%';
+                DELETE FROM `zzzzsys_note_category`;
+                DELETE FROM `zzzzsys_select` WHERE `zzzzsys_select_id` NOT LIKE 'nu%';
+                DELETE FROM `zzzzsys_select_clause` WHERE `zzzzsys_select_clause_id` NOT LIKE 'nu%';
+                DELETE FROM `zzzzsys_php` WHERE IFNULL(`sph_php`, '') = '';
+                DELETE FROM `zzzzsys_translate`;
+                DELETE FROM `zzzzsys_permission_item`;
+                DELETE FROM `zzzzsys_user_permission`;
+                DELETE FROM `zzzzsys_email_log`;
+                UPDATE `zzzzsys_object` SET `sob_input_attribute` = NULL WHERE `sob_input_attribute` = '';
+                UPDATE `zzzzsys_form` SET `sfo_browse_redirect_form_id` = '' WHERE `sfo_browse_redirect_form_id` IS NULL;
+                UPDATE `zzzzsys_form` SET `sfo_browse_javascript` = NULL WHERE TRIM(`sfo_browse_javascript`) = '';
+                UPDATE `zzzzsys_form` SET `sfo_javascript` = NULL WHERE TRIM(`sfo_javascript`) = '';
+                UPDATE `zzzzsys_tab` SET `syt_access` = NULL WHERE TRIM(`syt_access`) = '';
+                UPDATE `zzzzsys_form` SET `sfo_browse_row_height` = 0 WHERE `sfo_browse_row_height` IS NULL;
+                UPDATE `zzzzsys_form` SET `sfo_browse_rows_per_page` = 0 WHERE `sfo_browse_rows_per_page` IS NULL;
+                UPDATE `zzzzsys_tab` SET `syt_order` = '-1' WHERE `zzzzsys_tab_id` = 'nufastforms';
+                DELETE FROM `zzzzsys_debug`;
+                DELETE FROM `zzzzsys_session`;
+
         ";
 
         nuRunQuery($q);
@@ -92,16 +93,17 @@ function nuResetEmailSettings() {
     
     $update = 
     
-        "UPDATE zzzzsys_setup
+        "
+        UPDATE `zzzzsys_setup`
         SET
-           set_smtp_username = '1',
-          set_smtp_password = '1',
-          set_smtp_host = '1',
-          set_smtp_from_address = '1',
-          set_smtp_from_name = '1',
-          set_smtp_port = '1',
-          set_smtp_use_authentication = '1',
-          set_smtp_use_ssl = '1';
+           `set_smtp_username` = '1',
+          `set_smtp_password` = '1',
+          `set_smtp_host` = '1',
+          `set_smtp_from_address` = '1',
+          `set_smtp_from_name` = '1',
+          `set_smtp_port` = '1',
+          `set_smtp_use_authentication` = '1',
+          `set_smtp_use_ssl` = '1'
        ";
        
    nuRunQuery($update); 

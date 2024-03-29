@@ -1,11 +1,10 @@
-
-nuSetToolTip('sse_resize','Resize');
+nuSetToolTip('sse_resize', 'Resize');
 $('#sse_sql').css('z-index', 1);
 nuLabelOnTop(['nusvg']);
 
 
 
-if(nuIsNewRecord()){
+if (nuIsNewRecord()) {
     $('#sse_edit').val(0);
 }
 
@@ -20,41 +19,41 @@ $('#sse_sql')
 
 $('#label_sse_sql').remove();
 nuHide('sse_code_snippet_lookupcode');
-nuSetSnippetFormFilter(0,0,1);
+nuSetSnippetFormFilter(0, 0, 1);
 
 $('#sse_resize').addClass('nuAllowDblClick');
 
 nuSetSFCB();
 
-if(window.filter == 'justsql'){
+if (window.filter == 'justsql') {
 
-    var sid     = String(nuFORM.getCurrent().record_id);
-    var from    = sid.substring(sid.length-2);
-    var targ    = '#sfo_browse_sql';
+    var sid = String(nuFORM.getCurrent().record_id);
+    var from = sid.substring(sid.length-2);
+    var targ = '#sfo_browse_sql';
 
     $('#nuDeleteButton').remove();
     $('#nuCloneButton').remove();
     $('#sse_description').val(sid);
-    
+
     nuHide('sse_description');
-    
-    if(nuFORM.getCurrent().record_id != -1){
-    
+
+    if (nuFORM.getCurrent().record_id != -1) {
+
         $('#nuSaveButton').hide();
-    
-        if(from == 'BR'){
+
+        if (from == 'BR') {
             nuAddActionButton('SaveToTextarea', 'Copy to Form Browse SQL', 'nuCopySQL("sfo_browse_sql")');
         }
-        
-        if(from == 'SE'){
+
+        if (from == 'SE') {
             nuAddActionButton('SaveToTextarea', 'Copy to Select Object SQL', 'nuCopySQL("sob_select_sql")');
         }
-        
 
-        if(from == 'DI'){
+
+        if (from == 'DI') {
             nuAddActionButton('SaveToTextarea', 'Copy to Display Object SQL', 'nuCopySQL("sob_display_sql")');
         }
-        
+
     }
 
 }
@@ -63,27 +62,27 @@ if(window.filter == 'justsql'){
 
 
 
-$('#sse_sql').css('overflow-x','scroll');
+$('#sse_sql').css('overflow-x', 'scroll');
 
 
 nuWhereClauses();
 
 
-function nuCopySQL(target){
-    
-    var s   = $('#sse_sql').val();
-    
+function nuCopySQL(target) {
+
+    var s = $('#sse_sql').val();
+
     parent.$('#' + target).val(s).change();
-    
-    parent.$('#dialogClose').trigger( "click" );
+
+    parent.$('#dialogClose').trigger("click");
 
 }
 
 
-function nuTempPHP(){
-    
-    var p   = [];
-    
+function nuTempPHP() {
+
+    var p = [];
+
     p.push('');
     p.push('$sql = "');
     p.push('');
@@ -100,110 +99,109 @@ function nuTempPHP(){
 
 }
 
-function nuBeforeSave(){
-    
+function nuBeforeSave() {
+
     $('#sqlframe')[0].contentWindow.nuSQL.buildSQL();
     return true;
-    
+
 }
 
 
 
 
-function nuWhereClauses(){
+function nuWhereClauses() {
 
-	$("[id$='ssc_type']select").each(function(index){
-		
-		var p   = $(this).attr('data-nu-prefix');
-		var t   = $(this).val();
-		
-		if(t == 2 || t == 3){
-		    
-		    if($('#' + p + 'ssc_sort').val() == ''){
+    $("[id$='ssc_type']select").each(function(index) {
+
+        var p = $(this).attr('data-nu-prefix');
+        var t = $(this).val();
+
+        if (t == 2 || t == 3) {
+
+            if ($('#' + p + 'ssc_sort').val() == '') {
                 $('#' + p + 'ssc_sort').val('ASC');
-		    }
-		    
-    		$('#' + p + 'ssc_clause').hide();
-    		$('#' + p + 'ssc_sort').show();
-    		
-		}else{
-		    
-    		$('#' + p + 'ssc_clause').show();
-    		$('#' + p + 'ssc_sort').hide();
-    		
-		}
+            }
 
-	});
+            $('#' + p + 'ssc_clause').hide();
+            $('#' + p + 'ssc_sort').show();
+
+        } else {
+
+            $('#' + p + 'ssc_clause').show();
+            $('#' + p + 'ssc_sort').hide();
+
+        }
+
+    });
 
 }
 
 
-function nuWhereClausesold(){
+function nuWhereClausesold() {
 
-	$("[id$='ssc_type']select").each(function(index){
-		
-		var p   = $(this).attr('data-nu-prefix');
-		var t   = $(this).val();
-		
-		if(t == 2 || t == 3){
-		    
-		    if($('#' + p + 'ssc_sort').val() == ''){
+    $("[id$='ssc_type']select").each(function(index) {
+
+        var p = $(this).attr('data-nu-prefix');
+        var t = $(this).val();
+
+        if (t == 2 || t == 3) {
+
+            if ($('#' + p + 'ssc_sort').val() == '') {
                 $('#' + p + 'ssc_sort').val('ASC');
-		    }
-		    
-    		$('#' + p + 'ssc_clause').hide();
-    		$('#' + p + 'ssc_sort').show();
-    		
-		}else{
-		    
-    		$('#' + p + 'ssc_clause').show();
-    		$('#' + p + 'ssc_sort').hide();
-    		
-		}
+            }
 
-	});
+            $('#' + p + 'ssc_clause').hide();
+            $('#' + p + 'ssc_sort').show();
+
+        } else {
+
+            $('#' + p + 'ssc_clause').show();
+            $('#' + p + 'ssc_sort').hide();
+
+        }
+
+    });
 
 }
 
 
-function nuAddSQLTable(e){
-  
+function nuAddSQLTable(e) {
+
     var s = $('#sqlframe')[0].contentWindow.nuSQL;
-    
+
     s.addBox(e.target.value);
-    e.target.value  = '';
+    e.target.value = '';
     s.buildSQL();
 
 }
 
 
-function nuSFCB(){
-    
+function nuSFCB() {
+
     nuWhereClauses();
     $('#sqlframe')[0].contentWindow.nuSQL.buildSQL();
 
 }
 
 
-function nuSetSFCB(){
-    
-    $('.nuSubformCheckbox.zzzzsys_select_clause')
-	.click(function(){
-		nuSFCB();
-    });
-    
+function nuSetSFCB() {
+
+    $('.nuSubformCheckbox.zzzzsys_select_clause').on('click',
+        function() {
+            nuSFCB();
+        });
+
+
 }
 
 
 
-function nuResizeSQL(){
+function nuResizeSQL() {
 
-    if($('#sqlframe').css('height') == '460px'){
+    if ($('#sqlframe').css('height') == '460px') {
         $('#sqlframe').css('height', 700);
-    }else{
+    } else {
         $('#sqlframe').css('height', 460);
     }
-    
+
 }
-
-
