@@ -821,19 +821,16 @@ class nuSelectObject {
 
 	addJoin(key, v) {
 
-		var j = parent.$('#sse_json').val();
-
-		if (j == '') {
-			var J = { 'joins': [] };
-		} else {
-			var J = JSON.parse(j);
+		const jsonString = parent.$('#sse_json').val();
+		let Joins = { 'joins': [] };
+		if (jsonString !== '') {
+			Joins = JSON.parse(jsonString);
 		}
 
-		J.joins[key] = v;
+		Joins.joins[key] = v;
 
-		var u = JSON.stringify(J);
-
-		parent.$('#sse_json').val(u);
+		const sseJson u = JSON.stringify(Joins);
+		parent.$('#sse_json').val(sseJson);
 
 	}
 
