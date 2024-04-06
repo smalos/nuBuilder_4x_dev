@@ -651,12 +651,12 @@ function nuSetTools() {
 
 	$('#nuToolBar').html(h);
 	$('#nuToolBar').addClass('nuSection nuDragToolbar nuDragDialog');
-	moveToolbar();
+	nuMoveToolbar();
 
 
 }
 
-function moveToolbar() {
+function nuMoveToolbar() {
 
 	$('#nuToolBar').css('top', window.scrollY + 10);
 
@@ -1191,7 +1191,7 @@ function nuObjectDialog() {
 
 }
 
-function deleteSelectedObjects() {
+function nuDeleteSelectedObjects() {
 
 	var sel = document.getElementsByClassName('nuDragSelected');
 
@@ -1206,7 +1206,7 @@ function deleteSelectedObjects() {
 
 }
 
-function findWithAttr(array, attr, value) {
+function nuFindWithAttr(array, attr, value) {
 	for (var i = 0; i < array.length; i += 1) {
 		if (array[i][attr] === value) {
 			return i;
@@ -1385,13 +1385,14 @@ function nuDialogInput(cap, id, top, left, val, fun, sel) {
 		$('#' + e.id).html(opener.nuTranslate(cap));
 	}
 
-	if (arguments.length == 7) {
-		var e = document.createElement('select');
-		var ew = 4;
-	} else {
-		var e = document.createElement('input');
-		var ew = 0;
+	let ew = 4;
+	let tagName = 'select';
+	if (arguments.length !== 7) {
+		tagName = 'input';
+		ew = 0;
 	}
+
+	var e = document.createElement(tagName);
 	e.setAttribute('id', id);
 
 	$('#nuDragDialog').append(e);

@@ -110,26 +110,11 @@ if (filter[0] == 'fromfastform') {
 
 }
 
-$('.js').on('dblclick', function() {
-    nuOpenAce('JavaScript', this.id);
-});
-$('.sql').on('dblclick', function() {
-    nuOpenAce('SQL', this.id);
-});
-$('.html').on('dblclick', function() {
-    nuOpenAce('HTML', this.id);
-});
-$('.php').on('dblclick', function() {
-    nuOpenAce('PHP', this.id);
-});
-$('.css').on('dblclick', function() {
-    nuOpenAce('CSS', this.id);
-});
+nuACEInitDblClickHandlers();
 
 nuHide('sob_input_format');
 var sit = nuGetValue('sob_input_type');
 nuShow('sob_input_format', sit == 'nuDate' || sit == 'nuNumber');
-debugger;
 nuShow('sob_input_javascript', sit == 'nuScroll');
 
 nuObjectColor();

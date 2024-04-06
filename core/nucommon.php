@@ -977,6 +977,7 @@ function nuGetUserAccess(){
 	$A['USER_ADDITIONAL2']		= $j->session->sus_additional2;
 	$A['USER_PERMISSIONS']		= $j->session->user_permissions;
 	$A['USER_A11Y']				= $j->session->sus_accessibility_features == '1' ? true : false;
+	$A['DEV_MODE']				= $j->session->dev_mode == '1' ? true : false;
 	$A['LANGUAGE']				= $j->session->language;
 
 	//-- update session time
@@ -2669,4 +2670,20 @@ function nuDecode($str) {
 
 }
 
-?>
+function nuIsHTTPS() {
+
+	$isHttps =
+		$_SERVER['HTTPS']
+		?? $_SERVER['REQUEST_SCHEME']
+		?? $_SERVER['HTTP_X_FORWARDED_PROTO']
+		?? null
+	;
+
+	return
+		$isHttps && (
+			strcasecmp('on', $isHttps) == 0
+			|| strcasecmp('https', $isHttps) == 0
+		)
+	;
+
+}

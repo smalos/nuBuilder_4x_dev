@@ -14,13 +14,7 @@ $(function() {
 $('#set_header').addClass('js');
 $('#set_style').addClass('css');
 
-$('.js').on('dblclick', function() {
-    nuOpenAce('JavaScript', this.id);
-});
-
-$('.css').on('dblclick', function() {
-    nuOpenAce('CSS', this.id);
-});
+nuACEInitDblClickHandlers();
 
 $('#nuDeleteButton').remove();
 $('#nuCloneButton').remove();
@@ -161,12 +155,12 @@ function nuOnSetSaved(v) {
 
 function sfStoreInitialValues() {
     $('[id ^=nuconfigsettings][id $=cfg_value]').each(function() {
-        $(this).attr('data-org-value', nuBase64encode(this.value));
+        $(this).attr('data-org-value', nuEncode(this.value));
     });
 }
 
 function onConfigValueChanged(t) {
-    let orgValue = nuBase64decode($(t).attr('data-org-value'));
+    let orgValue = nuDecode($(t).attr('data-org-value'));
     if (orgValue !== t.value) {
         $(t).addClass('changedCgfValue');
     } else {

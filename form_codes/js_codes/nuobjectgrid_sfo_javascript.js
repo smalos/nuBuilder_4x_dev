@@ -26,7 +26,7 @@ if (nuFormType() == 'edit') {
     const OPTION_ALL = '(' + nuTranslate('All')  + ')';
     
     var sfFilter = {};
-    sfFilter['objform']  = {
+    sfFilter.objform = {
     	'sob_all_zzzzsys_tab_id': {type: 'select', blank: false, all: OPTION_ALL},
     	'sob_all_id': {type: 'search', placeholder: nuTranslate('Search')},
     	'sob_all_type': {type: 'select', blank: false, all: OPTION_ALL},

@@ -143,22 +143,7 @@ if (nuFormType() == 'edit') {
 
     default_description();
 
-    // Add ACE event handlers
-    $('.js').on('dblclick', function() {
-            nuOpenAce('JavaScript', this.id);
-    });
-
-    $('.sql').on('dblclick', function() {
-        nuOpenAce('SQL', this.id);
-    });
-
-    $('.html').on('dblclick', function() {
-            nuOpenAce('HTML', this.id);
-    });
-
-    $('.css').on('dblclick', function() {
-            nuOpenAce('CSS', this.id);
-    });
+    nuACEInitDblClickHandlers();
 
     nuUpdateDisplayDatalists();
 

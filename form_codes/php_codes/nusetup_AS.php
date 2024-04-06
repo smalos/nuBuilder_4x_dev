@@ -1,3 +1,4 @@
+
 function writeVersionToFile($dbVersion, $filesVersion) {
 
     $f = fopen(__DIR__ . '/../version.txt', "w+") or die("Unable to open file!");
@@ -10,11 +11,11 @@ function writeVersionToFile($dbVersion, $filesVersion) {
 }
 
 
-$nuDevMode = '#nuDevMode#' == '1';
+$DEV_MODE = '#DEV_MODE#' == '1';
 
 // Write Version Info
 
-if ($nuDevMode) {
+if ($DEV_MODE) {
     
     nuSetConfigOrder();
 
@@ -155,13 +156,12 @@ if ($t != '-1') {
 
 }
 
-
-if ("#set_language_current#" != "#set_language#") {
-    $_SESSION['nubuilder_session_data']['translation'] = nuGetTranslation("#set_language#");
+if ('#set_language_current#' != '#set_language#') {
+    $_SESSION['nubuilder_session_data']['translation'] = nuGetTranslation('#set_language#');
 }
 
 // Check if header textarea changed
 
-if ("#set_header_current#" != "#set_header#") {
+if ('#set_header_current#' != '#set_header#') {
     nuDisplayError(nuTranslate('<h2>'.nuTranslate('Information').'</h2><br>You will need to log in again for the changes to take effect.'));
 }

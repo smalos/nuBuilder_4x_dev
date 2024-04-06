@@ -1,6 +1,6 @@
 $justphp = nuObjKey(nuHash(), 'filter') == 'justphp';
 
-if ('#nuDevMode#' != 1 && '#sph_template#' == '1') {
+if ('#DEV_MODE#' != 1 && '#sph_template#' == '1') {
     if (! $justphp) {
         nuDisplayError(nuTranslate("Templates cannot be saved. Clone it instead."));
         return;

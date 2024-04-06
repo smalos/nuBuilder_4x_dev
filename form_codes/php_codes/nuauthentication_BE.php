@@ -1,4 +1,4 @@
-$devMode = nuReplaceHashVariables("#nuDevMode#");
+$devMode = nuReplaceHashVariables("#DEV_MODE#");
 
 $t = $devMode == '1' ? '_Template' : '';
 

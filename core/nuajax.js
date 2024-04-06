@@ -1,29 +1,27 @@
 function nuAjax(w, successCallback, errorCallback) {
 
-	// Serialize data
-	const data = JSON.stringify(nuAddEditFieldsToHash(w));
+	try {
+		const data = JSON.stringify(nuAddEditFieldsToHash(w));
 
-	// Send AJAX request
-	$.ajax({
-		async: true,
-		dataType: "json",
-		url: "core/nuapi.php",
-		method: "POST",
-		data: {
-			nuSTATE: data
-		},
-		success: (data, textStatus, jqXHR) => successCallback(data, textStatus, jqXHR),
-		error: (jqXHR, textStatus, errorThrown) => {
-			// Call error callback if defined
-			if (errorCallback) {
+		$.ajax({
+			async: true,
+			dataType: "json",
+			url: "core/nuapi.php",
+			method: "POST",
+			data: { nuSTATE: data }
+		})
+		.done(successCallback)
+		.fail((jqXHR, textStatus, errorThrown) => {
+			if (typeof errorCallback === "function") {
 				errorCallback(jqXHR, textStatus, errorThrown);
 			}
-
 			nuAjaxShowError(jqXHR, errorThrown);
+		});
 
-		}
+	} catch (error) {
+		console.error('nuAjax Error:', error);
+	}
 
-	});
 }
 
 function nuAjaxShowError(jqXHR, errorThrown) {
@@ -778,7 +776,7 @@ function nuUpdateData(action, instruction, close) {
 
 function nuSaveAfterDrag() {
 
-	const contentWin = getNuDragDialogIframes()[0].contentWindow;
+	const contentWin = nuGetNuDragDialogIframes()[0].contentWindow;
 	let last = contentWin.nuFORM.getCurrent();
 
 	last.call_type = 'nudragsave';

@@ -42,7 +42,6 @@ if (db_num_rows($stmt) === 1) {
 
 }
 
-
 if ($page) {
 	header("Location: $page");
 } else {
@@ -69,13 +68,16 @@ function nuGetVendorURL($appId, $table) {
 		$page = "libs/tinyfilemanager/tinyfilemanager.php";
 	}
 
-	setcookie("nu_".$appId, $_SESSION['nubuilder_session_data']['SESSION_ID'], [
-		'secure' => true,
+	$cookieOptions = [
 		'httponly' => true
-	]);
+	];
+
+	if (nuIsHTTPS()) {
+		$cookieOptions['secure'] = true;
+	}
+
+	setcookie("nu_".$appId, $_SESSION['nubuilder_session_data']['SESSION_ID'], $cookieOptions);
 	
 	return $page;
 	
 }
-
-?>

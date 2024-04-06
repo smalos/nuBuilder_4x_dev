@@ -7,31 +7,31 @@ if (nuFormType() == 'edit') {
 
     // Add ACE event handlers
     sc.on('dblclick', function() {
-         nuOpenAce(nuGetSourceLangage(), this.id);
+        nuOpenAce(nuGetSourceLangage(), this.id);
     });
 
-   // Code Snippets form
-   nuSetProperty('IS_SETUP_HEADER',0);
-   nuSetProperty('IS_CUSTOM_CODE',1);
+    // Code Snippets form
+    nuSetProperty('IS_SETUP_HEADER', 0);
+    nuSetProperty('IS_CUSTOM_CODE', 1);
 
     // Disable nu-records
     if (nuRecordId().startsWith('nu')) {
-      nuDisableAllObjects();
-      $('#nuSaveButton').hide();
+        nuDisableAllObjects();
+        $('#nuSaveButton').hide();
     }
 
 }
 
-function nuOnClone(){
-      nuEnableAllObjects();
-      $('#nuSaveButton').show();
+function nuOnClone() {
+    nuEnableAllObjects();
+    $('#nuSaveButton').show();
 }
 
 
 function nuGetSourceLangage() {
-    
-    var l = $('#cot_language').val();
-    return l === '' ? 'Javascript' : l;
-    
-}
 
+    let l = $('#cot_language').val();
+    if (l === 'JavaScript') l = 'JS';
+    return l === '' ? 'JS': l;
+
+}

@@ -170,7 +170,7 @@ function nuGetIPAddress() {
 
 function nuLoginSetupGlobeadmin($loginName, $userId, $userName) {
 
-	global $nuConfig2FAAdmin;
+	global $nuConfig2FAAdmin, $nuConfigDevMode;
 
 	$_SESSION['nubuilder_session_data']['SESSION_ID'] = nuIDTEMP();
 	$_SESSION['nubuilder_session_data']['SESSION_TIMESTAMP'] = time();
@@ -198,7 +198,8 @@ function nuLoginSetupGlobeadmin($loginName, $userId, $userName) {
 	$sessionIds->sus_additional2 =  '';
 	$sessionIds->sus_accessibility_features =  '';
 	$sessionIds->user_permissions =  '';
-	
+	$sessionIds->dev_mode =  isset($nuConfigDevMode) ? (string)((int)$nuConfigDevMode) : '0';
+
 	if ($nuConfig2FAAdmin) {
 		if (nu2FALocalTokenOK($sessionIds->sus_login_name)) {
 			$sessionIds->zzzzsys_form_id = $_SESSION['nubuilder_session_data']['HOME_ID'];
@@ -297,14 +298,14 @@ function nuLoginSetupNOTGlobeadmin($new = true, $sSoUserName = "", $changePasswo
 
 			$checkToken = ($thisPassword == $login_token && strlen($thisPassword) >= 20);
 			// the token must match and be at least 10 chars
-			if ($checkToken == true) {
+			if ($checkToken) {
 				// generate a new token for next time if the use-once token has been used
 				nuSetUserJSONData("LOGIN_TOKEN", nuGenerateToken(20), $checkLoginDetailsOBJ->zzzzsys_user_id );
 			}
 
 		}
-
-		if ($check == false && $checkToken == false) nuDie();
+			
+		if ($check === false && $checkToken === false) nuDie();
 
 	}
 
@@ -319,13 +320,7 @@ function nuLoginSetupNOTGlobeadmin($new = true, $sSoUserName = "", $changePasswo
 		$_SESSION['nubuilder_session_data']['isGlobeadmin'] = false;
 	}
 
-	$translationQRY = nuRunQuery("SELECT * FROM zzzzsys_translate WHERE trl_language = ? ORDER BY trl_english", [$language]);
-	$getAccessLevelSQL = "SELECT zzzzsys_access.*, zzzzsys_user.* FROM zzzzsys_user ";
-	$getAccessLevelSQL .= "INNER JOIN zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id ";
-	$getAccessLevelSQL .= "WHERE zzzzsys_user_id = '$userId' ";
-	$getAccessLevelSQL .= "GROUP BY sus_zzzzsys_access_id ";
-	$getAccessLevelQRY = nuRunQuery($getAccessLevelSQL);
-
+	$getAccessLevelQRY = nuRunQuery(nuGetAccessLevelQuery(), [$userId]);
 	if (db_num_rows($getAccessLevelQRY) == 0) {
 		nuDie($msg = 'No access levels setup.');
 	}
@@ -340,7 +335,6 @@ function nuLoginSetupNOTGlobeadmin($new = true, $sSoUserName = "", $changePasswo
 	$sessionIds->sus_login_name = $getAccessLevelOBJ->sus_login_name;
 	$sessionIds->sus_name = $getAccessLevelOBJ->sus_name;
 	$sessionIds->language = $language;
-
 	$sessionIds->sus_position = $getAccessLevelOBJ->sus_position ?? null;
 	$sessionIds->sus_department = $getAccessLevelOBJ->sus_department ?? null;
 	$sessionIds->sus_team = $getAccessLevelOBJ->sus_team ?? null;
@@ -348,12 +342,12 @@ function nuLoginSetupNOTGlobeadmin($new = true, $sSoUserName = "", $changePasswo
 	$sessionIds->sus_additional1 = $getAccessLevelOBJ->sus_additional1 ?? null;
 	$sessionIds->sus_additional2 = $getAccessLevelOBJ->sus_additional2 ?? null;
 	$sessionIds->sus_accessibility_features = $getAccessLevelOBJ->sus_accessibility_features ?? null;
+	$sessionIds->dev_mode = '0';
 	$sessionIds->user_permissions = nuArrayToSeparated(nuGetUserPermissions($userId));
-
 	$sessionIds->global_access = '0';
 	$sessionIds->ip_address = nuGetIPAddress();
 	$sessionIds->zzzzsys_form_id = $getAccessLevelOBJ->sal_zzzzsys_form_id;
-
+	
 	if ($changePassword) {
 		$sessionIds->zzzzsys_form_id = $_SESSION['nubuilder_session_data']['CHANGE_PW_FORM_ID'];
 		$_SESSION['nubuilder_session_data']['SESSION_CHANGE_PW_STATUS'] = 'PENDING';
@@ -378,51 +372,25 @@ function nuLoginSetupNOTGlobeadmin($new = true, $sSoUserName = "", $changePasswo
 	$storeSessionInTable->access_level_code = $aclInfo['code'];
 	$storeSessionInTable->access_level_group = $aclInfo['group'];
 
-	// form ids
-	$getFormsSQL = "SELECT slf_zzzzsys_form_id	AS id, ";
-	$getFormsSQL .= "slf_add_button				AS a, ";
-	$getFormsSQL .= "slf_save_button			AS s, ";
-	$getFormsSQL .= "slf_delete_button			AS d, ";
-	$getFormsSQL .= "slf_clone_button			AS c, ";
-	$getFormsSQL .= "slf_print_button			AS p ";
-	$getFormsSQL .= "FROM zzzzsys_user ";
-	$getFormsSQL .= "JOIN zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id ";
-	$getFormsSQL .= "JOIN zzzzsys_access_form ON zzzzsys_access_id = slf_zzzzsys_access_id ";
-	$getFormsSQL .= "WHERE zzzzsys_user_id = '$userId' ";
-	$getFormsQRY = nuRunQuery($getFormsSQL);
-	$formAccess = [];
-	while ($getFormsOBJ = db_fetch_object($getFormsQRY)) {
-		$formAccess[] = [$getFormsOBJ->id, $getFormsOBJ->a, $getFormsOBJ->p, $getFormsOBJ->s, $getFormsOBJ->c, $getFormsOBJ->d];
+	// Form Access
+	$getFormAccessQRY = nuRunQuery(nuGetFormAccessQuery(), [$userId]);
+	$formAccess = [];	
+	while ($getFormsOBJ = db_fetch_object($getFormAccessQRY)) {
+		$formAccess[] = [$getFormsOBJ->id, $getFormsOBJ->add_btn, $getFormsOBJ->print_btn, $getFormsOBJ->save_btn, $getFormsOBJ->clone_btn, $getFormsOBJ->delete_btn];
 	}
+					
 	$storeSessionInTable->forms = $formAccess;
 
-	// report ids
-	$getReportsSQL = "SELECT sre_zzzzsys_report_id AS id, sre_zzzzsys_form_id AS form_id ";
-	$getReportsSQL .= "FROM zzzzsys_user ";
-	$getReportsSQL .= "JOIN zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id ";
-	$getReportsSQL .= "JOIN zzzzsys_access_report ON zzzzsys_access_id = sre_zzzzsys_access_id ";
-	$getReportsSQL .= "JOIN zzzzsys_report ON zzzzsys_report_id = sre_zzzzsys_report_id ";
-	$getReportsSQL .= "WHERE zzzzsys_user_id = '$userId' ";
-	$getReportsSQL .= "GROUP BY sre_zzzzsys_report_id ";
-	$getReportsQRY = nuRunQuery($getReportsSQL);
+	// Report Access
+	$getReportsQRY = nuRunQuery(nuGetReportIdsQuery(), [$userId]);
 	$reportAccess = [];
 	while ($getReportsOBJ = db_fetch_object($getReportsQRY)) {
 		$reportAccess[] = [$getReportsOBJ->id, $getReportsOBJ->form_id];
 	}
 	$storeSessionInTable->reports = $reportAccess;
-
-	// php ids
-	$getPHPsSQL = "SELECT ";
-	$getPHPsSQL .= "sal_code AS access_level_code, ";
-	$getPHPsSQL .= "slp_zzzzsys_php_id AS id, ";
-	$getPHPsSQL .= "sph_zzzzsys_form_id AS form_id ";
-	$getPHPsSQL .= "FROM zzzzsys_user ";
-	$getPHPsSQL .= "JOIN zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id ";
-	$getPHPsSQL .= "JOIN zzzzsys_access_php ON zzzzsys_access_id = slp_zzzzsys_access_id ";
-	$getPHPsSQL .= "JOIN zzzzsys_php ON zzzzsys_php_id = slp_zzzzsys_php_id ";
-	$getPHPsSQL .= "WHERE zzzzsys_user_id = '$userId' ";
-	$getPHPsSQL .= "GROUP BY slp_zzzzsys_php_id ";
-	$getPHPsQRY = nuRunQuery($getPHPsSQL);
+	
+	// Procedure Access
+	$getPHPsQRY = nuRunQuery(nuGetPHPIdsQuery(), [$userId]);
 	$phpAccess = [];
 	while ($getPHPsOBJ = db_fetch_object($getPHPsQRY)) {
 		$phpAccess[] = [$getPHPsOBJ->id, $getPHPsOBJ->form_id];
@@ -439,11 +407,90 @@ function nuLoginSetupNOTGlobeadmin($new = true, $sSoUserName = "", $changePasswo
 	return true;
 }
 
+function nuGetAccessLevelQuery() {
+
+	return "SELECT 
+				zzzzsys_access.*, 
+				zzzzsys_user.* 
+			FROM 
+				zzzzsys_user 
+			INNER JOIN 
+				zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id 
+			WHERE 
+				zzzzsys_user_id = ? 
+			GROUP BY 
+				sus_zzzzsys_access_id";
+
+}
+
+function nuGetFormAccessQuery() {
+
+	return "SELECT 
+				`slf_zzzzsys_form_id` AS `id`,
+				`slf_add_button` AS `add_btn`,
+				`slf_save_button` AS `save_btn`,
+				`slf_delete_button` AS `delete_btn`,
+				`slf_clone_button` AS `clone_btn`,
+				`slf_print_button` AS `print_btn`
+			FROM 
+				`zzzzsys_user` 
+			JOIN 
+				`zzzzsys_access` ON `zzzzsys_access_id` = `sus_zzzzsys_access_id` 
+			JOIN 
+				`zzzzsys_access_form` ON `zzzzsys_access_id` = `slf_zzzzsys_access_id` 
+			WHERE 
+				`zzzzsys_user_id` = ?";
+
+}
+
+
+function nuGetReportIdsQuery() {
+
+	return "SELECT 
+				sre_zzzzsys_report_id AS id, 
+				sre_zzzzsys_form_id AS form_id 
+			FROM 
+				zzzzsys_user 
+			JOIN 
+				zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id 
+			JOIN 
+				zzzzsys_access_report ON zzzzsys_access_id = sre_zzzzsys_access_id 
+			JOIN 
+				zzzzsys_report ON zzzzsys_report_id = sre_zzzzsys_report_id 
+			WHERE 
+				zzzzsys_user_id = ? 
+			GROUP BY 
+				sre_zzzzsys_report_id";
+}
+
+function nuGetPHPIdsQuery() {
+	
+	return "SELECT 
+				sal_code AS access_level_code, 
+				slp_zzzzsys_php_id AS id, 
+				sph_zzzzsys_form_id AS form_id 
+			FROM 
+				zzzzsys_user 
+			JOIN 
+				zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id 
+			JOIN 
+				zzzzsys_access_php ON zzzzsys_access_id = slp_zzzzsys_access_id 
+			JOIN 
+				zzzzsys_php ON zzzzsys_php_id = slp_zzzzsys_php_id 
+			WHERE 
+				zzzzsys_user_id = ? 
+			GROUP BY 
+				slp_zzzzsys_php_id";
+
+}
+
 function nuTempAnonReport() {
+
 	// only let the user have 1 temporary report run
 	$_SESSION['nubuilder_session_data']['SESSION_ID'] = null;
 	$_SESSION['nubuilder_session_data']['SESSION_TIMESTAMP'] = null;
 	$_SESSION['nubuilder_session_data']['TEMPORARY_SESSION'] = true;
+
 }
 
 function nuUpdateExistingSession() {
@@ -463,6 +510,7 @@ function nuUpdateExistingSession() {
 	else {
 		nuDie('Your session has timed out.');
 	}
+
 }
 
 function nuDie($msg = 'Invalid login!') {
@@ -472,6 +520,7 @@ function nuDie($msg = 'Invalid login!') {
 	header("Content-Type: text/html");
 	header('HTTP/1.0 403 Forbidden');
 	die($msg);
+
 }
 
 function nuAccessLevelInfo($u) {
@@ -505,6 +554,7 @@ function nuIDTEMP() {
 	$id = $_POST['nuCounter2ID'] . str_pad($_POST['nuCounter2'], 4, '0', STR_PAD_LEFT);
 
 	return $id;
+
 }
 
 function nuGetTranslation($l) {
@@ -517,4 +567,5 @@ function nuGetTranslation($l) {
 	}
 
 	return $a;
+
 }

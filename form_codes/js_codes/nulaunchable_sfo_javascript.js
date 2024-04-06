@@ -4,21 +4,7 @@ $('#sfo_javascript').addClass('js');
 
 nuSetTitle($('#sfo_table').val());
 
-$('.js').on('dblclick', function() {
-	nuOpenAce('Javascript', this.id);
-});
-
-$('.sql').on('dblclick', function() {
-	nuOpenAce('SQL', this.id);
-});
-
-$('.html').on('dblclick', function() {
-	nuOpenAce('HTML', this.id);
-});
-
-$('.php').on('dblclick', function() {
-	nuOpenAce('PHP', this.id);
-});
+nuACEInitDblClickHandlers();
 
 if(window.filter == 'justjs'){
     
