@@ -206,22 +206,4 @@ function nu2FALocalTokenOK($uid) {
 
 }
 
-function nu2FAStatusPending($globalAccess, $sessionData, $callType, $recordId, $formId) {
-	if ((($globalAccess && nuObjKey($sessionData, '2FA_ADMIN')) || (!$globalAccess && nuObjKey($sessionData, '2FA_USER'))) && nuObjKey($sessionData, 'SESSION_2FA_STATUS') == 'PENDING') {
-		return !(($callType === 'runhiddenphp' && nuArrayContains($recordId, ['nuAuthentication2FA', 'nuAuthentication2FA_Template', 'NUSETHASHCOOKIE'])) || ($formId === $sessionData['2FA_FORM_ID'] && $recordId === '-1'));
-	}
-	else {
-		return false;
-	}
-}
-
-function nuPasswordChangeStatusPending($globalAccess, $sessionData, $callType, $formId) {
-
-	if (!$globalAccess  && nuObjKey($sessionData,'SESSION_CHANGE_PW_STATUS') == 'PENDING') {
-		if ($formId != $sessionData['CHANGE_PW_FORM_ID'] && $callType != 'runhiddenphp') {
-			return true;
-		}
-	}
-
-	return false;
-}
+?>

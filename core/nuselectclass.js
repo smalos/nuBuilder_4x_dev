@@ -509,29 +509,37 @@ class nuSelectObject {
 
 		for (var k in r) {
 
-			var fromField = String(k).split('--')[0];
-			var toField = String(k).split('--')[1];
+			var I = String(k).split('--')[0];
+			var i = String(k).split('--')[1];
 
-			var fromTable = String(fromField).split('_')[2];
-			var toTable = String(toField).split('_')[2];
+			var B = String(I).split('_')[2];
+			var b = String(i).split('_')[2];
 
-			var obj = {
+			var T = $('#tablename' + B).html();
+			var A = $('#alias' + B).val();
+			var F = $('#' + I).html();
 
-				'from': fromField,
-				'fromtable': $('#tablename' + fromTable).html(),
-				'fromalias': $('#alias' + fromTable).val(),
-				'fromfield': $('#' + fromField).html(),
+			var t = $('#tablename' + b).html();
+			var a = $('#alias' + b).val();
+			var f = $('#' + i).html();
 
-				'to': toField,
-				'totable': $('#tablename' + toTable).html(),
-				'toalias': $('#alias' + toTable).val(),
-				'tofield': $('#' + toField).html(),
+			var o = {
+
+				'from': I,
+				'fromtable': T,
+				'fromalias': A,
+				'fromfield': F,
+
+				'to': i,
+				'totable': t,
+				'toalias': a,
+				'tofield': f,
 
 				'join': r[k],
 
 			};
 
-			this.joins[fromField + '--' + toField] = obj;
+			this.joins[I + '--' + i] = o;
 
 		}
 
@@ -813,21 +821,27 @@ class nuSelectObject {
 
 	addJoin(key, v) {
 
-		const jsonString = parent.$('#sse_json').val();
-		let Joins = { 'joins': [] };
-		if (jsonString !== '') {
-			Joins = JSON.parse(jsonString);
+		var j = parent.$('#sse_json').val();
+
+		if (j == '') {
+			var J = { 'joins': [] };
+		} else {
+			var J = JSON.parse(j);
 		}
 
-		Joins.joins[key] = v;
+		J.joins[key] = v;
 
-		const sseJson = JSON.stringify(Joins);
-		parent.$('#sse_json').val(sseJson);
+		var u = JSON.stringify(J);
+
+		parent.$('#sse_json').val(u);
 
 	}
 
 
 }
+
+
+
 
 //=========functions==========================================================================
 
@@ -891,6 +905,8 @@ function nuDown(e) {
 
 }
 
+
+
 function nuMove(e) {
 
 	if (window.nuCurrentID == '') { return; }
@@ -915,6 +931,7 @@ function nuMove(e) {
 	}
 
 }
+
 
 function nuAngle() {
 
@@ -1018,22 +1035,20 @@ function nuAngle() {
 
 function nuChangeJoin(e) {
 
-	const jsonInputElement = parent.$('#sse_json');
-	let jsonString = jsonInputElement.val();
-	const parsedJson = JSON.parse(jsonString);
-	const joinIndex = $(event.target).attr('data-nu-join');
+	var v = parent.$('#sse_json').val();
+	var j = JSON.parse(v);
+	var i = $(e.target).attr('data-nu-join');
 
-	if (parsedJson.joins[joinIndex] === '') {
-		parsedJson.joins[joinIndex] = 'LEFT';
+	if (j.joins[i] == '') {
+		j.joins[i] = 'LEFT';
 	} else {
-		parsedJson.joins[joinIndex] = '';
+		j.joins[i] = '';
 	}
 
-	jsonInputElement
-		.val(JSON.stringify(parsedJson))
+	parent.$('#sse_json')
+		.val(JSON.stringify(j))
 		.trigger("change");
 
 	nuSQL.buildSQL();
 
 }
-

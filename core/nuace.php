@@ -17,11 +17,11 @@
 
 <script>
 
-window.nuACELanguage = opener.window.nuAce[0];
-window.nuACEObjectId = opener.window.nuAce[1];
-window.nuACETheme = opener.window.nuAce[2];
-window.nuACEObjectLabel = $('#' + window.nuACEObjectId, window.opener.document).attr('data-nu-label');
-document.title = window.nuACEObjectId + " - Ace Editor";
+window.c = opener.window.nuAce[0];
+window.o = opener.window.nuAce[1];
+window.theme = opener.window.nuAce[2];
+window.l = $('#' + o, window.opener.document).attr('data-nu-label');
+document.title = l + " - Ace Editor";
 
 function nuLoad(){
 
@@ -31,7 +31,7 @@ function nuLoad(){
 	window.editor = ace.edit("nu_editor");
 
 	editor.setShowPrintMargin(false);
-	const theme = "ace/theme/" + (window.nuACETheme ? window.nuACETheme : 'monokai');
+	const theme = "ace/theme/" + (window.theme ? window.theme : 'monokai');
 
 	editor.setTheme(theme);
 	editor.setOptions({
@@ -40,15 +40,15 @@ function nuLoad(){
 		enableLiveAutocompletion: true
 	});
 
-	window.startValue = opener.window.document.getElementById(nuACEObjectId).value;
+	window.startValue = opener.window.document.getElementById(window.o).value;
 	editor.setFontSize(14);
-
 	var cl			= '';
-	var language = window.nuACELanguage.toUpperCase();
+
+	var language = window.c.toUpperCase();
 
 	const languageModes = {
 	  'HTML': {mode: 'html', cl: 'html'},
-	  'JS': {mode: 'javascript', cl: 'js'},
+	  'JAVASCRIPT': {mode: 'javascript', cl: 'js'},
 	  'MYSQL': {mode: 'mysql', cl: 'sql'},
 	  'PHP': {mode: 'php', cl: 'php'},
 	  'SQL': {mode: 'sql', cl: 'sql'},
@@ -60,13 +60,13 @@ function nuLoad(){
 	  editor.getSession().setMode({path:`ace/mode/${mode}`, inline:true});
 	}
 
-	document.getElementById('nu_language').innerHTML	= window.nuACEObjectLabel + " (" + window.nuACELanguage + ")";
+	document.getElementById('nu_language').innerHTML	= window.l + " (" + c  + ")";
 	
 	if (language.includes('SQL')) {
 		document.getElementById('nuACEBeautifyButton').style.display = 'none';
 	}
 
-	if($('#' + window.nuACEObjectId, window.opener.document)[0].id == 'deb_message'){
+	if($('#' + o, window.opener.document)[0].id == 'deb_message'){
 		$('#copy_to_nubuilder').remove();
 		$('#copy_to_nubuilder_no_close').remove();
 	}else{
@@ -91,7 +91,7 @@ function nuLoad(){
 		exec: editor.commands.byName['showSettingsMenu'].exec
 	});
 
-	document.addEventListener('keydown', nuACEhandleCtrlComma);
+	document.addEventListener('keydown', handleCtrlComma);
 
 	nuSetEdited(false);
 	editor.getSession().getUndoManager().reset();
@@ -99,12 +99,12 @@ function nuLoad(){
 }
 
 
-function nuACEhandleCtrlComma(event) {
+function handleCtrlComma(event) {
   // Check if the Ctrl + , combination is pressed (Ace menu opens)
   if ((event.metaKey || event.ctrlKey) && event.keyCode == 188) {
 	  editor.execCommand("showSettingsMenu");
-	  document.title = Date.now();
-	  setTimeout(function () {
+      document.title = Date.now();
+      setTimeout(function () {
 		$('#ace_settingsmenu').parent().css('background-color','');
 	}, 50);
 
@@ -112,7 +112,7 @@ function nuACEhandleCtrlComma(event) {
 }
 
 function nuSetEdited(edited = true) {
-	$('.nuCopyBackButton').toggleClass('red', edited);	
+    $('.nuCopyBackButton').toggleClass('red', edited);	
 	$('.undo').toggleClass('nuReadonly', ! edited);	
 	$(".undo").prop("disabled", !edited);
 }
@@ -147,16 +147,14 @@ function nuAceSave(close){
 
 	window.nuWarn	= 0;
 
-	if(!opener.window.document.getElementById(window.nuACEObjectId)){
+	if(!opener.window.document.getElementById(window.o)){
 
 		alert('The opening Form is no longer available.');
 		return;
 
 	}
 
-	nuSetEdited(false);
-
-	opener.window.document.getElementById(window.nuACEObjectId).value = editor.getValue();
+	opener.window.document.getElementById(o).value = editor.getValue();
 
 	if ("createEvent" in document) {
 
@@ -164,10 +162,10 @@ function nuAceSave(close){
 
 		evt.initEvent("change", false, true);
 
-		opener.window.document.getElementById(window.nuACEObjectId).dispatchEvent(evt);
+		opener.window.document.getElementById(window.o).dispatchEvent(evt);
 
 	}else{
-		opener.window.document.getElementById(window.nuACEObjectId).fireEvent("onchange");
+		opener.window.document.getElementById(window.o).fireEvent("onchange");
 	}
 
 	if (close) {

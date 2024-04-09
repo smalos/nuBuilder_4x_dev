@@ -51,13 +51,19 @@
 	$sessionData							= $_SESSION['nubuilder_session_data'];
 	$formId									= $formAndSessionData->form_id;
 	$recordId								= $formAndSessionData->record_id;
-	
-	if (nu2FAStatusPending($globalAccess, $sessionData, $callType, $recordId, $formId)) {
-		nuDisplayError(nuTranslate('Access denied. Authentication Pending.'));
+
+	// 2FA: Check authentication status.
+	if ((($globalAccess && nuObjKey($sessionData,'2FA_ADMIN')) || (!$globalAccess && nuObjKey($sessionData,'2FA_USER'))) && nuObjKey($sessionData,'SESSION_2FA_STATUS') == 'PENDING') {
+		if ($formAndSessionData->form_id != $sessionData['2FA_FORM_ID'] && $callType != 'runhiddenphp') {
+			nuDisplayError(nuTranslate('Access denied. Authentication Pending.'));
+		}
 	}
 
-	if (nuPasswordChangeStatusPending($globalAccess, $sessionData, $callType, $formId)) {
-		nuDisplayError(nuTranslate('Access denied. Password Change Pending.'));
+	// Change Password: Check authentication status.
+	if (!$globalAccess  && nuObjKey($sessionData,'SESSION_CHANGE_PW_STATUS') == 'PENDING') {
+		if ($formAndSessionData->form_id != $sessionData['CHANGE_PW_FORM_ID'] && $callType != 'runhiddenphp') {
+			nuDisplayError(nuTranslate('Access denied. Password Change Pending.'));
+		}
 	}
 
 	$_POST['FORM_ID'] 						= $formId;
@@ -69,7 +75,6 @@
 	$_POST['nuHash']['SESSION_ID'] 			= $sessionData['SESSION_ID'];
 	$_POST['nuValidate']					= [];
 	$_POST['nuCallback']					= '';
-	$_POST['nuRunPHPHidden']				= '';
 	$_POST['nuAfterEvent']					= false;
 
 	$f										= new stdClass;
@@ -157,14 +162,12 @@
 		$f->forms[0]->session_id				= $sessionData['SESSION_ID'];
 
 		$f->forms[0]->callback					= nuSetGlobalPropertiesJS()."\n".nuObjKey($_POST,'nuCallback');
-		$f->forms[0]->run_php					= nuObjKey($_POST,'nuRunPHPHidden');
 		$f->forms[0]->errors					= nuObjKey($_POST,'nuErrors');
 		$f->forms[0]->log_again					= nuObjKey($_POST,'nuLogAgain');
 		$f->forms[0]->global_access				= $globalAccess ? '1' : '0';
 		$f->forms[0]->data_mode					= $globalAccess ? null : nuGetFormPermission($formId,'slf_data_mode');
 		$f->forms[0]->form_type_access			= $globalAccess ? null : nuGetFormPermission($formId,'slf_form_type');
 		$f->forms[0]->is_demo					= nuDemo(false);
-		$f->forms[0]->dev_mode 					= $globalAccess && isset($nuConfigDevMode) ? (string)((int)$nuConfigDevMode) : '0';	
 		$f->forms[0]->remember_me_2fa			= $sessionData['2FA_REMEMBER_ME'];
 		$f->forms[0]->token_validity_time_2fa	= $sessionData['2FA_TOKEN_VALIDITY_TIME'];
 		$f->forms[0]->form_access				= $GLOBALS['nuSetup']->set_denied;
@@ -183,3 +186,4 @@
 	$j											= json_encode($f->forms[0]);
 
 	print $j;
+?>

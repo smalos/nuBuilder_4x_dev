@@ -157,3 +157,4 @@ function nuPrintUpdateMessage($msg, $i = null) {
 
 }
 
+?>

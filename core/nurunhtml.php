@@ -2,17 +2,11 @@
 require_once ('nusessiondata.php');
 require_once ('nucommon.php');
 require_once ('nudata.php');
-
+	
 print "<meta charset='utf-8'>";
 
-$debugId = $_GET['i'] ?? ''; 
-
-$sessionVariable = "nuPrint_".$debugId;
-$jsonData = isset($_SESSION[$sessionVariable]) ? json_decode($_SESSION[$sessionVariable]) : null;
-if ($jsonData === null) {
-	$jsonData = nuGetDebugMessageData($debugId);
-	$_SESSION[$sessionVariable] = json_encode($jsonData );
-} 
+$debugId = $_GET['i'] ?? null; 
+$jsonData = nuGetDebugMessageData($debugId);
 
 if ($jsonData) {
 	$columns = $jsonData->columns;
@@ -52,16 +46,15 @@ function nuGetDebugMessageData($debugId) {
 
 }
 
-function nuRunHTMLGenerateTableHeader($columns, $includeHiddenColumns = false, $includedColumns = []) {
+function nuRunHTMLGenerateTableHeader($columns, $includeHiddenColumns = false) {
 
 	$tableHtml = "<TR>";
 
 	$columnCount = count($columns);
 	for ($col = 0;$col < $columnCount;$col++) {
-
 		$column = $columns[$col];
-		$printColumn = nuRunHTMLPrintColumn($col, $column, $includeHiddenColumns, $includedColumns);
-		if ($printColumn) {
+
+		if (!($column->width == 0 && $includeHiddenColumns != true)) {
 			$style = "style='font-size:12px;width:{$column->width}px;text-align:{$column->align}'";
 			$tableHtml .= "<TH $style>" . nuTranslate($column->title) . "</TH>\n";
 		}
@@ -72,17 +65,7 @@ function nuRunHTMLGenerateTableHeader($columns, $includeHiddenColumns = false, $
 
 }
 
-function nuRunHTMLPrintColumn($col, $column, $includeHiddenColumns, $includedColumns) {
-
-	if (count($includedColumns) > 0) {
-		return array_search($col, $includedColumns) !== false;
-	} else {
-		return $column->width > 0 || $includeHiddenColumns === true;
-	}
-
-}
-
-function nuRunHTMLGenerateTableData($columns, $data, $includeHiddenColumns = false, $includedColumns = []) {
+function nuRunHTMLGenerateTableData($columns, $data, $includeHiddenColumns = false) {
 
 	$tableHtml = "";
 
@@ -94,8 +77,7 @@ function nuRunHTMLGenerateTableData($columns, $data, $includeHiddenColumns = fal
 		for ($col = 0;$col < $columnCount;$col++) {
 
 			$column = $columns[$col];
-			$printColumn = nuRunHTMLPrintColumn($col, $column, $includeHiddenColumns, $includedColumns);
-			if ($printColumn) {
+			if (!($column->width === 0 && $includeHiddenColumns != true)) {
 				$display = $column->display;
 				$alias = nuGetColumnAlias($display);
 				$display = $alias ? $alias : $display;
@@ -117,15 +99,10 @@ function nuRunHTMLGenerateTableData($columns, $data, $includeHiddenColumns = fal
 function nuRunHTMLGenerateHTMLTable($columns, $data, $hash) {
 
 	$includeHiddenColumns = nuObjKey($hash, 'nuPrintincludeHiddenColumns', null) == '1' ? true : false;
-	$includedColumns = nuObjKey($hash, 'nuPrintincludedColumns', []);
-
-	if (! is_array($includedColumns)) {
-		$includedColumns = $includedColumns === '' ? [] : explode(',', nuDecode($includedColumns));
-	}
 
 	$tableHtml = "<TABLE border=1; style='border-collapse: collapse'>\n";
-	$tableHtml .= nuRunHTMLGenerateTableHeader($columns, $includeHiddenColumns, $includedColumns);
-	$tableHtml .= nuRunHTMLGenerateTableData($columns, $data, $includeHiddenColumns, $includedColumns);
+	$tableHtml .= nuRunHTMLGenerateTableHeader($columns, $includeHiddenColumns);
+	$tableHtml .= nuRunHTMLGenerateTableData($columns, $data, $includeHiddenColumns);
 	$tableHtml .= "</TABLE>";
 
 	return $tableHtml;
@@ -165,3 +142,5 @@ function nuAddJavaScript($js, $bc = false, $first = false){
 	// dummy
 }
 
+
+?>

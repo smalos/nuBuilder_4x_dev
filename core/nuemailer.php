@@ -185,3 +185,5 @@ function _nuEmailHelperAttach(&$mail, $file_list = [] ) {
 		$mail->AddAttachment($filesource,$filename);
 	}
 }
+
+?>

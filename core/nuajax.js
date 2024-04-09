@@ -1,27 +1,29 @@
 function nuAjax(w, successCallback, errorCallback) {
 
-	try {
-		const data = JSON.stringify(nuAddEditFieldsToHash(w));
+	// Serialize data
+	const data = JSON.stringify(nuAddEditFieldsToHash(w));
 
-		$.ajax({
-			async: true,
-			dataType: "json",
-			url: "core/nuapi.php",
-			method: "POST",
-			data: { nuSTATE: data }
-		})
-		.done(successCallback)
-		.fail((jqXHR, textStatus, errorThrown) => {
-			if (typeof errorCallback === "function") {
+	// Send AJAX request
+	$.ajax({
+		async: true,
+		dataType: "json",
+		url: "core/nuapi.php",
+		method: "POST",
+		data: {
+			nuSTATE: data
+		},
+		success: (data, textStatus, jqXHR) => successCallback(data, textStatus, jqXHR),
+		error: (jqXHR, textStatus, errorThrown) => {
+			// Call error callback if defined
+			if (errorCallback) {
 				errorCallback(jqXHR, textStatus, errorThrown);
 			}
+
 			nuAjaxShowError(jqXHR, errorThrown);
-		});
 
-	} catch (error) {
-		console.error('nuAjax Error:', error);
-	}
+		}
 
+	});
 }
 
 function nuAjaxShowError(jqXHR, errorThrown) {
@@ -90,7 +92,7 @@ function nuForm(f, r, filter, search, n, like) {
 	last.filter = filter == '' ? window.nuFILTER : filter;
 	last.search = search;
 
-	if (parent.nuHashFromEditForm === undefined) {
+	if (parent['nuHashFromEditForm'] === undefined) {
 		last.hash = [];
 	} else {
 		last.hash = parent.nuHashFromEditForm();
@@ -276,7 +278,7 @@ function nuGetPHP(formId, recordId) {
 	last.form_id = formId;
 	last.record_id = recordId;
 
-	if (parent.nuHashFromEditForm === undefined) {
+	if (parent['nuHashFromEditForm'] === undefined) {
 		last.hash = [];
 	} else {
 		last.hash = parent.nuHashFromEditForm();
@@ -314,7 +316,7 @@ function nuRunPHP(code, iFrame, runBeforeSave) {
 
 	if (nuFORM.getCurrent() === undefined) {
 		last.record_id = parent.nuFORM.getCurrent().record_id;
-		last.hash = parent.nuHashFromEditForm === undefined ? [] : parent.nuHashFromEditForm();
+		last.hash = parent['nuHashFromEditForm'] === undefined ? [] : parent.nuHashFromEditForm();
 	} else {
 		last.record_id = nuFORM.getCurrent().record_id;
 		last.hash = nuHashFromEditForm();
@@ -390,11 +392,9 @@ function nuRunPHPHidden(code, options = null) {
 
 }
 
-function nuRunPHPHiddenWithParams(code, paramName, paramValue, runBeforeSave) {
-
-	nuSetProperty(paramName, nuEncode(JSON.stringify(paramValue)));
-	nuRunPHPHidden(code, runBeforeSave);
-
+function nuRunPHPHiddenWithParams(code, paramName, paramValue) {
+	nuSetProperty(paramName, btoa(JSON.stringify(paramValue)));
+	nuRunPHPHidden(code);
 }
 
 function nuSystemUpdate() {
@@ -776,7 +776,7 @@ function nuUpdateData(action, instruction, close) {
 
 function nuSaveAfterDrag() {
 
-	const contentWin = nuGetNuDragDialogIframes()[0].contentWindow;
+	const contentWin = getNuDragDialogIframes()[0].contentWindow;
 	let last = contentWin.nuFORM.getCurrent();
 
 	last.call_type = 'nudragsave';

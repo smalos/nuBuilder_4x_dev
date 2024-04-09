@@ -651,12 +651,12 @@ function nuSetTools() {
 
 	$('#nuToolBar').html(h);
 	$('#nuToolBar').addClass('nuSection nuDragToolbar nuDragDialog');
-	nuMoveToolbar();
+	moveToolbar();
 
 
 }
 
-function nuMoveToolbar() {
+function moveToolbar() {
 
 	$('#nuToolBar').css('top', window.scrollY + 10);
 
@@ -1159,12 +1159,12 @@ function nuObjectDialog() {
 
 	var t = opener.nuTranslate('Field Name');
 
-	if (D.objectType == 'image') { t = 'Source'; }
-	if (D.objectType == 'label') { t = 'Title'; }
+	if (D['objectType'] == 'image') { t = 'Source'; }
+	if (D['objectType'] == 'label') { t = 'Title'; }
 
 	$('#caption_fieldName330').html(t);
 	/*
-		if(D.objectType== 'image'){
+		if(D['objectType'] == 'image'){
 			nuSetnuScroll(window.nuImages);
 		}else{
 			nuSetnuScroll(window.nuTT);
@@ -1173,15 +1173,15 @@ function nuObjectDialog() {
 	*/
 
 
-	if (D.objectType == 'image') {
+	if (D['objectType'] == 'image') {
 		nuSetnuScroll(window.nuImages);
 	}
 
-	if (D.objectType == 'field') {
+	if (D['objectType'] == 'field') {
 		nuSetnuScroll(window.nuTT);
 	}
 
-	if (D.objectType == 'label') {
+	if (D['objectType'] == 'label') {
 		nuSetnuScroll([["KEEP EXACT HEIGHT"]]);
 	}
 
@@ -1191,7 +1191,7 @@ function nuObjectDialog() {
 
 }
 
-function nuDeleteSelectedObjects() {
+function deleteSelectedObjects() {
 
 	var sel = document.getElementsByClassName('nuDragSelected');
 
@@ -1206,7 +1206,7 @@ function nuDeleteSelectedObjects() {
 
 }
 
-function nuFindWithAttr(array, attr, value) {
+function findWithAttr(array, attr, value) {
 	for (var i = 0; i < array.length; i += 1) {
 		if (array[i][attr] === value) {
 			return i;
@@ -1385,14 +1385,13 @@ function nuDialogInput(cap, id, top, left, val, fun, sel) {
 		$('#' + e.id).html(opener.nuTranslate(cap));
 	}
 
-	let ew = 4;
-	let tagName = 'select';
-	if (arguments.length !== 7) {
-		tagName = 'input';
-		ew = 0;
+	if (arguments.length == 7) {
+		var e = document.createElement('select');
+		var ew = 4;
+	} else {
+		var e = document.createElement('input');
+		var ew = 0;
 	}
-
-	var e = document.createElement(tagName);
 	e.setAttribute('id', id);
 
 	$('#nuDragDialog').append(e);

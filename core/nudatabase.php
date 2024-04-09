@@ -507,7 +507,7 @@ function nuDebugResult($nuDebugMsg, $flag = null){
 		"user_id"	=> nuDebugUserId()
 	];
 
-	nuRunQueryNoDebug($insert, $params);
+	nuRunQuery($insert, $params);
 
 	$nuDebugFlag = $flag ?? '';
 	$proc	= nuProcedure('NUDEBUGRESULTADDED');
@@ -613,3 +613,5 @@ function nuID_DEV(){
 	return $prefix . $uniqueId . substr($hash, 0, 2);
 
 }
+
+?>

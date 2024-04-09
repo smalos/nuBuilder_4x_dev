@@ -110,8 +110,7 @@ function nuInitTinyMCE(id, options, mobile, toolbar, toolbar_groups, menubar, co
 		contextmenu: _contextmenu,
 		skin: useDarkMode ? 'oxide-dark' : 'oxide',
 		content_css: useDarkMode ? 'dark' : 'default',
-		cache_suffix: '?v=7.0.0',
-		license_key: 'gpl',
+		cache_suffix: '?v=6.3.0',
 		setup: function (editor) {
 
 			editor.addShortcut('ctrl+shift+S', 'Save', function () {
