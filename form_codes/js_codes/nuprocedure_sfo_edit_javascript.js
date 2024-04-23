@@ -8,7 +8,7 @@ var recordIdSuffix = recordId.slice(-2);
 
 window.nuImages = parent.nuImages;
 
-if (isTemplate() && !nuDevMode()) {
+if (nuPorcIsTemplate() && !nuDevMode()) {
     nuDisableAllObjects();
     nuMessage("Unable to save templates. Please clone them to create a new copy and save the cloned version instead.", 2500);
 }
@@ -22,8 +22,8 @@ if (! recordId.startsWith('nu')) {
 }
 
 if (!nuIsNewRecord()) {
-    nuUpdateAclCount();
-    nuAddActionButton('runProcedure', 'Run', 'runProcedure();');
+    nuProcUpdateAclCount();
+    nuAddActionButton('ProcRunProcedure', 'Run', 'nuProcRunProcedure();');
 }
 
 
@@ -39,24 +39,24 @@ $(function() {
 
 nuHasNotBeenEdited();
 
-function setStyles() {
+function nuProcSetStyles() {
     $('#sph_php')
     .css('padding', '3px 3px 3px 3px')
     .trigger("focus");
 
 }
 
-function runProcedure() {
+function nuProcRunProcedure() {
 
     if (sph_run.value == 'window') {
         nuRunPHP(sph_code.value, '', 0);
     } else {
-        nuRunPHPHidden(sph_code.value, 0);
+        nuRunPHPHidden(sph_code.value);
     }
 
 }
 
-function nuUpdateAclCount() {
+function nuProcUpdateAclCount() {
 
     const l = $("[data-nu-field='slp_zzzzsys_access_id']").length -2;
     const t = l <= 0 ? '': ' (' + l + ')';
@@ -64,7 +64,7 @@ function nuUpdateAclCount() {
 
 }
 
-function isTemplate() {
+function nuPorcIsTemplate() {
     return nuGetValue('sph_template');
 }
 
@@ -73,7 +73,7 @@ function nuOnClone() {
 
     let code = sph_code.value;
 
-    if (isTemplate()) {
+    if (nuPorcIsTemplate()) {
         code = code == 'NUSENDWELCOMEEMAIL_Template' ? 'nuSendWelcomeEmail': code.substring(0, code.length-9);
         nuSetValue('sph_code', code);
         nuSetValue('sph_group', '');
@@ -89,10 +89,7 @@ function nuOnSetSaved(v) {
 
 function nuBeforeSave() {
 
-    if (nuFormType() == 'edit') {
-        window.scrollTop = $('#sph_php').scrollTop();
-    }
-
+    window.scrollTop = $('#sph_php').scrollTop();
     return true;
 
 }

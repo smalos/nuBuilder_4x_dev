@@ -3,17 +3,17 @@ $('.nuActionButton').hide();
 nuHideTabs(0);
 nuGetStartingTab();
 
-function openForm(f, r, event) {
+function nuHomeOpenForm(f, r, event) {
     n = event.ctrlKey ? '2': '0';
     nuForm(f, r, '', '', n);
 }
 
-function openMenu(event, menu, element) {
+function nuHomeOpenMenu(event, menu, element) {
     event.stopPropagation();
     ctxmenu.show(menu, element);
 }
 
-function menuProcedureClick(element, event) {
+function nuHomeMenuProcedureClick(element, event) {
 
     const menu = [{
         text: nuTranslate("Procedure")
@@ -21,18 +21,18 @@ function menuProcedureClick(element, event) {
 
         {
             text: nuContextMenuItemText("Run", "fa fa-play"),
-            action: () => openForm('nurunphp', '', event)
+            action: () => nuHomeOpenForm('nurunphp', '', event)
         },
         {
             text: nuContextMenuItemText("Add", "fa fas fa-plus"),
-            action: () => openForm('nuprocedure', '-1', event)
+            action: () => nuHomeOpenForm('nuprocedure', '-1', event)
         }]
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }
 
-function menuNotesClick(element, event) {
+function nuHomeMenuNotesClick(element, event) {
 
     const menu = [{
         text: nuTranslate("Notes")
@@ -40,18 +40,18 @@ function menuNotesClick(element, event) {
 
         {
             text: nuContextMenuItemText("Add", "fa fas fa-plus"),
-            action: () => openForm('nunotes', '-1', event)
+            action: () => nuHomeOpenForm('nunotes', '-1', event)
         },
         {
             text: nuContextMenuItemText("Categories", "fa-solid fa-list"),
-            action: () => openForm('nunotescategroy', '', event)
+            action: () => nuHomeOpenForm('nunotescategroy', '', event)
         }]
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }
 
-function menuUserClick(element, event) {
+function nuHomeMenuUserClick(element, event) {
 
     const menu = [{
         text: nuTranslate("User")
@@ -59,18 +59,18 @@ function menuUserClick(element, event) {
 
         {
             text: nuContextMenuItemText("Add", "fa fas fa-plus"),
-            action: () => openForm('nuuser', '-1', event)
+            action: () => nuHomeOpenForm('nuuser', '-1', event)
         },
         {
             text: nuContextMenuItemText("Permission Items", "fa-solid fa-list"),
-            action: () => openForm('nupermissionitem', '', event)
+            action: () => nuHomeOpenForm('nupermissionitem', '', event)
         }]
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }
 
-function menuEmailClick(element, event) {
+function nuHomeMenuEmailClick(element, event) {
 
     const menu = [{
         text: nuTranslate("Email")
@@ -78,18 +78,18 @@ function menuEmailClick(element, event) {
 
         {
             text: nuContextMenuItemText("Add Template", "fa fas fa-plus"),
-            action: () => openForm('nuemailtemplate', '-1', event)
+            action: () => nuHomeOpenForm('nuemailtemplate', '-1', event)
         },
         {
             text: nuContextMenuItemText("Email Templates", "fa-solid fa-list"),
-            action: () => openForm('nuemailtemplate', '', event)
+            action: () => nuHomeOpenForm('nuemailtemplate', '', event)
         }]
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }
 
-function menuReportClick(element, event) {
+function nuHomeMenuReportClick(element, event) {
 
     const menu = [{
         text: nuTranslate("Report")
@@ -97,22 +97,22 @@ function menuReportClick(element, event) {
 
         {
             text: nuContextMenuItemText("Run", "fa fa-play"),
-            action: () => openForm('nurunreport', '', event)
+            action: () => nuHomeOpenForm('nurunreport', '', event)
         },
         {
             text: nuContextMenuItemText("Add", "fa fas fa-plus"),
-            action: () => openForm('nubuildreport', '-1', event)
+            action: () => nuHomeOpenForm('nubuildreport', '-1', event)
         },
         {
             text: nuContextMenuItemText("Fast Report", "fa fa-bolt"),
-            action: () => openForm('nufrlaunch', '', event)
+            action: () => nuHomeOpenForm('nufrlaunch', '', event)
         }]
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }
 
-function menuFormClick(element, event) {
+function nuHomeMenuFormClick(element, event) {
 
     const menu = [{
         text: nuTranslate("Form")
@@ -120,18 +120,18 @@ function menuFormClick(element, event) {
 
         {
             text: nuContextMenuItemText("Add", "fa fas fa-plus"),
-            action: () => openForm('nuform', '-1', event)
+            action: () => nuHomeOpenForm('nuform', '-1', event)
         },
         {
             text: nuContextMenuItemText("Fast Form", "fa fa-bolt"),
-            action: () => openForm('nufflaunch', '', event)
+            action: () => nuHomeOpenForm('nufflaunch', '', event)
         }]
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }
 
-function menuDatabaseClick(element, event) {
+function nuHomeMenuDatabaseClick(element, event) {
 
 
     let menuSession =
@@ -139,7 +139,7 @@ function menuDatabaseClick(element, event) {
     {
         conditional: true,
         text: nuContextMenuItemText("Sessions", "fas fa-key"),
-        action: () => openForm('nusession', '', event)
+        action: () => nuHomeOpenForm('nusession', '', event)
     };
 
 
@@ -149,7 +149,7 @@ function menuDatabaseClick(element, event) {
     },
         {
             text: nuContextMenuItemText("CSV Transfer", "fas fa-file-csv"),
-            action: () => openForm('nucsvtransfer', '', event)
+            action: () => nuHomeOpenForm('nucsvtransfer', '', event)
         },
         menuSession,
         {
@@ -159,11 +159,11 @@ function menuDatabaseClick(element, event) {
 
         {
             text: nuContextMenuItemText("Cloner", "far fa-clone"),
-            action: () => openForm('nucloner', '', event)
+            action: () => nuHomeOpenForm('nucloner', '', event)
         },
         {
             text: nuContextMenuItemText("Update", "fas fa-cloud-download-alt"),
-            action: () => openForm('nuupdate', '', event)
+            action: () => nuHomeOpenForm('nuupdate', '', event)
         }]
 
 
@@ -172,26 +172,26 @@ function menuDatabaseClick(element, event) {
         menuProcedure = menuProcedure .filter((item) => item.conditional !== true);
     }
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }
 
 
-function menuSetupClick(element, event) {
+function nuHomeMenuSetupClick(element, event) {
 
     const menu = [{
         text: nuTranslate("Setup")
     },
         {
             text: nuContextMenuItemText("Format", "fa fa-calendar"),
-            action: () => openForm('nuFormat', '', event)
+            action: () => nuHomeOpenForm('nuFormat', '', event)
         },
 
         {
             text: nuContextMenuItemText("Translation", "fa fa-globe"),
-            action: () => openForm('nutranslate', '', event)
+            action: () => nuHomeOpenForm('nutranslate', '', event)
         }]
 
-    openMenu(event, menu, element);
+    nuHomeOpenMenu(event, menu, element);
 
 }

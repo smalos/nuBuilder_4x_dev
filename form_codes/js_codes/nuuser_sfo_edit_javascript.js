@@ -14,7 +14,7 @@ nuSelectAddEnglishOption('sus_language');
 
 nuHasNotBeenEdited();
 
-function nuTogglePasswordVisibility() {
+function nuUserTogglePasswordVisibility() {
     $("#new_password").nuTogglePassword();
     $("#check_password").nuTogglePassword();
 }

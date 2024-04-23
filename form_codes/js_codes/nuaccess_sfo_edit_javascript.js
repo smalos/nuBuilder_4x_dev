@@ -1,20 +1,10 @@
+$('#sal_zzzzsys_form_id_open_button').toggleClass('input_button nuButton nuLookupButton');
+if (nuIsNewRecord()) nuHide('sal_zzzzsys_form_id_open_button');
 
-function nuBeforeSave() {
-    const subforms = [
-        {name: 'accform', column: 'slf_zzzzsys_form_id', title: 'Forms'},
-        {name: 'accphp', column: 'slp_zzzzsys_php_id', title: 'Procedures'},
-        {name: 'accreport', column: 'sre_zzzzsys_report_id', title: 'Reports'}
-    ];
-    const duplicates = subforms.filter(subform => !nuSubformColumnUnique(subform.name, subform.column, subform.title));
-    if (duplicates.length) {
-        const duplicateTitles = duplicates.map(subform => subform.title);
-        nuMessage(`Duplicate ${duplicateTitles.join(', ')} found`);
-        return false;
-    }
-    return true;
-}
+nuAccessSetButtonIcons();
+nuAccessAddSfFilter();
 
-function addSfFilter() {
+function nuAccessAddSfFilter() {
 
     let sfFilter = {};
     sfFilter.accform = {
@@ -28,9 +18,18 @@ function addSfFilter() {
 
 }
 
+function nuAccessSetButtonIcons(force) {
 
-$('#sal_zzzzsys_form_id_open_button').toggleClass('input_button nuButton nuLookupButton');
-if (nuIsNewRecord()) nuHide('sal_zzzzsys_form_id_open_button');
+    function setInnerHTML(element, icon) {
+        element.innerHTML = '<br>&nbsp<span style="padding: 1px 10px 1px 10px;" class="nuActionButton"><i class="' + icon +'"></i></span>';
+    }
 
-nuAccessFormSetButtonIcons();
-addSfFilter();
+    if (nuIsMobile() || force === true) {
+        setInnerHTML(title_accformslf_add_button, 'fas fa-plus');
+        setInnerHTML(title_accformslf_print_button, 'fas fa-print');
+        setInnerHTML(title_accformslf_save_button, 'fas fa-save');
+        setInnerHTML(title_accformslf_clone_button, 'fas fa-clone');
+        setInnerHTML(title_accformslf_delete_button, 'fas fa-trash-alt');
+    }
+
+}

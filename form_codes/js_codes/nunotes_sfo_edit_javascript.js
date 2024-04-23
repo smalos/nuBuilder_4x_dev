@@ -4,9 +4,9 @@ nuSetPlaceholder('not_title', nuTranslate('Title'));
 nuHide('label_not_zzzzsys_note_category_id');
 nuSetPlaceholder('not_zzzzsys_note_category_idcode', nuTranslate('Category'));
 
-handleKeys();
+nuNotesHandleKeys();
 
-function handleKeys() {
+function nuNotesHandleKeys() {
 
     $('#not_title').on('keydown', function(evt) {
       if (evt.key === 'Enter') {

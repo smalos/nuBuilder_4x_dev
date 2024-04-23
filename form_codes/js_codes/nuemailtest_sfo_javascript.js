@@ -2,7 +2,7 @@ nuAddActionButton('nuRuntestemail', nuTranslate('Send'), 'nuRunPHPHidden("NUTEST
 
 if (parent.$('#nuModal').length > 0) {
 
-    var p = window.parent;h
+    var p = window.parent;
     $('#set_smtp_from_address').val(p.set_smtp_from_address.value);
     $('#ema_to').val(p.set_smtp_from_address.value);
     $('#set_smtp_from_name').val(p.set_smtp_from_name.value);

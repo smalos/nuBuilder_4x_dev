@@ -1,4 +1,4 @@
-function getDataType(t, i, selectMultiple) {
+function nuAddDBColumnGetDataType(t, i, selectMultiple) {
 
     let dt = 'VARCHAR(100)';
 
@@ -48,7 +48,7 @@ var id = parent.$('#sob_all_id').val();
 var type = parent.$('#sob_all_type').val();
 var input = parent.$('#sob_input_type').val();
 var selectMultiple = parent.nuGetValue('sob_select_multiple')
-var dataType = getDataType(type, input);
+var dataType = nuAddDBColumnGetDataType(type, input);
 
 var qry = '`$column` $type NULL DEFAULT NULL';
 qry = qry.replace('$column', id);

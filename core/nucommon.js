@@ -853,8 +853,6 @@ function nuBindCtrlEvents() {
 
 			window.nuNEW = 0;
 
-			e.preventDefault();
-
 			const globalAccess = nuGlobalAccess();
 			const formId = nuFormId();
 			const formType = nuFormType();
@@ -904,9 +902,10 @@ function nuBindCtrlEvents() {
 
 			// Execute action based on key press if condition is met
 			const action = actions[e.code];
-			if (action && action.condition) {
+			if (action?.condition) {
+				e.preventDefault();
 				action.action();
-			}
+			} 
 
 			let nosearch = window.nuFORM.getProperty('nosearch_columns');
 			let searchIndex = -1;
@@ -2218,7 +2217,6 @@ function nuSelectRemoveMultiple(i) {
 
 }
 
-
 function nuSelectSelectAll(id, value = true) {
 
 	const $id = $("#" + id);
@@ -2252,6 +2250,10 @@ function nuSelectSelectedValueArray(id) {
 
 function nuSelectSelectedTextArray(id) {
 	return nuSelectSelectedInfo(id).texts;
+}
+
+function nuSelectSetIndex(id, index) {
+	$("#" + id).prop("selectedIndex", index).change();
 }
 
 function nuPasteText(id, callback) {
@@ -2779,10 +2781,11 @@ function nuConsoleErrorsToMessage(cancel = false) {
 function nuSetAttributes(element, attributes) {
 
 	for (const key in attributes) {
-		if (attributes.hasOwnProperty(key)) {
+		if (Object.prototype.hasOwnProperty.call(attributes, key)) {
 			element.setAttribute(key, attributes[key]);
-		}
+	  	}
 	}
 
 }
+  
 

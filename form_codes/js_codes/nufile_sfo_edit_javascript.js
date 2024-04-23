@@ -1,4 +1,4 @@
-nuShowFile();
+nuFilesDisplayFile();
 nuSetToolTip('sfi_json_file_file', nuTranslate('Max. 300Kb'));
 
 if (nuIsNewRecord()) {
@@ -21,7 +21,7 @@ function nuBeforeSave() {
 
 }
 
-function nuShowFile() {
+function nuFilesDisplayFile() {
 
     const j = $('#sfi_json').val();
     nuEmbedObject(j, 'view_image', -1, -1); // auto-size
