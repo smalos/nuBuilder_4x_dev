@@ -1,0 +1,1 @@
+$(this).val($(this).val().replace(/\s/g,""));

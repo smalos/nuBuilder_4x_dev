@@ -1,12 +1,14 @@
 $('#nuAddButton').remove();
 $('#nuPrintButton').remove();
 
-function nuSelectBrowse(e) {
+function nuSelectBrowse(event) {
 
-    var r = $('#' + e.target.id).attr('data-nu-row');
-    var p = $('#nucell_' + r + '_0').html();
-    var f = $('#' + e.target.id).attr('data-nu-primary-key');
+    const $element = $('#' + event.target.id);
+    const primaryKey = $element.attr('data-nu-primary-key');
 
-    nuGetPHP(p, f);
+    const row = $element.attr('data-nu-row');
+    const phpFunction = $('#nucell_' + row + '_0').html();
+
+    nuGetPHP(phpFunction, primaryKey);
 
 }

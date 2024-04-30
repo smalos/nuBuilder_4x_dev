@@ -1,0 +1,1 @@
+nuSetFormatType(1)

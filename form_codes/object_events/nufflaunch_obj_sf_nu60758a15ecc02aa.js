@@ -1,0 +1,1 @@
+nuClickDelete(event);

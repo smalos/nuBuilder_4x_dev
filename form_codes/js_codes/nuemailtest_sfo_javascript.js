@@ -16,7 +16,7 @@ nuSetToolTip('ema_load_data', nuTranslate('Load from Local Storage'));
 nuSetToolTip('ema_save_data', nuTranslate('Save to Local Storage'));
 
 
-function saveDatatoLS() {
+function nuemailtestSaveDatatoLS() {
 
     $('input[type=text], textarea').each(function() {
         localStorage.setItem(this.id, $(this).val());
@@ -25,7 +25,7 @@ function saveDatatoLS() {
 }
 
 
-function loadDatafromLS() {
+function nuemailtestLoadDatafromLS() {
 
     $('input[type="text"], textarea').each(function() {
         var key = $(this).attr('id');

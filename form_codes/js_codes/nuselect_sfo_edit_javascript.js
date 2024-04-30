@@ -98,7 +98,7 @@ function nuSelectTempPHP() {
 
 function nuBeforeSave() {
 
-    $('#sqlframe')[0].contentWindow.nuSQL.buildSQL();
+    nuSelectBuildSQL();
     return true;
 
 }
@@ -170,8 +170,12 @@ function nuSelectAddSQLTable(e) {
 function nuSelectSFCB() {
 
     nuSelectWhereClauses();
-    $('#sqlframe')[0].contentWindow.nuSQL.buildSQL();
+    nuSelectBuildSQL();
 
+}
+
+function nuSelectBuildSQL() {
+  $('#sqlframe')[0].contentWindow.nuSQL.buildSQL();
 }
 
 function nuSelectSetSFCB() {

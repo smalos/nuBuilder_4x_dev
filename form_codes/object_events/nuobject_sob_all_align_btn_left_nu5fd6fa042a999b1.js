@@ -1,0 +1,1 @@
+nuSelectSetIndex('sob_all_align',1);

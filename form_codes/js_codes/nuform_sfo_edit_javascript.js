@@ -12,7 +12,6 @@ if ($('#zzzzsys_tab_sf000syt_access').val() !== '') {
   
   nuAccessFormSetButtonIcons();
   
-  
   function nuFormColorObjectTypes() {
   
       // Color Types

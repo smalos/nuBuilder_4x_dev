@@ -1,0 +1,1 @@
+onAttributeChanged(this.value);
