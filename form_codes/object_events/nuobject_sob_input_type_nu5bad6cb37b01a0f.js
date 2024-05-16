@@ -1,0 +1,1 @@
+nuObjectInputTypeChanged(this.value)

@@ -36,7 +36,7 @@ function nuBeforeEdit($FID, $RID){
 	if($ct == 'getform' and $r == ''){return;}
 
 	$formType = $_POST['nuSTATE']['form_type'] ?? '';
-    $recordID = $_POST['nuSTATE']['record_id'] ?? '';
+	$recordID = $_POST['nuSTATE']['record_id'] ?? '';
 
 	if($ct == 'getform'){
 
@@ -178,6 +178,8 @@ function nuGetFormObject($F, $R, $OBJS, $tabs = null){
 
 	if($R != ''){
 
+		$dbFields = ($A !== []) ? db_field_names($f->table) : [];
+
 		$t							= nuRunQuery($s, [$F]);
 
 		while($r = db_fetch_object($t)){
@@ -188,10 +190,12 @@ function nuGetFormObject($F, $R, $OBJS, $tabs = null){
 				$cloneable[]		= ['subform' => $r->sob_all_type == 'subform', 'id' => $r->sob_all_id];
 			}
 
+			$o->table_column = in_array($r->sob_all_id, $dbFields) ? '1' : '0';
+
 			if($R == '-1'){
 				$o->value			= '';//nuGetSQLValue($r->sob_all_default_value_sql);
 			}else{
-				$o->value			= nuObjKey($A,$r->sob_all_id,'');
+				$o->value = nuObjKey($A,$r->sob_all_id, '');
 			}
 
 			if($r->sob_all_type == 'calc'){
@@ -345,7 +349,7 @@ function nuGetFormObject($F, $R, $OBJS, $tabs = null){
 
 					$o->run_type	= 'F';
 
-				}else if($runType == 'P' || isProcedure($fromId)){
+				}else if($runType == 'P' || nuIsProcedure($fromId)){
 
 					$actt			= nuRunQuery('SELECT sph_zzzzsys_form_id, sph_code FROM zzzzsys_php WHERE zzzzsys_php_id = ?', [$fromId]);
 					$act			= db_fetch_object($actt);
@@ -355,7 +359,7 @@ function nuGetFormObject($F, $R, $OBJS, $tabs = null){
 					$runtab			= nuRunQuery("SELECT sph_run FROM zzzzsys_php WHERE zzzzsys_php_id = ?", [$r->sob_run_zzzzsys_form_id]);
 					$o->run_hidden	= db_fetch_object($runtab)->sph_run == 'hide';
 
-				}else if($runType == 'R' || isReport($fromId)){
+				}else if($runType == 'R' || nuIsReport($fromId)){
 
 					$actt			= nuRunQuery('SELECT sre_zzzzsys_form_id, sre_code  FROM zzzzsys_report WHERE zzzzsys_report_id = ?', [$fromId]);
 					$act			= db_fetch_object($actt);
@@ -739,7 +743,7 @@ function nuBreadcrumbDescription($r, $R){
 		$b = nuBreadcrumbDescriptionPart($bt);
 	}
 
-	return nuReplaceHashVariables($b);
+	return stripslashes(nuReplaceHashVariables($b));
 
 }
 
@@ -1023,8 +1027,11 @@ function nuSelectOptions($sql) {
 
 		$count = count($parts);
 		for ($i = 0; $i < $count; $i++) {
+			
+			$selectValue = $parts[$i];
+			$selectDescription = isset($parts[$i + 1]) ? $parts[$i + 1] : 'Undefined';
 
-			$options[]	= nuSelectAddOption($parts[$i], $parts[$i + 1]);
+			$options[]	= nuSelectAddOption($selectValue, $selectDescription);
 			$i++;
 
 		}
@@ -1383,9 +1390,9 @@ function nuBrowseWhereClause($searchFields, $searchString, $returnArray = false)
 		for ($SF = 0; $SF < $countSearchFields; $SF++) {												//-- loop through searchable fields
 
 			if ($task[$i] == 'include') {
-				$include[] = 'CONVERT(' . nuBrowseRemoveFieldAlias($searchFields[$SF]) . ' USING utf8) LIKE ' . $SEARCHES[$i];
+				$include[] = 'CONVERT(' . nuBrowseRemoveFieldAlias($searchFields[$SF]) . ' USING UTF8MB4) LIKE ' . $SEARCHES[$i];
 			} else {
-				$exclude[] = 'CONVERT(' . nuBrowseRemoveFieldAlias($searchFields[$SF]) . ' USING utf8) NOT LIKE ' . $SEARCHES[$i];
+				$exclude[] = 'CONVERT(' . nuBrowseRemoveFieldAlias($searchFields[$SF]) . ' USING UTF8MB4) NOT LIKE ' . $SEARCHES[$i];
 			}
 
 		}
@@ -1807,7 +1814,7 @@ function nuGetBrowseWidth($f){
 
 }
 
-function isForm($i){
+function nuIsForm($i){
 
 	$s	= "SELECT zzzzsys_form_id_id FROM zzzzsys_form WHERE zzzzsys_form_id = ?";
 	$t	= nuRunQuery($s, [$i]);
@@ -1817,7 +1824,7 @@ function isForm($i){
 
 }
 
-function isProcedure($i){
+function nuIsProcedure($i){
 
 	$s	= "SELECT zzzzsys_php_id FROM zzzzsys_php WHERE zzzzsys_php_id = ?";
 	$t	= nuRunQuery($s, [$i]);
@@ -1827,7 +1834,7 @@ function isProcedure($i){
 
 }
 
-function isReport($i){
+function nuIsReport($i){
 
 	$s	= "SELECT zzzzsys_report_id FROM zzzzsys_report WHERE zzzzsys_report_id = ?";
 	$t	= nuRunQuery($s, [$i]);
@@ -1900,5 +1907,3 @@ function nuPreloadImages($a){
 	nuAddJavaScript($js);
 
 }
-
-?>

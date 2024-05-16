@@ -9,17 +9,29 @@ require __DIR__ . '/libs/phpmailer/Exception.php';
 require __DIR__ . '/libs/phpmailer/SMTP.php';
 
 // Send email using the built in PHP function
-function nuEmailPHP($sendTo, $fromAddress, $fromName, $content, $subject){
+function nuEmailPHP($sendTo, $fromAddress, $fromName, $content, $subject, $options = []) {
 
-	$headers	= "MIME-Version: 1.0\r\n";
-	$headers	.= "Content-type: text/html; charset=iso-8859-1\r\n";
-	$headers	.= "From: {$fromAddress} <{$fromName}> \n";
+	$headers = "MIME-Version: 1.0\r\n";
+	$headers .= "Content-type: text/html; charset=UTF-8\r\n";
+	$headers .= "From: \"" . addslashes($fromName) . "\" <" . filter_var($fromAddress, FILTER_SANITIZE_EMAIL) . ">\r\n";
 
-	if(mail($sendTo, $subject, $content, $headers)){
-		return true;
+	// Optional headers
+	if (!empty($options['cc'])) {
+		$headers .= "Cc: " . filter_var($options['cc'], FILTER_SANITIZE_EMAIL) . "\r\n";
+	}
+	if (!empty($options['bcc'])) {
+		$headers .= "Bcc: " . filter_var($options['bcc'], FILTER_SANITIZE_EMAIL) . "\r\n";
+	}
+	if (!empty($options['replyTo'])) {
+		$headers .= "Reply-To: " . filter_var($options['replyTo'], FILTER_SANITIZE_EMAIL) . "\r\n";
 	}
 
-	return false;
+	if (!filter_var($sendTo, FILTER_VALIDATE_EMAIL)) {
+		return false;
+	}
+
+	return mail($sendTo, $subject, $content, $headers);
+
 }
 
 // Send email using PHPMailer
@@ -36,7 +48,7 @@ function nuEmail($to_list=[],$from_address='',$from_name='',$content='',$subject
 
 	$nuEmailSettings = nuMarshallEmailSettings($from_address, $from_name, $html, $reply_to_list);
 
-	$mail = new \PHPMailer\PHPMailer\PHPMailer();
+	$mail = new PHPMailer();
 	$mail->SMTPDebug = $debug;
 
 	if ( $method == 'SMTP' ) {
@@ -185,5 +197,3 @@ function _nuEmailHelperAttach(&$mail, $file_list = [] ) {
 		$mail->AddAttachment($filesource,$filename);
 	}
 }
-
-?>

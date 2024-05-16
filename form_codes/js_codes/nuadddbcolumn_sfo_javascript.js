@@ -1,4 +1,4 @@
-function getDataType(t, i, selectMultiple) {
+function nuAddDBColumnGetDataType(t, i, selectMultiple) {
 
     let dt = 'VARCHAR(100)';
 
@@ -48,7 +48,7 @@ var id = parent.$('#sob_all_id').val();
 var type = parent.$('#sob_all_type').val();
 var input = parent.$('#sob_input_type').val();
 var selectMultiple = parent.nuGetValue('sob_select_multiple')
-var dataType = getDataType(type, input);
+var dataType = nuAddDBColumnGetDataType(type, input);
 
 var qry = '`$column` $type NULL DEFAULT NULL';
 qry = qry.replace('$column', id);
@@ -60,7 +60,7 @@ start = start.replace('$table', table);
 $('#sql_query_word').html(start);
 $('#sql_query').val(qry);
 
-nuAddActionButton('Run', 'Run', 'nuRunPHPHidden("NURUNADDDBCOLUMN")');
+nuAddActionButton('Run', 'Run', 'nuHasNotBeenEdited(); nuRunPHPHidden("NURUNADDDBCOLUMN")');
 
 $('#sql_query').addClass('sql');
 $('.sql').on('dblclick', function() {
@@ -69,7 +69,3 @@ $('.sql').on('dblclick', function() {
 
 nuSetProperty('sob_all_table', table);
 nuRefreshSelectObject('sql_after_column');
-
-function nuSelectObjectRefreshed() {
-   nuHasBeenEdited();
-}

@@ -41,7 +41,7 @@ function nuPopulateSelectObject($formId, $selectId, $removeBlank, $prefix) {
     $selectId = $prefix.$selectId;
 
     $cb = "if (window.nuSelectObjectRefreshed) {
-    	    nuSelectObjectRefreshed('$formId', '$selectId', count);
+    	    nuSelectObjectRefreshed('$formId', '$selectId', nuSelectObjectRefreshedCount);
          }";
 
     if ($j == false) {
@@ -78,7 +78,7 @@ function nuPopulateSelectObject($formId, $selectId, $removeBlank, $prefix) {
     		return count;
     	}
     	
-    	var count = nuPopulateSelectObject();
+    	var nuSelectObjectRefreshedCount = nuPopulateSelectObject();
 
     ".$cb;
     }

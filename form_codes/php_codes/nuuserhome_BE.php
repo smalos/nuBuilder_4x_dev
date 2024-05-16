@@ -1,1 +1,0 @@
-nuDebug(nuHash());

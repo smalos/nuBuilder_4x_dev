@@ -41,10 +41,15 @@ function nuRefreshDisplayObject($displayId, $formIdHk, $prefixHK) {
 	} else {
 
 		$js = " 
-			var obj = $('#$displayId');
-			var format = obj.attr('data-nu-format');
-			var v = nuFORM.addFormatting('$value', format);
-			obj.val(v).change();
+		    
+		    function nuRefreshDisplayObjectSetNewValue(displayId, value) {
+    			let obj = $('#' + displayId);
+    			const format = obj.attr('data-nu-format');
+    			const formattedValue = nuFORM.addFormatting(value, format);
+    			nuSetValue(displayId, formattedValue);
+		    }
+
+		    nuRefreshDisplayObjectSetNewValue('$displayId', '$value');
 			
 			if (window.nuDisplayObjectRefreshed) {
 				nuDisplayObjectRefreshed('$displayId', '$formId');

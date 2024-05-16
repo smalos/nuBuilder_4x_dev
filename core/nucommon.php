@@ -411,45 +411,65 @@ function nuAllowedActivities(){
 
 }
 
-function nuRunPHPHidden($nuCode){ 
+function nuRunPHPHidden($nuCode){
 	return nuRunPHP($nuCode, true);
+}
+
+function nuGetPHP($idOrCode) {
+
+    $sql = "SELECT sph_code, sph_description, zzzzsys_php_id, sph_php, sph_global
+            FROM zzzzsys_php
+            WHERE sph_code = ? OR zzzzsys_php_id = ?";
+
+    $stmt = nuRunQuery($sql, [$idOrCode, $idOrCode]);
+	$exists = db_num_rows($stmt) === 1;
+	return $exists ? db_fetch_object($stmt) : false;
+
+}
+
+function nuHasProcedureAccess($phpObj) {
+
+	$hasAccess = $phpObj->sph_global == '1';
+	if (!$hasAccess) {
+		$procList = nuProcedureAccessList(nuAllowedActivities());
+		$hasAccess = in_array($phpObj->zzzzsys_php_id, $procList);
+	}
+
+	return ($hasAccess || $_SESSION['nubuilder_session_data']['isGlobeadmin']);
+
 }
 
 function nuRunPHP($nuCode, $hidden = false) {
 
 	if ($nuCode !== 'nukeepalive') {
+		
+		$result = "";
+		$_POST['nuRunPHPHiddenResult'] = "";
+		$phpObj = nuGetPHP($nuCode);
+		$exists = $phpObj !== false;
+		
+		if ($exists) {
 
-		$sql = "SELECT sph_code, sph_description, zzzzsys_php_id, sph_php, sph_global
-					FROM zzzzsys_php
-					WHERE sph_code = ?
-			";
-
-		$stmt = nuRunQuery($sql, [$nuCode]);
-		$exists = db_num_rows($stmt) == 1;
-
-		if (!$exists) {
-			if (! nuStringStartsWith('nu', $nuCode)) {
-				nuDisplayError(nuTranslate("The Procedure does not exist...") . " ($nuCode)");
-			}
-		}
-		else {
-
-			$row = db_fetch_object($stmt);
-			$hasAccess = $row->sph_global == '1';
-
-			if (!$hasAccess) {
-				$procList = nuProcedureAccessList(nuAllowedActivities());
-				$hasAccess = in_array($row->zzzzsys_php_id, $procList);
-			}
-
-			if ($hasAccess || $_SESSION['nubuilder_session_data']['isGlobeadmin']) {
-				if ($hidden) nuEval($row->zzzzsys_php_id);
-			}
-			else {
+			if (nuHasProcedureAccess($phpObj)) {
+				if ($hidden) {
+					nuEval($phpObj->zzzzsys_php_id);
+					$_POST['nuRunPHPHiddenResult'] = $result;
+					$_POST['nuRunPHPHidden'] = $nuCode;
+				}
+			} else {
+				$_POST['nuRunPHPHiddenResult'] = "Access denied";
 				nuDisplayError(nuTranslate("Access To Procedure Denied...") . " ($nuCode)");
 			}
+
+		} else {
+
+			if (!$exists && !nuStringStartsWith('nu', $nuCode)) {
+				$_POST['nuRunPHPHiddenResult'] = "Procedure does not exist";
+				nuDisplayError(nuTranslate("The Procedure does not exist...") . " ($nuCode)");
+			}
+
 		}
-	
+
 	}
 
 	if ($hidden) {
@@ -461,10 +481,10 @@ function nuRunPHP($nuCode, $hidden = false) {
 	}
 	else {
 
-		$_POST['nuHash']['code'] = $exists ? $row->sph_code : null;
-		$_POST['nuHash']['description'] = $exists ? $row->sph_description : null;
-		$_POST['nuHash']['parentID'] = $exists ? $row->zzzzsys_php_id : null;
-		$_POST['nuHash']['sph_php'] = $exists ? $row->sph_php : null;
+		$_POST['nuHash']['code'] = $exists ? $phpObj->sph_code : null;
+		$_POST['nuHash']['description'] = $exists ? $phpObj->sph_description : null;
+		$_POST['nuHash']['parentID'] = $exists ? $phpObj->zzzzsys_php_id : null;
+		$_POST['nuHash']['sph_php'] = $exists ? $phpObj->sph_php : null;
 
 		$json = json_encode($_POST['nuHash']);
 		$id = nuID();
@@ -666,7 +686,7 @@ function nuReplaceHashVariables($s){
 	foreach ($a as $k => $v) {
 
 		 if(!is_object ($a[$k]) && !is_array ($a[$k]) ) {
-			$v = $v == null ? '' : $v; 
+			$v = $v == null ? '' : $v;
 			$s	= str_replace ('#' . $k . '#', $v, $s);
 		}
 
@@ -898,7 +918,7 @@ function nuAddToHashList($J, $run){
 }
 
 function nuGetUserPermissions($userId = null){
-	
+
 	if ($userId === null) {
 		$userId = $_POST['nuHash']['USER_ID'];
 	}
@@ -962,6 +982,7 @@ function nuGetUserAccess(){
 	$A['USER_ADDITIONAL2']		= $j->session->sus_additional2;
 	$A['USER_PERMISSIONS']		= $j->session->user_permissions;
 	$A['USER_A11Y']				= $j->session->sus_accessibility_features == '1' ? true : false;
+	$A['DEV_MODE']				= $j->session->dev_mode == '1' ? true : false;
 	$A['LANGUAGE']				= $j->session->language;
 
 	//-- update session time
@@ -1016,9 +1037,9 @@ function nuAddFormatting($v, $f){
 
 	if($f[0] == 'N'){												//-- number  '456.789','N|€ 1,000.00'
 		$CF				= nuGetNumberFormat(substr($f,2));			//-- CF[0]=sign, CF[1]=separator, CF[2]=decimal, CF[3]=places
-				
+
 		$nf				= number_format ($v , $CF[3] , $CF[2] , $CF[1]);
-//		$nf				= number_format ($v , gettype($CF[3])=='string'? 0: $CF[3] , $CF[2] , $CF[1]);		 
+//		$nf				= number_format ($v , gettype($CF[3])=='string'? 0: $CF[3] , $CF[2] , $CF[1]);
 		$nm				= str_replace('-', '', $nf);
 
 		return $m . $CF[0] . ' ' . $nm;
@@ -1364,7 +1385,7 @@ function nuListSystemTables(){
 	$t				= nuRunQuery("SELECT table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = DATABASE()");
 
 	while($r = db_fetch_row($t)){
- 
+
 		if(nuStringStartsWith('zzzzsys_', $r[0])){
 			$a[]	= $r[0];
 		}
@@ -1432,22 +1453,6 @@ function nuEventName($eventName) {
 
 }
 
-function nuGetPHP($phpid) {
-
-	$s						= "SELECT sph_php, sph_code FROM zzzzsys_php WHERE zzzzsys_php_id = ? ";
-	$t						= nuRunQuery($s, [$phpid]);
-
-	$php = '';
-	if (db_num_rows($t) == 1) {
-		$php = db_fetch_object($t);	
-	}
-
-	return $php;
-
-}
-
-
-
 function nuFailIfUnsetHashCookies($string) {
 	return preg_match('/#[^#]+#/', $string);
 }
@@ -1455,11 +1460,11 @@ function nuFailIfUnsetHashCookies($string) {
 function nuEval($phpid){
 
 	$r						= nuGetPHP($phpid);
-	if($r == ''){return;}
+	if($r === false){return;}
 
 	$code					= $r->sph_code;
 	$php					= nuReplaceHashVariables($r->sph_php);
-	
+
 	if(trim($php) == ''){return;}
 
 	$_POST['nuSystemEval']	= nuEvalMessage($phpid, $code);
@@ -1480,7 +1485,7 @@ function nuEval($phpid){
 			nuExceptionHandler($e, $code);
 			return;
 		}
-	
+
 	}catch(Throwable $e){
 		nuExceptionHandler($e, $code);
 	}catch(Exception $e){
@@ -2113,9 +2118,9 @@ function nuImportUsersFromCSV($csvfile, $fieldseparator, $lineseparator) {
 
 			 // Skip the first row (header)
 			fgetcsv($handle);
-				
+
 			// Prepare the SQL statement
-			$insert = "INSERT INTO zzzzsys_user (zzzzsys_user_id, sus_zzzzsys_access_id, sus_language, sus_name, sus_code, sus_position, sus_department, sus_team, sus_email, sus_additional1, sus_additional2, sus_login_name, sus_login_password, sus_expires_on, sus_accessibility_features, sus_json) 
+			$insert = "INSERT INTO zzzzsys_user (zzzzsys_user_id, sus_zzzzsys_access_id, sus_language, sus_name, sus_code, sus_position, sus_department, sus_team, sus_email, sus_additional1, sus_additional2, sus_login_name, sus_login_password, sus_expires_on, sus_accessibility_features, sus_json)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			$stmt = $pdo->prepare("$insert");
@@ -2144,7 +2149,7 @@ function nuImportUsersFromCSV($csvfile, $fieldseparator, $lineseparator) {
 		}
 
 		fclose($handle);
-		
+
 	} else {
 		echo nuTranslate('Failed to open the CSV-file');
 	}
@@ -2242,22 +2247,21 @@ function nuGetRecordURL($origin = null, $subFolder = null, $homepageId = null, $
 	return $origin. $subFolder . '/index.php?f=' . $formId . '&r=' . nuRecordId() . $homepageId;
 
 }
-
 function nuRecordId() {
 
 	$recordIdLower = nuReplaceHashVariables('#record_id#');
 	$recordIdUpper = nuReplaceHashVariables('#RECORD_ID#');
 
-	$recordId = $recordIdLower && $recordIdLower != '-1'  ? $recordIdLower : $recordIdUpper;
+	$formId = function_exists('nuHash') ? nuObjKey(nuHash(), 'FORM_ID') ?? null : null;
+	$recordId = $formId === 'doesntmatter' ? $recordIdLower : $recordIdUpper;
 
-	return $recordId; 
+	return $recordId;
 
 }
-
 function nuUserId() {
 
 	$userId = function_exists('nuHash') ? nuObjKey(nuHash(), 'USER_ID') ?? null : null;
-	return $userId ?? nuObjKey($_POST, 'USER_ID'); 
+	return $userId ?? nuObjKey($_POST, 'USER_ID');
 
 }
 
@@ -2461,11 +2465,11 @@ function nuHasProperty($property, &$value = null, $allowEmpty = true) {
 
 	if ($value) {
 
-		if (!$allowEmpty & nuTrim($value) === '') { 
+		if (!$allowEmpty & nuTrim($value) === '') {
 			return false;
 		}
 
-		return $value; 
+		return $value;
 
 	}
 
@@ -2589,11 +2593,11 @@ function nuGetEmailTemplateData($code, $language = '', $group = '') {
 				`emt_bcc`
 			FROM
 				`zzzzsys_email_template`
-			WHERE 
-				`emt_code` = ? 
+			WHERE
+				`emt_code` = ?
 				AND IFNULL(`emt_language`,'') = ?
 				AND IFNULL(`emt_group`,'') = ?
-			LIMIT 1	
+			LIMIT 1
 		";
 
 	$qry = nuRunQuery($sql, [$code, $language, $group]);
@@ -2639,7 +2643,7 @@ function nuSendEmailFromTemplate($template) {
 }
 
 function nuIncludeConfigPHPFiles() {
-	
+
 	global $nuConfigIncludePHP;
 
 	if (isset($nuConfigIncludePHP) && $nuConfigIncludePHP != '') {
@@ -2658,4 +2662,32 @@ function nuPad($i, $length, $pad = 0) {
 	return str_pad((string)$i, $length, (string)$pad, STR_PAD_LEFT);
 }
 
-?>
+function nuDecode($str) {
+
+	$base64Decoded = base64_decode($str);
+	$decoded = json_decode($base64Decoded, true);
+	if (json_last_error() === JSON_ERROR_NONE) {
+		return $decoded;
+	} else {
+		return $base64Decoded;
+	}
+
+}
+
+function nuIsHTTPS() {
+
+	$isHttps =
+		$_SERVER['HTTPS']
+		?? $_SERVER['REQUEST_SCHEME']
+		?? $_SERVER['HTTP_X_FORWARDED_PROTO']
+		?? null
+	;
+
+	return
+		$isHttps && (
+			strcasecmp('on', $isHttps) == 0
+			|| strcasecmp('https', $isHttps) == 0
+		)
+	;
+
+}

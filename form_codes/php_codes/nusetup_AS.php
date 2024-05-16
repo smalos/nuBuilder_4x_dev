@@ -1,5 +1,4 @@
-
-function writeVersionToFile($dbVersion, $filesVersion) {
+function nuSetupWriteVersionToFile($dbVersion, $filesVersion) {
 
     $f = fopen(__DIR__ . '/../version.txt', "w+") or die("Unable to open file!");
     fwrite($f, "nuBuilder Forte 4.5\n\n");
@@ -16,8 +15,8 @@ $DEV_MODE = '#DEV_MODE#' == '1';
 // Write Version Info
 
 if ($DEV_MODE) {
-    
-    nuSetConfigOrder();
+
+    nuSetupSetConfigOrder();
 
     $nuDumpCodes = nuProcedure('NUDUMPFORMCODES');
     eval($nuDumpCodes);
@@ -41,7 +40,7 @@ if ($DEV_MODE) {
     }
 
     if ($nuNewFilesV != '' || $nuNewDBV != '') {
-        writeVersionToFile($nuDBV, $nuFilesV);
+        nuSetupWriteVersionToFile($nuDBV, $nuFilesV);
     }
 
     if ('#set_dev_reset_tables#' == true) {
@@ -71,19 +70,17 @@ if ($DEV_MODE) {
                 DELETE FROM `zzzzsys_user_permission`;
                 DELETE FROM `zzzzsys_email_log`;
                 UPDATE `zzzzsys_object` SET `sob_input_attribute` = NULL WHERE `sob_input_attribute` = '';
-                UPDATE `zzzzsys_form` SET `sfo_browse_redirect_form_id` = '' WHERE `sfo_browse_redirect_form_id` IS NULL;
                 UPDATE `zzzzsys_form` SET `sfo_browse_javascript` = NULL WHERE TRIM(`sfo_browse_javascript`) = '';
                 UPDATE `zzzzsys_form` SET `sfo_javascript` = NULL WHERE TRIM(`sfo_javascript`) = '';
                 UPDATE `zzzzsys_tab` SET `syt_access` = NULL WHERE TRIM(`syt_access`) = '';
-                UPDATE `zzzzsys_form` SET `sfo_browse_row_height` = 0 WHERE `sfo_browse_row_height` IS NULL;
-                UPDATE `zzzzsys_form` SET `sfo_browse_rows_per_page` = 0 WHERE `sfo_browse_rows_per_page` IS NULL;
                 UPDATE `zzzzsys_tab` SET `syt_order` = '-1' WHERE `zzzzsys_tab_id` = 'nufastforms';
                 DELETE FROM `zzzzsys_debug`;
                 DELETE FROM `zzzzsys_session`;
-
         ";
 
         nuRunQuery($q);
+
+        nuSetupSetDefaultValues();
 
 
     }
@@ -91,10 +88,10 @@ if ($DEV_MODE) {
 }
 
 function nuResetEmailSettings() {
-    
-    $update = 
-    
-        "
+
+    $update =
+
+    "
         UPDATE `zzzzsys_setup`
         SET
            `set_smtp_username` = '1',
@@ -106,8 +103,28 @@ function nuResetEmailSettings() {
           `set_smtp_use_authentication` = '1',
           `set_smtp_use_ssl` = '1'
        ";
-       
-   nuRunQuery($update); 
+
+    nuRunQuery($update);
+
+}
+
+function nuSetupSetDefaultValues() {
+
+    $columns = db_field_names('zzzzsys_object');
+    foreach ($columns as $name) {
+
+        if ($name === 'sob_all_label') {
+            $newValue = '';
+        } else {
+            $newValue = null;
+        }
+
+        nuRunQuery("UPDATE `zzzzsys_object` SET `$name` = ? WHERE TRIM(IFNULL($name,'')) = '' ", [$newValue]);
+
+    }
+    
+    
+    nuRunQuery("UPDATE `zzzzsys_object` SET sob_all_label = ' ' WHERE `sob_all_type` LIKE 'subform' AND IFNULL(sob_all_label,'') = '' ");
 
 }
 
@@ -128,8 +145,8 @@ function nuImportSelectedLanguageFiles($l) {
     }
 }
 
-function nuSetConfigOrder() {
-    
+function nuSetupSetConfigOrder() {
+
     $select = "SELECT zzzzsys_config_id FROM `zzzzsys_config` ORDER BY `zzzzsys_config`.`cfg_order` ASC";
     $stmt = nuRunQuery($select);
 

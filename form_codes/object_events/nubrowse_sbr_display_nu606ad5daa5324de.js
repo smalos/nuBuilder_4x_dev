@@ -1,0 +1,1 @@
+nuFormOnTitleDisplayChanged(event);

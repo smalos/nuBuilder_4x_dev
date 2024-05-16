@@ -4,18 +4,18 @@ activeObj = $('#emt_body');
 $('#emt_avail_fields').nuLabelOnTop();
 nuSelectRemoveMultiple('emt_avail_fields');
 
-if (isTemplate() && !nuDevMode()) {
+if (nuEmailTemplateIsTemplate() && !nuDevMode()) {
     nuDisableAllObjects();
     nuMessage("Unable to save templates. Please clone them to create a new copy and save the cloned version instead.", 2500);
 }
 
-setPreviewText();
+nuEmailTemplateSetPreviewText();
 
-function addSelectedField() {
+function nuEmailTemplateAddSelectedField() {
     const selObjectId = nuGetValue('emt_avail_fields', 'text');
     const selObjectLabel = nuGetValue('emt_avail_fields');
     if (selObjectId !== '') {
-        const activeObjectId = getActiveObjectId();
+        const activeObjectId = nuEmailTemplateGetActiveObjectId();
         const isBody = activeObjectId == 'emt_body';
         const label = isBody ? '<b>' + selObjectLabel + ': </b>': '';
         nuInsertAtCaret(activeObjectId, label + "#" + selObjectId + "#" + (isBody ? '\n': ''));
@@ -24,7 +24,7 @@ function addSelectedField() {
 }
 
 
-function wrapText(elementID, openTag, closeTag) {
+function nuEmailTemplateWrapText(elementID, openTag, closeTag) {
     const textArea = $('#' + elementID);
     const len = textArea.val().length;
     const start = textArea[0].selectionStart;
@@ -36,24 +36,24 @@ function wrapText(elementID, openTag, closeTag) {
     }
 }
 
-function getActiveObjectId() {
+function nuEmailTemplateGetActiveObjectId() {
     return activeObj.attr('id');
 }
 
-function formatText(tag) {
-    wrapText(getActiveObjectId(), '<' + tag + '>', '</' + tag + '>');
+function nuEmailTemplateFormatText(tag) {
+    nuEmailTemplateWrapText(nuEmailTemplateGetActiveObjectId(), '<' + tag + '>', '</' + tag + '>');
 }
 
-function formatText2(tag) {
-    wrapText(getActiveObjectId(), tag, tag);
+function nuEmailTemplateFormatText2(tag) {
+    nuEmailTemplateWrapText(nuEmailTemplateGetActiveObjectId(), tag, tag);
 }
 
-function setPreviewText() {
+function nuEmailTemplateSetPreviewText() {
     $('#textAreaPreviewDiv').html($('#emt_body').val().replace(/\n/g, '<br />'));
 }
 
 
-function isTemplate() {
+function nuEmailTemplateIsTemplate() {
     return nuGetValue('emt_template');
 }
 
@@ -61,7 +61,7 @@ function nuOnClone() {
 
     const code = emt_code.value;
 
-    if (isTemplate()) {
+    if (nuEmailTemplateIsTemplate()) {
         nuSetValue('emt_code', code.substring(0, code.length-8));
         nuSetValue('emt_group', '');
         nuSetValue('emt_template', false);

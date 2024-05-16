@@ -30,7 +30,7 @@ function nuCheckCSV(){
                     if(nuFORM.getJustTables().includes(csvTo)){
                         nuMessage([nuTranslate('There is already a table named'), '<b>' + csvTo + '</b>']);
                     }else{
-                        nuRunPHP("CSVTRANSFER")
+                        nuRunPHP("NUCSVTRANSFER")
                     }
                 }
                     

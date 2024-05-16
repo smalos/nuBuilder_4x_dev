@@ -19,11 +19,6 @@ if ($r[0] > 0) {
     nuDisplayError(nuTranslate('This <b>ID</b> is already used on this Form..'));
 }
 
-if ('#sob_all_label#' == '') {
-    nuDisplayErrorNotBlank('Label');
-}
-
-
 if ('#sob_all_access#' == 9 && '#sob_all_access_condition#' == '') {
     nuDisplayErrorNotBlank('Access Condition');
 }
