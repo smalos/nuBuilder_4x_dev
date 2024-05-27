@@ -1,5 +1,4 @@
 nuSetJSONDataAll('REFRESH_CACHE','1');
-nuCreateViewsOrTables();
 
 $js = "
 

@@ -69,6 +69,7 @@ if ($DEV_MODE) {
                 DELETE FROM `zzzzsys_permission_item`;
                 DELETE FROM `zzzzsys_user_permission`;
                 DELETE FROM `zzzzsys_email_log`;
+                DELETE FROM `zzzzsys_report_data`;
                 UPDATE `zzzzsys_object` SET `sob_input_attribute` = NULL WHERE `sob_input_attribute` = '';
                 UPDATE `zzzzsys_form` SET `sfo_browse_javascript` = NULL WHERE TRIM(`sfo_browse_javascript`) = '';
                 UPDATE `zzzzsys_form` SET `sfo_javascript` = NULL WHERE TRIM(`sfo_javascript`) = '';

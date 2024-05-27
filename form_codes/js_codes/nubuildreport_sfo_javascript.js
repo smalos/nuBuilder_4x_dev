@@ -32,7 +32,7 @@ if (nuFormType() == 'edit') {
       
       if(i.substr(0,6) == 'TABLE:'){
           
-          nuMessage(nuTranslate(['To edit a table go to the Database Button']));
+          nuVendorLogin('PMA', sre_zzzzsys_php_iddescription.value)
           return;
   
       }

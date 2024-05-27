@@ -1611,36 +1611,6 @@ function nuRunSystemUpdate(){
 
 }
 
-function nuGetFonts(){
-
-//	$dir	= "fonts/";
-	$dir	= "tfpdf/font/unifont/";
-	$a		= [];
-
-	if (is_dir($dir)){	// Open a directory, and read its contents
-
-		if ($dh = opendir($dir)){
-
-			while (($file = readdir($dh)) !== false){
-
-				$b = explode('.', $file);
-				if($b[1] == 'ttf'){
-					$f		= explode('.', $file);
-					$a[]	= $f[0];
-				}
-
-			}
-
-			closedir($dh);
-
-		}
-
-	}
-
-	return $a;
-
-}
-
 function nuIsValidEmail($email){
 	return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
 }
@@ -1872,7 +1842,6 @@ function db_setup(){
 
 }
 
-
 function nuUserLanguage($e = ''){
 
 	$user_id	= nuObjKey(nuHash(),'USER_ID','');
@@ -1953,7 +1922,6 @@ function nuFormatVarArgs($format, $values) {
 
 }
 
-
 function nuToCSV($table, $file, $d){
 
 	$T = nuRunQuery("SELECT * FROM `$table`");
@@ -1966,7 +1934,7 @@ function nuToCSV($table, $file, $d){
 
 	header('Content-Type: application/excel');
 	header('Content-Encoding: UTF-8');
-	header('Content-Disposition: attachment; filename="' . $file . '"');
+	header('Content-Disposition: attachment; filename="' . nuEnsureFileExtension($file, 'csv', true) . '"');
 
 	$fp = fopen('php://output', 'w');
 
@@ -2691,3 +2659,21 @@ function nuIsHTTPS() {
 	;
 
 }
+
+function nuEnsureFileExtension($filename, $desiredExtension, $forceExtension = false) {
+
+	$currentExtension = pathinfo($filename, PATHINFO_EXTENSION);
+
+	if (empty($currentExtension) || $forceExtension) {
+		$filename = preg_replace('/\.[^.]*$/', '', $filename);
+		
+		if ($forceExtension) {
+			$filename .= '.' . ltrim($desiredExtension, '.');
+		} else {
+			$filename .= '.' . ltrim($currentExtension, '.');
+		}
+	}
+
+	return $filename;
+}
+

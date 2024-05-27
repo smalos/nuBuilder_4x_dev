@@ -209,7 +209,7 @@ function nuGetFFDataType(h) {
     if (h == 'Calc') t = "DECIMAL";
     if (h == 'nuDate') t = "DATE";
     if (h == 'File') t = "LONGTEXT";
-    if (h == 'nuAutoNumber') t = "BIGINT UNSIGNED";
+    if (h == 'nuAutoNumber') t = "VARCHAR(15)";
     if (h == 'Number') t = "INT";
     if (h == 'nuNumber') t = "DECIMAL(12,4)";
     if (h == 'Button' || h == 'HTML' || h == 'Image' || h == 'Word' || h == 'Subform') t = null;

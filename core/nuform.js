@@ -1,19 +1,6 @@
 
 function nuInitJSOptions() {
 
-	if (window.nuAdminButtons === undefined) {
-
-		window.nuAdminButtons =
-		{
-			'nuDebug': true,
-			'nuPHP': true,
-			'nuRefresh': true,
-			'nuObjects': true,
-			'nuProperties': true
-		};
-
-	}
-
 	if (window.nuUXOptions === undefined) {
 
 		window.nuUXOptions =
@@ -34,7 +21,12 @@ function nuInitJSOptions() {
 			'nuCalendarWeekNumbers' : 'None', 			// nuCalendar: 0 = None, 1 = ISO 8601, 2 = Western traditional, 3 = Middle Eastern
 			'nuSelect2Theme': 'default',				// select2 theme (default, classic) Default: default
 			'nuEditCloseAfterSave': 'None',				// Close forms after saving. Values: None, All, User, System
-			'nuShowJSErrors' : 'None'					// Show JS errors in alert message
+			'nuShowJSErrors' : 'None',					// Show JS errors in alert message
+			'nuDebugIcon': true,
+			'nuPHPIcon': true,
+			'nuRefreshIcon': true,
+			'nuObjectsIcon': true,
+			'nuPropertiesIcon': true			
 		};
 
 	}
@@ -181,7 +173,7 @@ function nuBuildForm(formObj) {
 		document.title = nuUXOptions.nuBrowserTabTitlePrefix;
 	}
 
-	if (Object.keys(window.nuAdminButtons).length) {
+	if (nuGlobalAccess()) {
 		nuAddAdminButtons();
 	}
 
@@ -1116,7 +1108,7 @@ function nuINPUTfileDatabase($formId, obj, id, p) {
 		$id.val(obj.value);
 	}
 
-	return id + '_file';
+	return id + '_input';
 
 }
 
@@ -1509,36 +1501,49 @@ function nuApplyInputTypeSpecificBehaviors($id, inputType, objType, thisObj, obj
 function nuAddAttributes(id, attr) {
 
 	if (attr !== undefined && attr !== null && attr !== '') {
-
-		attr.trim().replace(/\"/g, "").split(",").forEach(attr => {
-
+		let attrs = [];
+		let inQuotes = false;
+		let currentAttr = '';
+		
+		for (let i = 0; i < attr.length; i++) {
+			let char = attr[i];
+			if (char === '"') {
+				inQuotes = !inQuotes;
+			}
+			if (char === ',' && !inQuotes) {
+				attrs.push(currentAttr);
+				currentAttr = '';
+			} else {
+				currentAttr += char;
+			}
+		}
+		attrs.push(currentAttr);
+		
+		attrs.forEach(attr => {
 			const arr = attr.split('=');
 			let key;
 			let value;
 
 			if (arr.length == 2) {
-				[key, value] = arr;
+				key = arr[0].trim();
+				value = arr[1].trim().replace(/^"(.*)"$/, '$1');  // Remove surrounding quotes
 			} else if (arr.length == 1) {
-				key = attr;
+				key = attr.trim();
 				value = '';
 			}
 
-			if (arr.length == 1 || arr.length == 2) {
-				
+			if (arr.length == 1 || arr.length == 2) {				
 				if (key.trim() === 'nu-label-position' && value === 'top') {
 					$('#' + id).nuLabelOnTop();
 				} else {
-					$('#' + id)[0].setAttribute(key.trim(), value);
+					document.getElementById(id).setAttribute(key.trim(), value);
 				}
 				
 			}
-
 		});
-
 	}
 
 }
-
 function nuAddInputIcon(id, icon) {
 
 	function addIcon(id, string, after) {
@@ -5131,38 +5136,40 @@ function nuChangeFile(e) {
 
 	}
 
-	var theFile = e.target.id;
-	var theTextarea = theFile.substr(0, theFile.length - 5);
+	var id = e.target.id;
+	var theTextarea = id.substr(0, id.length - 6);
 
-	if ($('#' + theFile).val() == '') { return; }
+	if ($('#' + id).val() == '') { return; }
 
-	var a = $('#' + theFile)[0].files[0];
+	var a = $('#' + id)[0].files[0];
 	var r = new FileReader();
 
 	r.onload = function () {
 
 		var f = btoa(r.result);
-		var o = { 'file': f, 'name': a.name, 'size': a.size, 'type': a.type };
-		var j = JSON.stringify(o);
+		var obj = { 'file': f, 'name': a.name, 'size': a.size, 'type': a.type };
+		var json = JSON.stringify(obj);
 
 		if (window.nuOnFileLoad) {
-			if (nuOnFileLoad(theFile, o) === false) { return; }
+			if (nuOnFileLoad(e, id, json) === false) { return; }
 		} else {
-			if (j.length > 600000) {
-
+			if (a.size > 300000) {
 				nuMessage([nuTranslate('File is too large, cannot be saved. Must be under 300Kb')]);
 				return;
-
 			}
 		}
 
-		$('#' + theTextarea).val(j).addClass('nuEdited');
+		$('#' + theTextarea).val(json).addClass('nuEdited');
+
+		if (window.nuOnFileLoaded) {
+			nuOnFileLoaded(e, id, json);
+		} 
 
 	};
 
 	r.readAsDataURL(a);
 
-	var t = $('#' + theFile)[0];
+	var t = $('#' + id)[0];
 	var p = $('#' + theTextarea).attr('data-nu-prefix');
 
 	$('#' + p + 'nuDelete').prop('checked', false);
@@ -5701,9 +5708,8 @@ function nuTotal(f) {
 function nuMessage(messages, timeout, callback) {
 
 	const rootElement = window.top.document;
-	window.nuHideMessage = false;
-
-	$('#nuMessageDiv', rootElement).remove();
+	nuMessageRemove(true);
+	rootElement.nuHideMessage = false;
 
 	if (messages.length === 0) {
 		return;
@@ -5752,6 +5758,15 @@ function nuMessage(messages, timeout, callback) {
 
 }
 
+function nuMessageRemove(force = false) {
+
+	const windowTopDoc = window.top.document;
+	if (force || windowTopDoc.nuHideMessage) {
+		windowTopDoc.nuHideMessage = false;
+		$('#nuMessageDiv', windowTopDoc).remove();
+	}
+
+}
 
 function nuWindowPosition() {
 
@@ -5989,14 +6004,14 @@ function nuFastReportFormat(width) {
 function nuIsDoubleClick(event, element) {
 
 	const now = event.timeStamp;
-	const lastClickTime = parseInt(element.getAttribute('nu-last-clicked-time')) || 0;
+	const lastClickTime = parseInt(element.getAttribute('nu-last-clicked-time'), 10) || 0;
 	const doubleClickThreshold = 1000;
 
-	if (now - lastClickTime > doubleClickThreshold) {
-		element.setAttribute('nu-last-clicked-time',  now.toString());
-		return false; 
+	if (lastClickTime && (now - lastClickTime < doubleClickThreshold)) {
+		return true;
 	} else {
-		return true; 
+		element.setAttribute('nu-last-clicked-time', now.toString());
+		return false;
 	}
 
 }
@@ -6432,7 +6447,7 @@ function nuPortraitScreen(columns) {
 
 					} else if (obj[i].input == 'file') {
 						top += 5;
-						$('#' + id + '_file').css({ 'top': top, 'left': lw + 10 });
+						$('#' + id + '_input').css({ 'top': top, 'left': lw + 10 });
 						top += 5;
 					}
 
@@ -7091,7 +7106,21 @@ function nuCalendarWeekStartNumber() {
 }
 
 function nuCalendarWeekNumbers() {
-    return nuUXOptions.nuCalendarWeekNumbers || 0;
+	
+	const weekNum =  nuUXOptions.nuCalendarWeekNumbers || 0;
+
+		const mapping = {
+			"None": 0,
+			"ISO 8601": 1,
+			"Western traditional": 2,
+			"Middle Eastern": 3
+		};
+	
+		if (weekNum in mapping) {
+			return mapping[weekNum];
+		} else {
+			return 0;
+		}
 }
 
 function nuConvertToVanillaJSCalendarFormat(str) {

@@ -32,7 +32,7 @@ if (window.configImport == '1') {
   // Code Snippets form
   nuSetSnippetFormFilter(0, 1, 0, 0);
   
-  nuSetupSetConfigDatalist('$nuConfigGlobeadminHome', ['nuhome','nuhomecompact']);
+  nuSetupSetConfigDatalist('$nuConfigGlobeadminHome', ['nuhome']);
   nuSetupSetConfigDatalist('nuShowJSErrors', ['none','globeadmin',"everyone"]);
   nuSetupSetConfigDatalist('nuEditCloseAfterSave', ['None','AllForms',"UserForms","SystemForms"]);
   nuSetupSetConfigDatalist('nuCalendarWeekNumbers', ['None','ISO 8601',"Western traditional","Middle Eastern"]);

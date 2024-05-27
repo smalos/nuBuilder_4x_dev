@@ -6,7 +6,7 @@ $('#nufr').css({'text-align' : 'left', 'height' : 410, 'background-color': '#ebe
 $('#list').addClass('nuScroll').removeClass('nuReadonly');
 
 $('.nuActionButton').hide();
-nuAddActionButton('nuRunPHPHidden', 'Build Fast Report', 'nuRunPHPHidden("RUNFR")');
+nuAddActionButton('nuRunPHPHidden', 'Build Fast Report', 'nuRunPHPHidden("RUNFR", true)');
 
 
 function nuAddReportField(t){
@@ -44,3 +44,34 @@ function nuBeforeSave(){
     
 }
 
+
+function nuFRSetData() {
+
+if($('#fieldlist').val() !== ''){
+   
+    var s   = String($('#fieldlist').val());
+    var ds  = s.replaceAll('[','').replaceAll(']','').replaceAll('\\','').replaceAll('"','');
+    var fl  = ds.split(',');
+    var fu  = [];
+    
+    $('#orderby').find('option').remove();
+
+    for(var i = 0 ; i < fl.length ; i++){
+        
+        if(fl[i] != 'KEEP EXACT HEIGHT'){
+            
+            fu[i]   = '<tr><td><div style="overflow:hidden;width:285px;text-align:left;padding:2px" onclick="nuAddReportField(this);" class="nuCalculatorButton nu_input">' + fl[i] + '</div></td></tr>';
+    
+            $('#orderby').append('<option value="' + fl[i] + '">' + fl[i] + '</option>');
+        
+        }
+            
+    }
+
+    $('#nufr').html('<table>' + fu.join('') + '</table>');
+    
+}
+
+$('#orderby').val(fl[0]);
+
+}
