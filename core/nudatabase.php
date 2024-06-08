@@ -510,9 +510,12 @@ function nuDebugResult($nuDebugMsg, $flag = null){
 	nuRunQueryNoDebug($insert, $params);
 
 	$nuDebugFlag = $flag ?? '';
-	$proc	= nuProcedure('NUDEBUGRESULTADDED');
-	if($proc != '') { 
-		eval($proc); 
+	
+	if (function_exists('nuProcedure')) {
+		$proc	= nuProcedure('NUDEBUGRESULTADDED');
+		if($proc != '') { 
+			eval($proc); 
+		}
 	}
 
 	return $nuDebugId;
@@ -537,13 +540,19 @@ function nuDebugCreateOutput(...$args) {
 	}
 
 	foreach ($args as $i => $arg) {
-		$type = gettype($arg);
-		$message .= sprintf("\n[%d] : ", $i);
 
-		if ($type === 'object' || $type === 'array') {
-			$message .= print_r($arg, true);
-		} else {
+		$type = gettype($arg);
+		if ($type === 'string' && nuStringStartsWith(' <html>', $arg)) {
 			$message .= $arg;
+		} else {
+			
+			$message .= sprintf("\n[%d] : ", $i);
+
+			if ($type === 'object' || $type === 'array') {
+				$message .= print_r($arg, true);
+			} else {
+				$message .= $arg;
+			}
 		}
 
 		$message .= "\n";
@@ -552,7 +561,6 @@ function nuDebugCreateOutput(...$args) {
 	return $message;
 	
 }
-
 
 function nuDebug(...$args) {
 

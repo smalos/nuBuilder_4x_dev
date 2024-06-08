@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once('nucommon.php');
 require_once('nudata.php');
 
@@ -13,3 +12,7 @@ $GLOBALS['TABLE_ID']	= $TABLE_ID;
 $_POST['nuHash']		= $hashData;
 
 nuEval($JSON->parentID);
+
+if (nuHasErrors()) {
+	echo implode("<br>",$_POST['nuErrors']);
+}

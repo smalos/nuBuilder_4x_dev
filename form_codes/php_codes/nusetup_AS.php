@@ -69,6 +69,7 @@ if ($DEV_MODE) {
                 DELETE FROM `zzzzsys_permission_item`;
                 DELETE FROM `zzzzsys_user_permission`;
                 DELETE FROM `zzzzsys_email_log`;
+                DELETE FROM `zzzzsys_report_data`;
                 UPDATE `zzzzsys_object` SET `sob_input_attribute` = NULL WHERE `sob_input_attribute` = '';
                 UPDATE `zzzzsys_form` SET `sfo_browse_javascript` = NULL WHERE TRIM(`sfo_browse_javascript`) = '';
                 UPDATE `zzzzsys_form` SET `sfo_javascript` = NULL WHERE TRIM(`sfo_javascript`) = '';
@@ -180,5 +181,5 @@ if ('#set_language_current#' != '#set_language#') {
 // Check if header textarea changed
 
 if ('#set_header_current#' != '#set_header#') {
-    nuDisplayError(nuTranslate('<h2>'.nuTranslate('Information').'</h2><br>You will need to log in again for the changes to take effect.'));
+    nuDisplayMessage(nuTranslate('<h2>'.nuTranslate('Information').'</h2><br>You will need to log in again for the changes to take effect.'));
 }

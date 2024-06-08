@@ -32,11 +32,11 @@ if (window.configImport == '1') {
   // Code Snippets form
   nuSetSnippetFormFilter(0, 1, 0, 0);
   
-  nuSetupSetConfigDatalist('$nuConfigGlobeadminHome', ['nuhome','nuhomecompact']);
+  nuSetupSetConfigDatalist('$nuConfigGlobeadminHome', ['nuhome']);
   nuSetupSetConfigDatalist('nuShowJSErrors', ['none','globeadmin',"everyone"]);
   nuSetupSetConfigDatalist('nuEditCloseAfterSave', ['None','AllForms',"UserForms","SystemForms"]);
-  nuSetupSetConfigDatalist('nuCalendarType', ['nuBuilder','VanillaJS']);
-  
+  nuSetupSetConfigDatalist('nuCalendarWeekNumbers', ['None','ISO 8601',"Western traditional","Middle Eastern"]);
+
   nuSelectAddEnglishOption('set_language');
   
   var d = nuDevMode();
@@ -185,19 +185,15 @@ if (window.configImport == '1') {
   }
   
   function nuSetupSfAddFilters() {
-  
-      const OPTION_ALL = '(' + nuTranslate('All') + ')';
-  
+
       var sfFilter = {};
       sfFilter.nuconfigsettings = {
-          'cfg_setting': {
+          'cfg_category': {
               type: 'search',
               float: 'left'
           },
-          'cfg_category': {
-              type: 'select',
-              blank: false,
-              all: OPTION_ALL
+          'cfg_title': {
+              type: 'search'
           }
       };
   

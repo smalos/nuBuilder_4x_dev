@@ -40,12 +40,12 @@ function selectToValueArray(id) {
 function runCloner() {
 
     if ($('#clo_form_source').val() === '') {
-        nuMessage([nuTranslate('Source Form cannot be left blank.')]);
+        nuMessage(nuTranslate('Validation Error'), nuTranslate('Source Form cannot be left blank.'));
         return;
     }
 
     if ($('#clo_tabs :selected').length === 0) {
-        nuMessage([nuTranslate('Select at least 1 Tab.')]);
+        nuMessage(nuTranslate('Validation Error'), nuTranslate('Select at least 1 Tab.'));
         return;
     }
 

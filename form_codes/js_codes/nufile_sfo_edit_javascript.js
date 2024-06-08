@@ -1,18 +1,14 @@
-nuFilesDisplayFile();
-nuSetToolTip('sfi_json_file_file', nuTranslate('Max. 300Kb'));
-
-if (nuIsNewRecord()) {
-    nuHide('view_image');
-}
+nuFilesDisplayFile($('#sfi_json').val());
+nuSetToolTip('sfi_file_input', nuTranslate('Max. 300Kb'));
 
 function nuBeforeSave() {
 
-    const f = $('#sfi_json_file').val();
+    const file = $('#sfi_file').val();
 
-    if (f !== '') {
+    if (file !== '') {
 
         $('#sfi_json')
-        .val(f)
+        .val(file)
         .change();
 
     }
@@ -21,9 +17,11 @@ function nuBeforeSave() {
 
 }
 
-function nuFilesDisplayFile() {
+function nuFilesDisplayFile(json) {
+    nuEmbedObject(json, 'view_image', -1, -1);
+    nuShow('view_image', json !== '');
+}
 
-    const j = $('#sfi_json').val();
-    nuEmbedObject(j, 'view_image', -1, -1); // auto-size
-
+function nuOnFileLoaded(e, id, json) {
+    nuFilesDisplayFile(json);
 }

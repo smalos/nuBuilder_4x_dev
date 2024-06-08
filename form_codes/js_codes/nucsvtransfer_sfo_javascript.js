@@ -7,7 +7,7 @@ function nuCheckCSV(){
     var csvDelimiter = $('#csv_delimiter').val();
 
     if($('#csv_transfer').val() === '' || csvFrom === '' || csvTo === '' || csvDelimiter === ''){
-        nuMessage([nuTranslate('No fields can be left blank') + '...']);
+        nuMessage(nuTranslate('Validation Error'),nuTranslate('No fields can be left blank') + '...');
     }else{
         
         if($('#csv_transfer').val() == 'export'){

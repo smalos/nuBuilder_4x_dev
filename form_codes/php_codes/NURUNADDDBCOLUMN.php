@@ -14,14 +14,14 @@ else {
 }
 
 if ($r == 0) {
-    $js = "nuMessage([nuTranslate('The column has been created successfully')]); nuRefreshSelectObject('sql_after_column');";
+    $js = "nuMessage(nuTranslate('Information'), nuTranslate('The column has been created successfully')); nuRefreshSelectObject('sql_after_column');";
 }
 else if ($r == - 1) {
-    $js = "nuMessage([nuTranslate('An error occured while creating the column'), nuTranslate('Check nuDebug Results for details')]);";
+    $js = "nuMessage(nuTranslate('Error'), nuTranslate('An error occured while creating the column'), nuTranslate('Check nuDebug Results for details'));";
 
 }
 else if ($r == - 2) {
-    $js = "nuMessage([nuTranslate('An error occured while creating the column'), nuTranslate('The query contains invalid keywords')]);";
+    $js = "nuMessage(nuTranslate('Error'), [nuTranslate('An error occured while creating the column'), nuTranslate('The query contains invalid keywords')]);";
 
 }
 

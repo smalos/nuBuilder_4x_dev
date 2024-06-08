@@ -1,14 +1,15 @@
+require('../nuconfig.php');
+
 nuSetJSONDataAll('REFRESH_CACHE','1');
-nuCreateViewsOrTables();
 
 $js = "
 
 nuGetBreadcrumb();
 
-function msg() {
-   nuMessage(nuTranslate('Cache Refreshed'));
+function nuMsgCacheRefreshed() {
+   nuMessage(nuTranslate('Information'), nuTranslate('Cache Refreshed'));
 }
-setTimeout(msg, 1000); 
+setTimeout(nuMsgCacheRefreshed, 1000); 
 
 ";
 

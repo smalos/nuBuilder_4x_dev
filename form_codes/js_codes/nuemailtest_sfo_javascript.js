@@ -34,7 +34,7 @@ function nuemailtestLoadDatafromLS() {
         if (value || value === '') {
             $(this).val(value);
         } else {
-            nuMessage(["There's no Data to load in Local Storage"])
+            nuMessage(`${nuTranslate('Information')}`, `${nuTranslate("There's no Data to load in Local Storage")}`);
         }
 
     });

@@ -35,28 +35,44 @@ function nuShowVersionInfo() {
 }
 
 function nuShowFormInfo() {
-
 	const currProps = nuCurrentProperties();
-	const formCode = currProps.form_code;
+	const { form_code: formCode, form_id: formId, form_description: formDescription, form_type: formType, browse_sql: browseSQLRaw, record_id: recordId } = currProps;
 	const isDevMode = nuDevMode();
-	const permalinkButton = '<br><button type="button" class="nuActionButton nuAdminButton" onclick="nuFormInfoCopyPermalink()">Copy Permalink</button>';
-	const currPropsButton = '<button type="button" class="nuActionButton nuAdminButton" onclick="nuFormInfoCurrentProperties()">Current Properties</button>';
-	const recordId = nuFormType() === "edit" && currProps.form_type !== "launch" ? `<b>Record ID:</b> ${currProps.record_id}<br>` : "";
-	const browseCopyButton = '<button type="button" class="nuActionButton nuAdminButton" onclick="nuFormInfoCopyBrowseSQL()">Copy SQL</button><br>';
+	const formTypeValue = nuFormType();
+	const isEditMode = formTypeValue === "edit";
+	const isBrowseMode = formTypeValue === "browse";
 	const showSQL = !formCode.startsWith("nu") || isDevMode;
-	const browseSQL = nuFormType() === "browse" && (showSQL) ? `<br><b>Browse SQL:</b><br><pre class="nuFormInfoBrowseSQL"><code id="nuFormInfoBrowseSQL">${currProps.browse_sql}</pre></code><br>${browseCopyButton}` : "<br>";
-	const table = nuSERVERRESPONSE.table !== "" && (showSQL) ? `<b>Table:</b> ${nuSERVERRESPONSE.table}` : "";
+	const formattedBrowseSQL = String(browseSQLRaw).replace(/\s{2,}/g, '\n');
+
+	// Function to create buttons with translated labels
+	const copyButtonHTML = (id, value, label) => `<button type="button" class="nuActionButton nuAdminButton" onclick="navigator.clipboard.writeText(nuTranslate('${value}'))">${nuTranslate(label)}</button>`;
+
+	// Copy Buttons for each element
+	const formIdCopyButton = copyButtonHTML("nuFormInfoCopyFormId", formId, 'Copy');
+	const formCodeCopyButton = copyButtonHTML("nuFormInfoCopyFormCode", formCode, 'Copy');
+	const browseCopyButton = copyButtonHTML("nuFormInfoCopyBrowseSQL", formattedBrowseSQL, 'Copy SQL');
+	const permalinkButton = nuUXOptions.nuShowURLPermaLink ? copyButtonHTML("nuFormInfoCopyPermalink", window.location.href, 'Copy Permalink') : '';
+	const currPropsButton = `<button type="button" class="nuActionButton nuAdminButton" onclick="nuFormInfoCurrentProperties()">${nuTranslate('Current Properties')}</button>`;
+
+	const tableInfo = nuSERVERRESPONSE.table !== "" && showSQL ? `<b>${nuTranslate('Table')}:</b> ${nuSERVERRESPONSE.table} ${copyButtonHTML("nuFormInfoCopyTable", nuSERVERRESPONSE.table, 'Copy')}` : "";
+	const recordIdInfo = isEditMode && formType !== "launch" ? `<b>${nuTranslate('Record ID')}:</b> ${recordId}<br>` : "";
+	const browseSQLInfo = isBrowseMode && showSQL ? `<br><b>${nuTranslate('Browse SQL')}:</b><br><br>${browseCopyButton}<pre class="nuFormInfoBrowseSQL"><code id="nuFormInfoBrowseSQL">${formattedBrowseSQL}</pre></code><br>` : "<br>";
+
 	const formInfo = [
-		`<h2><u>${currProps.form_description}</u></h2>`, 
-		`<b>Form ID:</b> ${currProps.form_id}`, `<b>Form Code:</b> ${formCode}`,
-		table,
-		recordId,
+		`<h3>${nuTranslate(formDescription)}</h3>`,
+		`<b>${nuTranslate('Form ID')}:</b> ${formId} ${formIdCopyButton}`,
+		`<b>${nuTranslate('Form Code')}:</b> ${formCode} ${formCodeCopyButton}`,
+		tableInfo,
+		recordIdInfo,
 		currPropsButton,
 		permalinkButton,
-		browseSQL,
+		browseSQLInfo
 	];
-	nuMessage(formInfo);
 
+	const msg = nuMessage(formInfo);
+	if (!isBrowseMode) {
+		msg.css('width', '350px');
+	}
 }
 
 function nuDevMode() {
@@ -121,9 +137,6 @@ function nuAddAdminButtons() {
 		},
 	};
 
-	if (!nuGlobalAccess())
-		return;
-
 	const {form_type, form_code} = nuCurrentProperties();
 	const formCode = form_code;
 
@@ -136,11 +149,11 @@ function nuAddAdminButtons() {
 	const isEdit = form_type.includes("edit");
 	const isLaunch = form_type.includes("launch");
 
-	if ((nuAdminButtons.nuDebug || devMode) && nuMainForm()) {
+	if ((window.nuUXOptions.nuDebugIcon || devMode) && nuMainForm()) {
 		nuAddIconToBreadcrumbHolder('nuDebugButton', 'nuDebug Results', 'nuOpenNuDebug(2)', 'fa fa-bug', '3px');
 	}
 
-	if (nuAdminButtons.nuRefresh) {
+	if (window.nuUXOptions.nuRefreshIcon) {
 		nuAddIconToBreadcrumbHolder('nuRefreshButton', 'Refresh', 'nuGetBreadcrumb()', 'fas fa-sync-alt', '3px');
 	}
 
@@ -148,15 +161,15 @@ function nuAddAdminButtons() {
 
 	if (!formCode.startsWith('nu') || devMode) {
 
-		if (nuAdminButtons.nuProperties) {
+		if (window.nuUXOptions.nuPropertiesIcon) {
 			buttonCount += nuAddAdminButton('Properties', adminButtons.nuProperties);
 		}
 
-		if (nuAdminButtons.nuObjects) {
+		if (window.nuUXOptions.nuObjectsIcon) {
 			buttonCount += nuAddAdminButton('Objects', adminButtons.nuObjects);
 		}
 
-		if (nuAdminButtons.nuPHP) {
+		if (window.nuUXOptions.nuPHPIcon) {
 			if (isEdit || isLaunch) {
 				buttonCount += nuAddAdminButton('AdminBE', adminButtons.AdminBE);
 			}
@@ -617,7 +630,7 @@ function nuContextMenuBeforeRender(menu, event) {
 }
 
 function nuContextMenuItemText(label, iconClass) {
-	return '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i> <span style="padding-left:8px; white-space:nowrap; display: inline;">' + label + '</span>';
+	return '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i> <span style="padding-left:8px; white-space:nowrap; display: inline;">' + nuTranslate(label) + '</span>';
 }
 
 function nuContextMenuGetWordWidth(w) {
@@ -804,7 +817,12 @@ function nuContextMenuLabelPromptCallback(value, ok) {
 		if (contextMenuCurrentTarget.id.startsWith('label_')) {
 			nuSetLabelText(contextMenuCurrentTarget.id.substring(6), value, true);
 		} else {
-			objLabel.html(value);
+			objLabel.html(nuTranslate(value));
+			objLabel.attr('data-nu-org-label', value);
+			const icon = objLabel.attr('nu-data-icon');
+			if (icon) {
+				nuAddInputIcon(contextMenuCurrentTarget.id, icon);
+			}
 		}
 
 		let column = nuFormType() == 'edit' ? 'sob_all_label' : 'sbr_title';
@@ -1796,19 +1814,19 @@ function nuPrettyPrintMessage(e, obj) {
 			maxDepth: 1,
 		})
 
-		let btnClose = '<button class="nuClose" onclick=" nuClosePropertiesMsgDiv() " style="height:25px;float:right;">&#10006;</button><br>';
-
+	const title = nuTranslate('Current Properties') + ' : ' + nuGetProperty('form_code');
 	if (e !== undefined && (nuIsMacintosh() ? e.metaKey : e.ctrlKey)) {
 		let w = window.open();
-		w.document.title = nuTranslate('Current Properties') + ' : ' + nuGetProperty('form_code')
+		w.document.title = title;
 			$(w.document.body).html(ppTable);
 	} else {
-		let msg = nuMessage([btnClose, ppTable]);
+		let msg = nuMessage(title, ppTable);
 		msg.css({
 			'width': 700,
 			'text-align': 'left',
 			'background-color': 'white'
 		}).attr("id", "nuPropertiesMsgDiv");
+
 		nuDragElement(document.getElementById('nuPropertiesMsgDiv'), 40);
 	}
 

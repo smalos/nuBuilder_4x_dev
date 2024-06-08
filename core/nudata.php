@@ -334,6 +334,7 @@ class UpdateData {
 	public $values = [];
 	public $inserts = [];
 }
+
 function nuUpdateDatabase() {
 
 	$nuConfigDBTypesSetNullWhenEmpty = nuGetDBTypesSetNullWhenEmpty();
@@ -341,6 +342,7 @@ function nuUpdateDatabase() {
 	$nuHash = $_POST['nuHash'];
 	$formId = $nuHash['form_id'];
 	$deleteAction = $nuHash['delete_action'];
+	$_POST['nuErrorValidation'] = '';
 
 	if (nuDemo(false)) {
 		if ($deleteAction || (!$deleteAction && strpos($_SESSION['nubuilder_session_data']['DEMO_SAVING_ALLOWED_IDS'], $formId) === false)) {
@@ -359,7 +361,10 @@ function nuUpdateDatabase() {
 		return;
 	}
 
-	if (!nuValidateForms()) return;
+	if (!nuValidateForms()) {
+		nuSetValidationErrorTitle('Validation Error');
+		return;
+	}
 
 	$nuMainTable = $nudata[0]->table;
 	$nuDataFormId = $nudata[0]->object_id;
@@ -477,6 +482,10 @@ function nuUpdateDatabase() {
 
 	return $_POST['nuHash']['RECORD_ID'];
 
+}
+
+function nuSetValidationErrorTitle($title) {
+	$_POST['nuErrorValidationTitle'] = nuTranslate($title);
 }
 
 function nuUpdateDatabaseAddNuLog(&$updateData, $userId, $table) {
@@ -771,31 +780,42 @@ function nuAutoNumber($formId, $fieldId, $value) {
 	}
 }
 
-function nuUpdateCounter($id){
+function nuUpdateCounter($id) {
 
-	$uniqueId	= nuID();
-	$sql		= "SELECT sob_input_count, sob_input_javascript FROM zzzzsys_object WHERE zzzzsys_object_id = ?";
+    $uniqueId = nuID();
+    $sql = "SELECT sob_input_count, sob_input_javascript FROM zzzzsys_object WHERE zzzzsys_object_id = ?";
 
-	for($i = 0 ; $i < 10 ; $i++){
+    for ($i = 0; $i < 10; $i++) {
 
-		nuRunQuery("UPDATE zzzzsys_object SET sob_input_javascript = ? WHERE zzzzsys_object_id = ? AND sob_input_javascript = ?", [$uniqueId, $id, '']);
+        nuRunQuery("UPDATE zzzzsys_object SET sob_input_javascript = ? WHERE zzzzsys_object_id = ? AND IFNULL(sob_input_javascript,'') = ?", [$uniqueId, $id, '']);
 
-		$result	= nuRunQuery($sql, [$id]);
-		$row	= db_fetch_object($result);
-		$count	= $row->sob_input_count + 1;
-		$js	= $row->sob_input_javascript;
+        $result = nuRunQuery($sql, [$id]);
+        $row = db_fetch_object($result);
+        $currentCount = $row->sob_input_count ?? 0;
+        $js = $row->sob_input_javascript;
 
-		if($js == $uniqueId){
+        if ($js == $uniqueId) {
 
-			nuRunQuery("UPDATE zzzzsys_object SET sob_input_javascript = ?, sob_input_count = ? WHERE zzzzsys_object_id = ?", ['', $count, $id]);
-			return $count;
+            $prefix = preg_replace('/[0-9]+/', '', $currentCount);
+            $numericPart = preg_replace('/[^0-9]/', '', $currentCount);
+			if ($numericPart === '') {
+				$numericPart = '0';
+			}
 
-		}
+            $newNumericPart = intval($numericPart) + 1;
+            $newId = $prefix . $newNumericPart;
 
-	}
+            nuRunQuery("UPDATE zzzzsys_object SET sob_input_javascript = ?, sob_input_count = ? WHERE zzzzsys_object_id = ?", ['', $newId, $id]);
 
-	nuDisplayError(nuTranslate('Could not get AutoNumber'));
-	return -1;
+            return $newId;
+        }
+		
+		return -1;
+		
+    }
+
+    nuDisplayError(nuTranslate('Could not get AutoNumber'));
+    return -1;
 
 }
 
@@ -864,8 +884,12 @@ function nuReturnNewRecord($i = - 1) {
 	$_POST['nuHash']['RECORD_ID'] = $i;
 }
 
-function nuDisplayError($m) {
-	$_POST['nuErrors'][] = $m;
+function nuDisplayError($message) {
+	$_POST['nuErrors'][] = $message;
+}
+
+function nuDisplayMessage($m) {
+	$_POST['nuMessages'][] = $m;
 }
 
 function nuHasErrors() {

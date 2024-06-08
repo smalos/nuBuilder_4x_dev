@@ -518,7 +518,7 @@ function getOpenForm($f2) {
 
     $msg = "
 	   var buttons = ' <button onclick=\"$(\'#nuMessageDiv\').remove();nuForm(\'$f2\', \'$r\', \'\', \'\', \'2\');\" class=\"nuActionButton\">Open Form</button>';
-	   nuMessage(['<h2>Cloning complete.</h2><h3>Code: $code</h3>' + buttons]);
+	   nuMessage(['<h2>Cloning complete.</h2>Code: $code' + buttons]);
 	   console.log('Cloning complete. Form Code: $code');
    ";
 

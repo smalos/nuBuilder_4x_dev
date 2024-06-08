@@ -5,6 +5,7 @@ error_reporting( error_reporting() & ~E_NOTICE );
 require_once('nusessiondata.php');
 require_once('nubuilders.php');
 require_once('nuemailer.php');
+require_once('nudata.php');
 
 nuSetTimeLimit(0);
 
@@ -417,11 +418,11 @@ function nuRunPHPHidden($nuCode){
 
 function nuGetPHP($idOrCode) {
 
-    $sql = "SELECT sph_code, sph_description, zzzzsys_php_id, sph_php, sph_global
-            FROM zzzzsys_php
-            WHERE sph_code = ? OR zzzzsys_php_id = ?";
+	$sql = "SELECT sph_code, sph_description, zzzzsys_php_id, sph_php, sph_global
+			FROM zzzzsys_php
+			WHERE sph_code = ? OR zzzzsys_php_id = ?";
 
-    $stmt = nuRunQuery($sql, [$idOrCode, $idOrCode]);
+	$stmt = nuRunQuery($sql, [$idOrCode, $idOrCode]);
 	$exists = db_num_rows($stmt) === 1;
 	return $exists ? db_fetch_object($stmt) : false;
 
@@ -442,7 +443,9 @@ function nuHasProcedureAccess($phpObj) {
 function nuRunPHP($nuCode, $hidden = false) {
 
 	if ($nuCode !== 'nukeepalive') {
-
+		
+		$result = "";
+		$_POST['nuRunPHPHiddenResult'] = "";
 		$phpObj = nuGetPHP($nuCode);
 		$exists = $phpObj !== false;
 		
@@ -451,16 +454,19 @@ function nuRunPHP($nuCode, $hidden = false) {
 			if (nuHasProcedureAccess($phpObj)) {
 				if ($hidden) {
 					nuEval($phpObj->zzzzsys_php_id);
+					$_POST['nuRunPHPHiddenResult'] = $result;
 					$_POST['nuRunPHPHidden'] = $nuCode;
 				}
 			} else {
-				nuDisplayError(nuTranslate("Access To Procedure Denied...") . " ($nuCode)");
+				$_POST['nuRunPHPHiddenResult'] = "Access denied";
+				nuDisplayError('<h2>'.nuTranslate("Error").'</h2>'. nuTranslate("Access To Procedure Denied...") . " ($nuCode)");
 			}
 
 		} else {
 
 			if (!$exists && !nuStringStartsWith('nu', $nuCode)) {
-				nuDisplayError(nuTranslate("The Procedure does not exist...") . " ($nuCode)");
+				$_POST['nuRunPHPHiddenResult'] = "Procedure does not exist";
+				nuDisplayError('<h2>'.nuTranslate("Error").'</h2>'. nuTranslate("The Procedure does not exist...") . " ($nuCode)");
 			}
 
 		}
@@ -1452,45 +1458,76 @@ function nuFailIfUnsetHashCookies($string) {
 	return preg_match('/#[^#]+#/', $string);
 }
 
-function nuEval($phpid){
+function nuEvalSafe($code, $returnOutput = false) {
+
+	$output = '';
+
+	try {
+		if ($returnOutput) ob_start();
+		/*
+		set_error_handler(function($errno, $errstr, $errfile, $errline) {
+			throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+		});
+		*/
+		$result = eval($code);
+		if ($returnOutput) {
+			$output = ob_get_clean();
+		//	restore_error_handler();
+		}
+
+		if ($returnOutput) {
+			return ['result' => $result, 'output' => $output, 'error' => null];
+		} else {
+			return ['result' => $result, 'error' => null];
+		}
+	} catch (ParseError $e) {
+		if ($returnOutput) ob_end_clean();
+		return ['result' => null, 'output' => $output, 'error' => $e];
+	} catch (ErrorException $e) {
+		if ($returnOutput) ob_end_clean();
+		return ['result' => null, 'output' => $output, 'error' => $e];
+	} catch (Throwable $e) {
+		if ($returnOutput) ob_end_clean();
+		return ['result' => null, 'output' => $output, 'error' => $e];
+	}
+
+}
+
+
+function nuEval($phpid, $returnOutput = false){
 
 	$r						= nuGetPHP($phpid);
-	if($r === false){return;}
+	if($r === false){return '';}
 
 	$code					= $r->sph_code;
 	$php					= nuReplaceHashVariables($r->sph_php);
 
-	if(trim($php) == ''){return;}
+	if(trim($php) == ''){return '';}
 
 	$_POST['nuSystemEval']	= nuEvalMessage($phpid, $code);
 
 	$nuDataSet = isset($_POST['nudata']);
 	$nudata = $nuDataSet ? $_POST['nudata'] : '';
 
-	try{
+	$result = nuEvalSafe($php, $returnOutput);
 
-		$result = eval($php);
-		if ($result === false) {
-			$e = new Exception('Eval failed');
-			nuExceptionHandler($e, $code);
-		}
+	if ($result['error']) {
+		nuExceptionHandler($result['error'], $code);
+	}
 
-		if (($nuFailIfUnsetHashCookies ?? false) === true && nuFailIfUnsetHashCookies($php)) {
-			$e = new Exception('nuEval failed, unset Hash Cookies.');
-			nuExceptionHandler($e, $code);
-			return;
-		}
+	if (($nuFailIfUnsetHashCookies ?? false) === true && nuFailIfUnsetHashCookies($php)) {
+		$e = new Exception('nuEval failed, unset Hash Cookies.');
+		nuExceptionHandler($e, $code);
+		return '';
+	}
 
-	}catch(Throwable $e){
-		nuExceptionHandler($e, $code);
-	}catch(Exception $e){
-		nuExceptionHandler($e, $code);
-	} catch (ParseError $e) {
-		nuExceptionHandler($e, $code);
+	if ($returnOutput) {
+		return $result['output'];
 	}
 
 	$_POST['nuProcedureEval']			= '';
 	$_POST['nuSystemEval']				= '';
+	
 	if ($nuDataSet) $_POST['nudata']	= $nudata;
 
 }
@@ -1511,15 +1548,15 @@ function nuRunProcedure($procedure) {
 
 function nuProcedure($c){
 
-	$s						= "SELECT sph_php, sph_code FROM zzzzsys_php WHERE sph_code = ? ";
-	$t						= nuRunQuery($s, [$c]);
+	$s = "SELECT sph_php, sph_code FROM zzzzsys_php WHERE sph_code = ? OR zzzzsys_php_id = ?";
+	$stmt = nuRunQuery($s, [$c, $c]);
 
-	if (db_num_rows($t) > 0) {	// procedure exists
+	if (db_num_rows($stmt) > 0) {
 
-		$r					= db_fetch_object($t);
+		$r = db_fetch_object($stmt);
 
-		$php				= nuReplaceHashVariables($r->sph_php);
-		$php				= "$php \n\n//--Added by nuProcedure()\n\n$"."_POST['nuProcedureEval'] = '';";
+		$php = nuReplaceHashVariables($r->sph_php);
+		$php = "$php \n\n//--Added by nuProcedure()\n\n$"."_POST['nuProcedureEval'] = '';";
 		$_POST['nuProcedureEval'] = "Procedure <b>$r->sph_code</b> - run inside ";
 		return $php;
 	} else {
@@ -1603,36 +1640,6 @@ function nuRunSystemUpdate(){
 	nuSetJSONData($i, 'valid');
 
 	return $i;
-
-}
-
-function nuGetFonts(){
-
-//	$dir	= "fonts/";
-	$dir	= "tfpdf/font/unifont/";
-	$a		= [];
-
-	if (is_dir($dir)){	// Open a directory, and read its contents
-
-		if ($dh = opendir($dir)){
-
-			while (($file = readdir($dh)) !== false){
-
-				$b = explode('.', $file);
-				if($b[1] == 'ttf'){
-					$f		= explode('.', $file);
-					$a[]	= $f[0];
-				}
-
-			}
-
-			closedir($dh);
-
-		}
-
-	}
-
-	return $a;
 
 }
 
@@ -1867,7 +1874,6 @@ function db_setup(){
 
 }
 
-
 function nuUserLanguage($e = ''){
 
 	$user_id	= nuObjKey(nuHash(),'USER_ID','');
@@ -1948,7 +1954,6 @@ function nuFormatVarArgs($format, $values) {
 
 }
 
-
 function nuToCSV($table, $file, $d){
 
 	$T = nuRunQuery("SELECT * FROM `$table`");
@@ -1961,7 +1966,7 @@ function nuToCSV($table, $file, $d){
 
 	header('Content-Type: application/excel');
 	header('Content-Encoding: UTF-8');
-	header('Content-Disposition: attachment; filename="' . $file . '"');
+	header('Content-Disposition: attachment; filename="' . nuEnsureFileExtension($file, 'csv', true) . '"');
 
 	$fp = fopen('php://output', 'w');
 
@@ -2242,18 +2247,17 @@ function nuGetRecordURL($origin = null, $subFolder = null, $homepageId = null, $
 	return $origin. $subFolder . '/index.php?f=' . $formId . '&r=' . nuRecordId() . $homepageId;
 
 }
-
 function nuRecordId() {
 
 	$recordIdLower = nuReplaceHashVariables('#record_id#');
 	$recordIdUpper = nuReplaceHashVariables('#RECORD_ID#');
 
-	$recordId = $recordIdLower && $recordIdLower != '-1'  ? $recordIdLower : $recordIdUpper;
+	$formId = function_exists('nuHash') ? nuObjKey(nuHash(), 'FORM_ID') ?? null : null;
+	$recordId = $formId === 'doesntmatter' ? $recordIdLower : $recordIdUpper;
 
 	return $recordId;
 
 }
-
 function nuUserId() {
 
 	$userId = function_exists('nuHash') ? nuObjKey(nuHash(), 'USER_ID') ?? null : null;
@@ -2660,6 +2664,8 @@ function nuPad($i, $length, $pad = 0) {
 
 function nuDecode($str) {
 
+	if (empty($str)) return '';
+
 	$base64Decoded = base64_decode($str);
 	$decoded = json_decode($base64Decoded, true);
 	if (json_last_error() === JSON_ERROR_NONE) {
@@ -2687,3 +2693,21 @@ function nuIsHTTPS() {
 	;
 
 }
+
+function nuEnsureFileExtension($filename, $desiredExtension, $forceExtension = false) {
+
+	$currentExtension = pathinfo($filename, PATHINFO_EXTENSION);
+
+	if (empty($currentExtension) || $forceExtension) {
+		$filename = preg_replace('/\.[^.]*$/', '', $filename);
+		
+		if ($forceExtension) {
+			$filename .= '.' . ltrim($desiredExtension, '.');
+		} else {
+			$filename .= '.' . ltrim($currentExtension, '.');
+		}
+	}
+
+	return $filename;
+}
+

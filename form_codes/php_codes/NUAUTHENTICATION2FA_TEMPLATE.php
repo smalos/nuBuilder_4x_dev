@@ -10,9 +10,12 @@ function nuSendCodeByEmail($code) {
     $content = 'Your Code: '.$code;
     $subject = 'nuBuilder Authentication Code';
     $fromName = 'nubuilder';
+    $fromAddress = 'from@something.com';
     $sendTo = nuGetEmail(''); // Pass the globeadmin email address here 
-    nuEmailPHP($sendTo, $fromAddress, $fromName, $content, $subject);
-    nuDisplayError("An email has been sent to the registered account. Subject = '".subject."'");
+
+    nuSendEmail($sendTo, $fromAddress, $fromName, $content, '$subject', [], true);
+
+    nuDisplayError("An email has been sent to the registered account. Subject = '".$subject."'");
 }
 
 $command = ! isset($nuauthcommand) ? "#nuauthcommand#" : $nuauthcommand;

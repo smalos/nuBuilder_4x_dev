@@ -15,8 +15,9 @@ var mess = String($('#deb_message').val());
 var i = mess.indexOf('<br>');
 var m = mess.substr(i + 6);
 var t = mess.substr(0, i);
+var isHTMLText = m.startsWith('<html>');
 
-nuSetTitle(mess.substr(0, i));
+nuSetTitle(m.substr(0, i));
 
 $('#nuTab0').remove();
 
@@ -51,3 +52,19 @@ if (nuFORM.getCurrent().record_id !== '') {
 }
 
 nuAddActionButton('DeleteAll', 'Delete All', 'nuDeleteAllAction()');
+
+if (isHTMLText) {
+    nuDebugConvertTextareaToDiv();
+}
+
+function nuDebugConvertTextareaToDiv() {
+
+    const textarea = document.getElementById('deb_message');
+    const htmlCode = textarea.value;
+    const div = document.createElement('div');
+    div.innerHTML = htmlCode;
+    div.style.cssText = textarea.style.cssText;
+    div.style.userSelect = 'text';
+    textarea.parentNode.replaceChild(div, textarea);
+
+}

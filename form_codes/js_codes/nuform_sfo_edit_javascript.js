@@ -1,5 +1,5 @@
 if ($('#zzzzsys_tab_sf000syt_access').val() !== '') {
-    nuMessage(nuTranslate('The first tab must not be set to hidden'));
+    nuMessage(nuTranslate('Validation Error'), nuTranslate('The first tab must not be set to hidden'));
   }
   
   function nuDisplayObjectRefreshed(obj) {

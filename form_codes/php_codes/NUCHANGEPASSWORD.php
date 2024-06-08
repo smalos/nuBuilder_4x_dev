@@ -4,6 +4,8 @@ $newPassword = '#new_password#';
 $session = '#SESSION_ID#';
 $userId = "#USER_ID#";
 
+
+
 //--
 
 $s = "
@@ -40,14 +42,21 @@ if ($useMd5) {
 }
 
 if ($check == false) {
-    nuDisplayError(nuTranslate('Incorrect Password'));
+    nuDisplayError('<h2>' . nuTranslate('Error') . '</h2>' . nuTranslate('Incorrect Password'));
     return;
 }
 
 if ($oldPassword == $newPassword) {
-    nuDisplayError(nuTranslate('Your new password cannot be the same as your old password'));
+
+    nuDisplayError('<h2>' . nuTranslate('Error') . '</h2>' . nuTranslate('Your new password cannot be the same as your old password'));
     return;
 }
+
+if ($oldPassword === '' || $newPassword === '') {
+    nuDisplayError('<h2>' . nuTranslate('Error') . '</h2>' . nuTranslate('The password cannot be left blank'));
+    return;
+}
+
 
 //--
 
@@ -95,13 +104,13 @@ if ($newPassword == $newPasswordCheck) {
                 nuLogout();
             }
         }
-        nuMessage(nuTranslate('Your password has been successfully changed'), 1500, nuMsgAfterPasswordChange);
+        nuMessage(nuTranslate('Information'), nuTranslate('Your password has been successfully changed'), 1500, nuMsgAfterPasswordChange);
     ";
 
 
 } else {
     $msg = nuTranslate('"New Password" must be the same as "Confirm New Password"');
-    $js = "nuMessage($msg);";
+    $js = "nuMessage(nuTranslate('Error'), '$msg');";
 }
 
 

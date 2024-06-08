@@ -6,7 +6,7 @@ nuSelectRemoveMultiple('emt_avail_fields');
 
 if (nuEmailTemplateIsTemplate() && !nuDevMode()) {
     nuDisableAllObjects();
-    nuMessage("Unable to save templates. Please clone them to create a new copy and save the cloned version instead.", 2500);
+    nuMessage(`${nuTranslate('Error')}`, `${nuTranslate("Unable to save templates. Please clone them to create a new copy and save the cloned version instead.")}`, 3500);
 }
 
 nuEmailTemplateSetPreviewText();

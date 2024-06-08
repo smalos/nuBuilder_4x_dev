@@ -26,7 +26,7 @@ if ('#sob_all_access#' == 9 && '#sob_all_access_condition#' == '') {
 $o = '#sob_all_type#';
 
 if ($o == 'display') {
-    if ('#sob_display_sql#' == '') {
+    if ('#sob_display_sql#' == '' && '#sob_display_procedure#' == '') {
         nuDisplayErrorNotBlank('Display');
     }
 }
@@ -125,4 +125,8 @@ function nuDisplayErrorNotBlank($label) {
     nuDisplayError($label . ' ' . nuTranslate('cannot be left blank'));
 
 }
+
+if (!empty($_POST['nuErrors'])) {
+   nuSetValidationErrorTitle('Validation Error');
+} 
 

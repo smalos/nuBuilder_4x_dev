@@ -1,27 +1,42 @@
-function nuGetDisplayValue($formId, $obj) {
+function nuGetDisplayValue($formId, $id) {
+	
+    $sql = "SELECT sob_display_sql, sob_display_procedure FROM `zzzzsys_object` WHERE sob_all_zzzzsys_form_id = ? AND sob_all_id = ?";
+    $selectObject = nuRunQuery($sql, [$formId, $id]);
+	
+    if (db_num_rows($selectObject) == 1) {
+        $obj = db_fetch_object($selectObject);
+        
+        if ($obj != false) {
+		
+            $displayProcedure = $obj->sob_display_procedure;
+            
+            if (empty($displayProcedure)) {
+              
+                $disS = nuReplaceHashVariables($obj->sob_display_sql);
+                $disT = nuRunQuery($disS);
 
-    $sql = "SELECT sob_display_sql FROM `zzzzsys_object` WHERE sob_all_zzzzsys_form_id = ? AND sob_all_id = ?";
-
-    $t = nuRunQuery($sql, [$formId, $obj]);
-
-    if (db_num_rows($t) == 1) {
-        $r = db_fetch_row($t);
-        if ($r != false) {
-
-            $disS = nuReplaceHashVariables($r[0]);
-            $disT = nuRunQuery($disS);
-
-            if (db_num_rows($disT) >= 1) {
-                $disR = db_fetch_row($disT);
-                return $disR[0];
+                if (db_num_rows($disT) >= 1) {
+                    $disR = db_fetch_row($disT);
+                    return $disR[0];
+                } else {
+                    return "";
+                }
+				
             } else {
-                return "";
+
+                $procedureCode = nuProcedure($displayProcedure);
+                if ($procedureCode !== '') {
+                    return nuEval($displayProcedure, $procedureCode);
+                } else {
+                    return false;
+                }
             }
         }
     }
 
     return false;
 }
+
 
 function nuRefreshDisplayObject($displayId, $formIdHk, $prefixHK) {
 
@@ -37,14 +52,19 @@ function nuRefreshDisplayObject($displayId, $formIdHk, $prefixHK) {
 	$displayId = $prefix.$displayId;
 		
 	if ($value === false && $value !== '') {
-		$js = "nuMessage([nuTranslate('Failed to refresh the Display Object: ') + '$displayId']); ";
+		$js = "nuMessage(nuTranslate('Error'), nuTranslate('Failed to refresh the Display Object:') + ' $displayId'); ";
 	} else {
 
 		$js = " 
-			var obj = $('#$displayId');
-			var format = obj.attr('data-nu-format');
-			var v = nuFORM.addFormatting('$value', format);
-			obj.val(v).change();
+		    
+		    function nuRefreshDisplayObjectSetNewValue(displayId, value) {
+    			let obj = $('#' + displayId);
+    			const format = obj.attr('data-nu-format');
+    			const formattedValue = nuFORM.addFormatting(value, format);
+    			nuSetValue(displayId, formattedValue);
+		    }
+
+		    nuRefreshDisplayObjectSetNewValue('$displayId', '$value');
 			
 			if (window.nuDisplayObjectRefreshed) {
 				nuDisplayObjectRefreshed('$displayId', '$formId');

@@ -60,7 +60,7 @@ start = start.replace('$table', table);
 $('#sql_query_word').html(start);
 $('#sql_query').val(qry);
 
-nuAddActionButton('Run', 'Run', 'nuRunPHPHidden("NURUNADDDBCOLUMN")');
+nuAddActionButton('Run', 'Run', 'nuHasNotBeenEdited(); nuRunPHPHidden("NURUNADDDBCOLUMN")');
 
 $('#sql_query').addClass('sql');
 $('.sql').on('dblclick', function() {
@@ -69,7 +69,3 @@ $('.sql').on('dblclick', function() {
 
 nuSetProperty('sob_all_table', table);
 nuRefreshSelectObject('sql_after_column');
-
-function nuSelectObjectRefreshed() {
-   nuHasBeenEdited();
-}

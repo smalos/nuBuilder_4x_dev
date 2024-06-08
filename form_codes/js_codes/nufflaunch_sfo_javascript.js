@@ -209,7 +209,7 @@ function nuGetFFDataType(h) {
     if (h == 'Calc') t = "DECIMAL";
     if (h == 'nuDate') t = "DATE";
     if (h == 'File') t = "LONGTEXT";
-    if (h == 'nuAutoNumber') t = "BIGINT UNSIGNED";
+    if (h == 'nuAutoNumber') t = "VARCHAR(15)";
     if (h == 'Number') t = "INT";
     if (h == 'nuNumber') t = "DECIMAL(12,4)";
     if (h == 'Button' || h == 'HTML' || h == 'Image' || h == 'Word' || h == 'Subform') t = null;
@@ -602,23 +602,23 @@ function nuBeforeSave() {
     let fk = nuGetValue('fastform_fk');
 
     if (table === '' && type !== 'launch') {
-        nuMessage(['<b>' + nuTranslate('Table Name') + '</b> ' + nuTranslate('cannot be left blank')]);
+        nuMessage(nuTranslate('Validation Error'), ['<b>' + nuTranslate('Table Name') + '</b> ' + nuTranslate('cannot be left blank')]);
         return false;
     }
 
     if (type === '') {
-        nuMessage(['<b>' + nuTranslate('Form Type') + '</b> ' + nuTranslate('cannot be left blank')]);
+        nuMessage(nuTranslate('Validation Error'), ['<b>' + nuTranslate('Form Type') + '</b> ' + nuTranslate('cannot be left blank')]);
         return false;
     }
 
     if (pk === '') {
-        nuMessage(['<b>' + nuTranslate('Primary Key') + '</b> ' + nuTranslate('cannot be left blank')]);
+        nuMessage(nuTranslate('Validation Error'), ['<b>' + nuTranslate('Primary Key') + '</b> ' + nuTranslate('cannot be left blank')]);
         return false;
     }
 
     if (type.startsWith('browse') && $("[data-nu-field='ff_browse']:checked").length === 0) {
 
-        nuMessage([nuTranslate('At least 1 Browse needs to be checked')]);
+        nuMessage(nuTranslate('Validation Error'), [nuTranslate('At least 1 Browse needs to be checked')]);
         return false;
 
     }
@@ -626,7 +626,7 @@ function nuBeforeSave() {
     let fieldArr = nuSubformColumnArray('obj_sf', 'ff_field');
     if (fieldArr.includes('') || !nuArrayIsUnique(fieldArr)) {
 
-        nuMessage(nuTranslate('The Field Names must be both unique and not blank'));
+        nuMessage(nuTranslate('Validation Error'), nuTranslate('The Field Names must be both unique and not blank'));
         return false;
 
     }
@@ -634,14 +634,14 @@ function nuBeforeSave() {
     //	let pk = table + '_id';
     if (fieldArr.includes(pk)) {
 
-        nuMessage(nuTranslate('The Primary Key %s must not be entered.').replace('%s', '<b>' + pk + '</b>'));
+        nuMessage(nuTranslate('Validation Error'),  nuTranslate('The Primary Key %s must not be entered.').replace('%s', '<b>' + pk + '</b>'));
         return false;
 
     }
 
     if (type === 'subform' && table !== '' && nuFORM.getTables().indexOf(table) === -1 && fk === '') {
 
-        nuMessage(['<b>' + nuTranslate('Foreign Key Field Name') + '</b> ' + nuTranslate('cannot be left blank')]);
+        nuMessage(nuTranslate('Validation Error'), ['<b>' + nuTranslate('Foreign Key Field Name') + '</b> ' + nuTranslate('cannot be left blank')]);
         return false;
 
     }
@@ -653,14 +653,14 @@ function nuBeforeSave() {
 
     if (fk !== '' && a.indexOf(fk) > -1 && type === 'subform') {
 
-        nuMessage(['<b>' + nuTranslate('Foreign Key Field Name') + '</b> ' + nuTranslate('is already used')]);
+        nuMessage(nuTranslate('Validation Error'), ['<b>' + nuTranslate('Foreign Key Field Name') + '</b> ' + nuTranslate('is already used')]);
         return false;
 
     }
 
     if (nuGetValue('obj_sf000ff_field') == '') {
 
-        nuMessage(nuTranslate(' At least one Field must be specified'));
+        nuMessage(nuTranslate('Validation Error'), nuTranslate(' At least one Field must be specified'));
         return false;
 
     }

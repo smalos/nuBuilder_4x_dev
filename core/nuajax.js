@@ -12,10 +12,13 @@ function nuAjax(w, successCallback, errorCallback) {
 		})
 		.done(successCallback)
 		.fail((jqXHR, textStatus, errorThrown) => {
+			let showError = true;
 			if (typeof errorCallback === "function") {
-				errorCallback(jqXHR, textStatus, errorThrown);
+				showError = errorCallback(jqXHR, textStatus, errorThrown);
 			}
-			nuAjaxShowError(jqXHR, errorThrown);
+			if (showError) {
+				nuAjaxShowError(jqXHR, errorThrown);
+			}
 		});
 
 	} catch (error) {
@@ -103,12 +106,15 @@ function nuForm(f, r, filter, search, n, like) {
 
 		var fm = data;
 
-		if (nuDisplayError(fm)) {
+		if (!fm || nuDisplayError(fm)) {
 
 			nuCursor('default');
 
 			parent.$('#nuModal').remove();
 
+			if (!fm) {
+			nuMessage(`${nuTranslate('Error')}`, `${nuTranslate('Error loading the form')}`);
+			} else
 			if (parent.$('#nuDragDialog').css('visibility') == 'hidden') {
 				parent.nuDisplayError(fm);
 				parent.$('#nuDragDialog').remove();
@@ -116,13 +122,12 @@ function nuForm(f, r, filter, search, n, like) {
 
 			nuFORM.breadcrumbs.pop();
 
-			if (fm.log_again == 1) { location.reload(); }
+			if (fm && fm.log_again == 1) { location.reload(); }
 
 		} else {
 
 			var last = window.nuFORM.getCurrent();
 			last.record_id = fm.record_id;
-			last.FORM = fm.form;
 
 			nuBuildForm(fm);
 
@@ -247,16 +252,23 @@ function nuLogout() {
 	last.session_id = window.nuSESSION;
 	last.call_type = 'logout';
 
-	const successCallback = function (data, textStatus, jqXHR) {
-
-		if (!nuDisplayError(data)) {
-			sessionStorage.removeItem('nukeepalive');
-			winTop.window.open('index.php', '_self');
-		}
-
+	const finalizeLogout = function() {
+		sessionStorage.removeItem('nukeepalive');
+		winTop.window.open('index.php', '_self');
 	};
 
-	nuAjax(last, successCallback);
+	const successCallback = function(data, textStatus, jqXHR) {
+		if (!nuDisplayError(data)) {
+			finalizeLogout();
+		}
+	};
+
+	const errorCallback = function(data, textStatus, jqXHR) {
+		finalizeLogout();
+		return false;
+	};
+
+	nuAjax(last, successCallback, errorCallback);
 
 }
 
@@ -296,14 +308,14 @@ function nuGetPHP(formId, recordId) {
 
 }
 
-function nuRunPHP(code, iFrame, runBeforeSave) {
+function nuRunPHP(code, iFrame = '', runBeforeSave = false) {
 	
-	if (runBeforeSave == undefined) {
+	if (runBeforeSave === true) {
 		if (window.nuBeforeSave) {
 			if (nuBeforeSave() === false) { return; }
 		}
 	}
-
+	
 	const current = nuFORM.getCurrent();
 	let last = $.extend(true, {}, current);
 
@@ -390,10 +402,17 @@ function nuRunPHPHidden(code, options = null) {
 
 }
 
-function nuRunPHPHiddenWithParams(code, paramName, paramValue, runBeforeSave) {
+function nuRunPHPHiddenWithParams(code, paramName, paramValue, runBeforeSave = false) {
 
 	nuSetProperty(paramName, nuEncode(JSON.stringify(paramValue)));
 	nuRunPHPHidden(code, runBeforeSave);
+
+}
+
+function nuRunPHPWithParams(code, paramName, paramValue, iFrame = '', runBeforeSave = false) {
+
+	nuSetProperty(paramName, nuEncode(JSON.stringify(paramValue)));
+	nuRunPHP(code, iFrame, runBeforeSave);
 
 }
 
@@ -450,8 +469,8 @@ function nuAttachImage(i, code, fit) {
 		return;
 
 	}
-
-	var PARENT = parent.parent.parent.parent.parent.parent.parent.parent.parent;
+	
+	var PARENT = window.top.window;
 
 	if (PARENT.nuImages[code] !== undefined) {
 
@@ -497,15 +516,18 @@ function nuAttachButtonImage(i, c, cssClass = 'nuButtonImage') {
 
 	if (window.nuGraphics.indexOf(c + '.png') != -1) {						//-- check filenames in graphics dir.
 
-		$('#' + i)
-			.css({ 'background-image': 'url("core/graphics/' + c + '.png', 'background-position': '3px 0' })
-			.addClass(cssClass);
+		const imageUrl = 'core/graphics/' + c + '.png?' + window.nuSESSION;
+
+		$('#' + i).css({ 
+			'background-image': 'url("' + imageUrl + '")', 
+			'background-position': '3px 0' 
+		}).addClass(cssClass);
 
 		return;
 
 	}
 
-	var PARENT = parent.parent.parent.parent.parent.parent.parent.parent.parent;
+	var PARENT = window.top.window;
 
 	var pi = PARENT.nuImages !== undefined ? PARENT.nuImages[c] : '';
 
@@ -711,12 +733,29 @@ function nuUpdateData(action, instruction, close) {
 
 	const successCallback = function (data, textStatus, jqXHR) {
 
+		const addErrorTitle = (errors, errorValidation) => {
+			if (Array.isArray(errors) && errors.length > 0) {
+				errors.unshift('<h3>' + errorValidation + '</h3');
+			}
+			return errors;
+		};
+
+		if (data.errors_validation_title) {
+			data.errors = addErrorTitle(data.errors, data.errors_validation_title);
+		} else if (data.errors) {
+			data.errors = addErrorTitle(data.errors, nuTranslate('Error'));
+		}
+
 		if (nuDisplayError(data)) {
 
 			$('.nuActionButton').show();
 			nuAbortSave();
 
 		} else {
+
+			if (data.messages) {
+				window.messages = data.messages;
+			}
 
 			if (data.after_event) {
 				nuMESSAGES = data.errors;

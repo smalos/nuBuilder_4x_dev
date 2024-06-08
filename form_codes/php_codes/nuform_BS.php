@@ -71,3 +71,8 @@ function nuCheckTabs() {
     }
 
 }
+
+
+if (!empty($_POST['nuErrors'])) {
+   nuSetValidationErrorTitle('Validation Error');
+} 

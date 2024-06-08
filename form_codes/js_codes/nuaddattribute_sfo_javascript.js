@@ -79,12 +79,12 @@ function addAttribute() {
     let an = nuGetValue('plh_attribute_name');
 
     if (v === '') {
-        nuMessage('Missing value');
+        nuMessage(`${nuTranslate('Error')}`, `${nuTranslate("Missing value")}`);
         return;
     }
 
     if (an === '' && nuGetValue('plh_attribute') == '2') { // data-
-        nuMessage('Missing name');
+        nuMessage(`${nuTranslate('Error')}`, `${nuTranslate("Missing name")}`);
         return;
     }    
 
@@ -93,7 +93,7 @@ function addAttribute() {
     let kEquals = k + '="';
 
     if (t.val().includes(kEquals)) {
-        nuMessage('The attribute already exists.');
+        nuMessage(`${nuTranslate('Error')}`, `${nuTranslate("The attribute already exists")}`);
         return;
     }
 

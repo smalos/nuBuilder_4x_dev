@@ -327,7 +327,12 @@ function nuResizeDrag(event) {
 }
 
 function nuAddDragSelected(t) {
-	t.addClass('nuDragSelected');
+
+	if (nuIsVisible(t)) {
+		t.addClass('nuDragSelected');
+	}  else {
+	}
+
 }
 
 function nuGetNuDragDialogIframes(contents = false) {
@@ -858,9 +863,9 @@ function nuSortObjAsc(a, b) {
 
 function nuSpacingNotSupported() {
 
-	var supported = $('.nuDragSelected', nuGetNuDragDialogIframes(true)).filter('.nu_contentbox').length == 0;
+	const supported = $('.nuDragSelected', nuGetNuDragDialogIframes(true)).filter('.nu_contentbox').length == 0;
 	if (!supported) {
-		nuMessage('Vertical spacing of ContentBox is not supported yet.');
+		nuMessage(`${nuTranslate('Information')}`,'Vertical spacing of ContentBox is not supported yet.');
 	}
 
 	return supported;
