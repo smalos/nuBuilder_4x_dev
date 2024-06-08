@@ -1,1 +1,0 @@
-nuHomeMenuReportClick(this, event);

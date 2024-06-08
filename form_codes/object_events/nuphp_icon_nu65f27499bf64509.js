@@ -1,1 +1,0 @@
-window.open("http://wiki.nubuilder.net/nubuilderforte/index.php/" + window.nuHelp);

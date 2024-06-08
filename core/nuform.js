@@ -1639,6 +1639,15 @@ function nuAddStyle(id, obj) {
 
 }
 
+function nuAddDblClickOpenObjectProperties(obj, objId) {  
+	if (nuGlobalAccess()) { 
+		obj.on('dblclick', function() { debugger;
+			nuDestroyWindowProperty('nudatepickers');
+			nuOptionsListAction("nuobject", objId);
+		});
+	}
+}
+
 function nuLookupFocus(e) {
 
 	const objT = $(e.target);
@@ -1781,9 +1790,7 @@ function nuCONTENTBOX(w, i, l, p, prop) {
 		.attr('data-nu-prefix', p)
 		.addClass('nuContentBoxContainer').html(w.objects[i].html);
 
-	if (nuGlobalAccess()) {
-		$('#label_' + id).attr('ondblclick', 'nuOptionsListAction("nuobject", "' + obj.object_id + '")');
-	}
+	nuAddDblClickOpenObjectProperties($('#label_' + id), obj.object_id);
 
 	nuSetAccess(id, obj.read);
 	nuAddStyle(id, obj);
@@ -1838,9 +1845,7 @@ function nuWORD(w, i, l, p, prop) {
 		.addClass('nuWord')
 		.html(nuTranslate(t));
 
-	if (nuGlobalAccess()) {
-		$div.attr('ondblclick', 'nuOptionsListAction("nuobject", "' + obj.object_id + '")');
-	}
+	nuAddDblClickOpenObjectProperties($div, obj.object_id);
 
 	if (r !== null) {
 		$div.css('font-weight', 'normal');
@@ -3275,8 +3280,7 @@ function nuLabel(w, i, p, prop) {
 	nuAddDataTab(id, obj.tab, p);
 	nuSetObjectBounds(objLabel, obj.top, Number(obj.left) - lwidth + -17, Number(lwidth + 12)).html(label);
 
-	if (nuGlobalAccess())
-		$('#' + id).attr('ondblclick', 'nuOptionsListAction("nuobject", "' + obj.object_id + '")');
+	nuAddDblClickOpenObjectProperties($('#' + id), obj.object_id);
 
 	if (label == ' ') {
 		label.innerHTML = '&#8199;';
@@ -7276,7 +7280,7 @@ function nuCalendarWeekNumbers() {
 		}
 }
 
-function nuConvertToVanillaJSCalendarFormat(str) {
+function nuConvertToVanillaJSCalendarFormat(format) {
 	
 	const formatMapping = {
 		'D|': '',
@@ -7286,12 +7290,12 @@ function nuConvertToVanillaJSCalendarFormat(str) {
 		'mmm': 'M'
 	};
 
-	let newStr = str;
+	let vanillaJSFormat = format;
 	for (const [key, value] of Object.entries(formatMapping)) {
-		newStr = newStr.split(key).join(value);
+		vanillaJSFormat = vanillaJSFormat.split(key).join(value);
 	}
 
-	return newStr;
+	return vanillaJSFormat;
 	
 }
 
@@ -7300,11 +7304,7 @@ function nuPopupCalendar(pThis, d) {
 	if (pThis === null) { return; }
 
 	let id = pThis.id;
-	let datepicker = nuGetWindowProperty('nudatepickers', id);
-
-	if (datepicker) {
-		datepicker.destroy();
-	}
+	nuDestroyWindowProperty('nudatepickers', id)
 
 	let optionWeekStart = {};
 	let weekStartNumber = nuCalendarWeekStartNumber();
@@ -7316,6 +7316,7 @@ function nuPopupCalendar(pThis, d) {
 		format: nuConvertToVanillaJSCalendarFormat($(pThis).attr('data-nu-format')),
 		todayHighlight: true,
 		clearBtn: true,
+		// updateOnBlur: false,
 		weekStart : (weekStartNumber !== undefined ? weekStartNumber : 0)
 	}
 
@@ -7348,10 +7349,9 @@ function nuPopupCalendar(pThis, d) {
 
 	$(pThis).off('changeDate.vanillajspicker').on('changeDate.vanillajspicker', nuChangeDate);
 
-	nuGetWindowProperty('nudatepickers', id, datepicker);
+	nuSetWindowProperty('nudatepickers', id, datepicker);
 
 	datepicker.setOptions({ defaultViewDate: d });
-
 	datepicker.show();
 
 }

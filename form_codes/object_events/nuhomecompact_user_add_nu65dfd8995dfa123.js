@@ -1,1 +1,0 @@
-nuHomeMenuUserClick(this, event);

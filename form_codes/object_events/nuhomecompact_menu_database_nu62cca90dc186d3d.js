@@ -1,1 +1,0 @@
-nuHomeMenuDatabaseClick(this, event);

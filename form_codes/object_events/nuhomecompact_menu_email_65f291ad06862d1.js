@@ -1,1 +1,0 @@
-nuHomeMenuEmailClick(this, event);

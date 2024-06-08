@@ -1,1 +1,0 @@
-nuHomeMenuProcedureClick(this, event);

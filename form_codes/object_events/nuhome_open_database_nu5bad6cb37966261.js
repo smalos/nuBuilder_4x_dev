@@ -1,1 +1,0 @@
-nuVendorLogin('PMA');

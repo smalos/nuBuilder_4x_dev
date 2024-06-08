@@ -1,1 +1,0 @@
-nuHomeMenuNotesClick(this, event);
