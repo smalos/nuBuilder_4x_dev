@@ -4926,7 +4926,7 @@ function nuSortBrowse(column) {
 
 function nuGetPage(pageNumber) {
 
-	const paddedPageNumber = parseInt('00' + pageNumber, 10);
+	let paddedPageNumber = parseInt('00' + pageNumber, 10);
 
 	if (pageNumber > nuCurrentProperties().pages || pageNumber === 0) {
 		return;
@@ -5088,14 +5088,14 @@ function nuLookupObject(id, set, value) {
 
 	const $id = $('#' + id);
 
-	if (!$id.length) {
-		nuResetLookupProperties(this);
-		return;
-	}
-
 	const nuResetLookupProperties = (obj) => {
 		const props = ['id_id', 'code_id', 'description_id', 'id_value', 'code_value', 'description_value'];
 		props.forEach(prop => obj[prop] = '');
+	}
+
+	if (!$id.length) {
+		nuResetLookupProperties(this);
+		return;
 	}
 
 	const nuUpdateLookupProperties = (obj, id) => {
@@ -6592,7 +6592,7 @@ function nuPortraitScreen(columns = 1) {
 		}
 	};
 
-	const nuSetPortraitElementPosition = (element, top, left, sameRow, previousWidth, previousTop, labelWidth) => {
+	const nuSetPortraitElementPosition = (element, top, sameRow, previousWidth, previousTop, labelWidth) => {
 		const spacing = Number(element.attr('data-nu-mobile-same-row') || 0);
 		if (sameRow) {
 			element.css({ 'top': previousTop, 'left': previousWidth + spacing });
@@ -6706,7 +6706,7 @@ function nuPortraitScreen(columns = 1) {
 						element = $(`#${id}_select2`);
 					}
 
-					nuSetPortraitElementPosition(element, top, labelWidth + 10, sameRow, objWidth, objTop, labelWidth);
+					nuSetPortraitElementPosition(element, top, sameRow, objWidth, objTop, labelWidth);
 
 					if (objType === 'lookup') {
 						const lookupResult = nuPortraitHandleLookup(id, top, labelWidth);

@@ -221,7 +221,7 @@ function nuSetMobileView() {
 		let tabVisible = tabElement.nuIsVisible();
 
 		if (currentTab === -1 && index === 0) {
-			const tabHeight = nuMobileViewAppendTabSelect(top);
+			const tabHeight = nuMobileViewAppendTabSelect();
 			top += tabHeight > 0 ? tabHeight + 60 : 0;
 		}
 
