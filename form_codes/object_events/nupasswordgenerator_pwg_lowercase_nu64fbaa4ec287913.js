@@ -1,1 +1,1 @@
-refreshPassword();
+nuPWGenRefreshPassword();

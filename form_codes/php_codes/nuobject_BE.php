@@ -45,3 +45,4 @@ function nuCalcObjects(){
 ";
 
 nuAddJavaScript($js);
+

@@ -104,9 +104,10 @@ if ($('#zzzzsys_tab_sf000syt_access').val() !== '') {
       nuHide('sfo_code_snippet_sql_lookupcode');
       nuHide('label_sfo_browse_sql');
   
-      nuSetPlaceholder('sfo_javascript', 'JavaScript');
-      nuSetPlaceholder('sfo_browse_javascript', 'JavaScript');
-      nuSetPlaceholder('sfo_edit_javascript', 'JavaScript');
+      nuSetPlaceholder('sfo_javascript', 'JavaScript / Browse & Edit');
+      nuSetPlaceholder('sfo_browse_javascript', 'JavaScript / Browse');
+      nuSetPlaceholder('sfo_edit_javascript', 'JavaScript / Edit');
+      nuSetPlaceholder('sfo_style', 'CSS');
   
       $('#title_zzzzsys_tab_sfsyt_help').attr('id', 'help_title');
       $("[id$='syt_help']").addClass('js');

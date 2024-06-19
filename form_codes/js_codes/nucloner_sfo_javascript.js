@@ -95,8 +95,8 @@ function setTitle() {
 function setDefaultValues() {
 
     if (nuIsNewRecord()) {
-        $('#clo_new_pks').prop('checked', true).change();
-        $('#clo_dump').prop('checked', true).change();
+        $('#clo_new_pks').prop('checked', true).trigger('change');
+        $('#clo_dump').prop('checked', true).trigger('change');
     }
 
 }
@@ -139,7 +139,7 @@ function selectObjectPopuplated(formId, selectId, count) {
             nuSelectSelectAll('clo_iframe_forms', true);
         }
         count === 0 ? nuDisable('clo_iframe_forms_include') : nuEnable('clo_iframe_forms_include');
-        if (count === 0) chk.prop('checked', false).change();
+        if (count === 0) chk.prop('checked', false).trigger('change');
     }
 
 
@@ -151,7 +151,7 @@ function selectObjectPopuplated(formId, selectId, count) {
             nuSelectSelectAll('clo_subforms', true);
         }
         count === 0 ? nuDisable('clo_subforms_include') : nuEnable('clo_subforms_include');
-        if (count === 0) chk.prop('checked', false).change();
+        if (count === 0) chk.prop('checked', false).trigger('change');
     }
 
 

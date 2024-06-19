@@ -1,3 +1,4 @@
+var useMobileView = nuUseMobileView();
 nuInit();
 
 function nuFFSetPrimaryKey() {
@@ -16,6 +17,10 @@ function nuFFSetPrimaryKey() {
 
 }
 
+function nuFFGetMessageTableEmpty() {
+   return nuTranslate('Either pick an existing table or enter a new table name.');
+}
+
 function nuInit() {
 
     $("[id$='ff_browse']").nuHide();
@@ -31,7 +36,7 @@ function nuInit() {
     nuSetValue('fastform_type', 'browseedit');
 
     nuAddActionButton('nuRunPHPHidden', 'Build Fast Form', 'nuRunPHPHidden("RUNFF", true);');
-    nuSetToolTip('fastform_table', nuTranslate('Either pick an existing table or enter a new table name.'), true);
+    nuSetToolTip('fastform_table', nuFFGetMessageTableEmpty(), true);
     nuSubformEnableMultiPaste("obj_sf", "#obj_sf000ff_label", null, callbackPasted);
     nuSetFFTypeOptionsColor('obj_sf000ff_type');
 
@@ -161,9 +166,12 @@ function nuSetFFTable() {
         l = c.nuCSSNumber('left');
     }
 
-    $('#obj_sf').css('left', l);
-    $('#ffwrd').css('left', l);
-    $('#ff_resize').css('left', rl);
+    if (! useMobileView) {
+        $('#obj_sf').css('left', l);
+        $('#ffwrd').css('left', l);
+        $('#ff_resize').css('left', rl);
+    }
+    
     $("[data-nu-field='ff_field']").attr('title', title);
 
     let bl = $("[id$='ff_browse']").length - 2;
@@ -261,17 +269,21 @@ function nuFFFormType() {
 function nuSelectFFObjects(e) {
 
     if ($('#fastform_table').val().trim() == '' && nuFFFormType() !== 'launch') {
-        nuMessage(fastform_table.title);
+        nuMessage(nuFFGetMessageTableEmpty());
         $('#fastform_table').trigger("focus");
         return;
     }
+debugger;
+    const isObjectSelect = e.target.id === 'fastform_objects' ;
+    
+    var id = isObjectSelect ? nuGetValue('fastform_objects') : e.target.id;
 
-    var id = e.target.id;
     var rowno = nuPad3($("[id^='obj_sf'][id$='ff_label']", document).length - 1);
     var rowsuf = nuPad2(rowno);
     var sfrow = '#obj_sf' + rowno;
-    var h = String(e.target.innerHTML).split(':');
-    var label = h[h.length - 1] + rowsuf;
+
+    var h = isObjectSelect ? nuGetText('fastform_objects') :  String(e.target.innerHTML).split(':');
+    var label = (isObjectSelect ? h : h[h.length - 1]) + rowsuf;
 
     nuSetPlaceholder(sfrow.substring(1) + 'ff_label', label);
 
@@ -423,7 +435,7 @@ function nuSetLabel(field, label) {
         field = field.substring(i + 1);
     }
 
-    label.val(field.replaceAll('_', ' ').nuCapitalise().nuToTitleCase()).change();
+    label.val(field.replaceAll('_', ' ').nuCapitalise().nuToTitleCase()).trigger('change');
 
 }
 

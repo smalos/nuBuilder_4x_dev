@@ -1,79 +1,66 @@
+var $sign = $('#sign');
+var $separator = $('#separator');
+var $decimal = $('#decimal');
+var $places = $('#places');
+var $srmFormat = $('#srm_format');
+var $srmType = $('#srm_type');
+var $srmCurrency = $('#srm_currency');
 
-$('#sign').css('font-style', 'bold').css('font-size', '18px');
-$('#separator').css('font-style', 'bold').css('font-size', '18px');
-$('#decimal').css('font-style', 'bold').css('font-size', '18px');
-$('#places').css('font-style', 'bold').css('font-size', '18px');
-$('#srm_format').addClass('nuReadonly').css('font-size', '22px');
+$sign.addClass('nu-bold-big-text');
+$separator.addClass('nu-bold-big-text');
+$decimal.addClass('nu-bold-big-text');
+$places.addClass('nu-bold-big-text');
+$srmFormat.addClass('nuReadonly').css('font-size', '22px');
 
 nuSetFormatType();
 
+function nuAddToFormat(e) {
+    const srmTypeVal = $srmType.val();
+    if (srmTypeVal === 'Date') {
+        let v = String(e.target.innerHTML);
+        if (v === 'Space') {
+            v = ' ';
+        }
+        $srmFormat.nuSetValue($srmFormat.val() + v);
+    } else {
+        const si = $sign.val();
+        const se = $separator.val();
+        const pl = $places.val();
+        const de = Number(pl) > 0 ? $decimal.val() : '';
+        const cu = JSON.stringify([si, se, de, pl]);
 
-function nuAddToFormat(e){
-    
-    if($('#srm_type').val() == 'Date'){
-        
-    var v   = String(e.target.innerHTML);
-    
-    if(v == 'Space'){
-        v   = ' ';
+        const space = si !== '' ? ' ' : '';
+        $srmFormat.val(si + space + '1' + se + '000' + de + String(0).repeat(pl)).trigger('change');
+        $srmCurrency.nuSetValue(cu);
     }
-    
-    $('#srm_format').val($('#srm_format').val() + v).change();
-        
-    }else{
-        
-        var si = $('#sign').val();
-        var se = $('#separator').val();
-        var pl = $('#places').val();
-        var de = Number(pl) > 0 ? $('#decimal').val() : '';
-        var cu = JSON.stringify([si,se,de,pl]);
-        
-        var space =  si !== '' ? ' ' : '';
-        $('#srm_format').val(si + space + '1' + se + '000' + de + String(0).repeat(pl)).change();
-       
-        $('#srm_currency').val(cu).change();
-
-    }
-    
 }
 
-
-function nuSetFormatType(a){
-
+function nuSetFormatType(a) {
+    
+    const argLength = arguments.length;
     nuHide('nucalculator');
-    nuHide('sign');
-    nuHide('separator');
-    nuHide('decimal');
-    nuHide('places');
-    
-    if(arguments.length == 1){
-        $('#srm_format').val('');
+     $("[data-nu-nunumber-format]").nuHide();
+
+    if (argLength === 1) {
+        $srmFormat.val('');
     }
-    
-    if($('#srm_type').val() == 'Date'){
-        
-        if(arguments.length == 1){
-            $('#srm_format').val('');
+
+    const srmTypeVal = $srmType.val();
+    if (srmTypeVal === 'Date') {
+        if (argLength === 1) {
+            $srmFormat.val('');
         }
-        
         nuShow('nucalculator');
     }
-    
-    if($('#srm_type').val() == 'Number'){
 
-        if(arguments.length == 1){
-            $('#srm_format').val('1000');
+    if (srmTypeVal === 'Number') {
+        if (argLength === 1) {
+            $srmFormat.val('1000');
             nuAddToFormat();
         }
-        
-        nuShow('sign');
-        nuShow('separator');
-        nuShow('decimal');
-        nuShow('places');
-        
+        $("[data-nu-nunumber-format]").nuShow();
     }
 
+    $("[data-nu-nunumber-format]").nuShow(srmTypeVal === 'Number');
+
 }
-
-
-

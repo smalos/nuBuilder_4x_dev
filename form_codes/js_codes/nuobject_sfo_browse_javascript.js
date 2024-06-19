@@ -1,7 +1,7 @@
 var a = [["",""],["calc","Calc"],["display","Display"],["contentbox","ContentBox"],["editor","WYSIWYG Editor"],["html","HTML"],["image","Image"],["input","Input"],["lookup","Lookup"],["run","Run"],["select","Select"],["subform","Subform"],["textarea","Textarea"],["word","Word"]];
 nuAddBrowseTitleSelect(0, a);
 
-$('#nuBrowseTitle9_select').parent().unbind("touchstart");
+$('#nuBrowseTitle9_select').parent().off("touchstart");
 
 a = [["",""],["nuDate","nuDate"],["nuNumber","nuNumber"],["nuScroll","nuScroll"],["nuAutoNumber","nuAutoNumber"],["button","Button"],
      ["checkbox","Checkbox"],["color","Color"],["datetime-local","Datetime-Local"],["email","Email"],["file","File"],

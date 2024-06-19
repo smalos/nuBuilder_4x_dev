@@ -1,31 +1,18 @@
 function nuBindDragEvents() {
-	
+
 	$(document).on('mousemove.nuformdrag', function (e) {
 
-		var draggable = 0;
+		let arrangingObjects = window.nuFORM.breadcrumbs.length != -1 && nuArrangingObjects();
 
-		if (window.nuFORM.breadcrumbs.length != -1) {
-
-			if (window.nuFORM.getProperty('record_id') == '-2') {
-				draggable = 1;
-			}
-
-		}
-
-		if (draggable) {
-
-			if (e.stopPropagation)
-				e.stopPropagation();
-			if (e.preventDefault)
-				e.preventDefault();
-
+		if (arrangingObjects) {
+			e.stopPropagation?.();
+			e.preventDefault?.();
 			e.cancelBubble = true;
 			e.returnValue = false;
 
 			if (e.buttons) {
 				nuDragBox(e);
 			}
-
 		}
 
 	});
@@ -37,17 +24,9 @@ function nuBindDragEvents() {
 		window.moveX = 0;
 		window.moveY = 0;
 
-		var draggable = 0;
+		const arrangingObjects = window.nuFORM.last != -1 && nuArrangingObjects();
 
-		if (window.nuFORM.last != -1) {
-
-			if (window.nuFORM.getProperty('record_id') == '-2') {
-				draggable = 1;
-			}
-
-		}
-
-		if (draggable) {
+		if (arrangingObjects) {
 
 			let id = e.target.id;
 
@@ -84,17 +63,8 @@ function nuBindDragEvents() {
 
 	$(document).on('mouseup.nuformdrag', function (e) {
 
-		var draggable = 0;
-
-		if (window.nuFORM.last != -1) {
-
-			if (window.nuFORM.getProperty('record_id') == '-2') {
-				draggable = 1;
-			}
-
-		}
-
-		if (draggable) {
+		const arrangingObjects = window.nuFORM.last != -1 && nuArrangingObjects();
+		if (arrangingObjects) {
 
 			if ($('#nuSelectBox').length > 0) {
 				nuRemoveBox((nuIsMacintosh() ? e.metaKey : e.ctrlKey));
@@ -330,7 +300,7 @@ function nuAddDragSelected(t) {
 
 	if (nuIsVisible(t)) {
 		t.addClass('nuDragSelected');
-	}  else {
+	} else {
 	}
 
 }
@@ -558,68 +528,91 @@ function nuFindFieldInState(tabNo, fieldID) {
 
 }
 
+function nuDragCreateButton(id, className, iconClass, text, onClickFunction) {
+
+	return `<button id="${id}" class="${className}" onclick="${onClickFunction}();">
+				<i class="${iconClass} fa-fw"></i> ${text}
+			</button>`;
+
+}
+
+function nuDragCreateSelectBox(id, className, extraStyle = '') {
+	return `<select id="${id}" class="${className}" style="${extraStyle}"></select>`;
+}
+
+function nuDragCreateCheckbox(id, title, onClickFunction, iconClass, marginLeft = '') {
+
+	return `<input type="checkbox" checked id="${id}" title="${title}" onclick="${onClickFunction}();" style="margin-left: ${marginLeft}">
+			<label for="${id}"><i class="${iconClass}"></i></label>`;
+
+}
+
+function nuDragGenerateOptionsControlPanel(dragOptionsBoxWidth, dragOptionsBoxMinHeight, classNuDragOptionsButton) {
+
+	return `
+		<div id="nuDragOptionsBox" class="nuDragOptionsBox" style="width:${dragOptionsBoxWidth - 80}px;height:100%;min-height:${dragOptionsBoxMinHeight}px;">
+			<div class="nuDragOptionsBoxContainer">
+				<div id="dragOptionsTitle" class="nuDragOptionsBoxTitle">Options</div>
+				<label for="nuDragOptionsFields" class="nuDragOptionsFieldsLabel">Object Tab Order</label>
+				<select multiple id="nuDragOptionsFields" class="nuDragOptionsFields" onchange="nuUpdateDragSelections(this);"></select>
+				<table>
+					<tbody>
+						<tr>
+							<td>${nuDragCreateButton("move_up_btn", classNuDragOptionsButton, "nuDragOptionsIcon fa fa-arrow-up", "Up", "nuMoveUpOrder")}</td>
+							<td>${nuDragCreateButton("move_top_btn", classNuDragOptionsButton, "nuDragOptionsIcon270 fa fa-step-forward", "Top", "nuAlignTop")}</td>
+						</tr>
+						<tr>
+							<td>${nuDragCreateButton("move_down_btn", classNuDragOptionsButton, "nuDragOptionsIcon fa fa-arrow-down", "Down", "nuMoveDownOrder")}</td>
+							<td>${nuDragCreateButton("move_bottom_btn", classNuDragOptionsButton, "nuDragOptionsIcon90 fa fa-step-forward", "Bottom", "nuAlignBottom")}</td>
+						</tr>
+						<tr>
+							<td>${nuDragCreateButton("move_ver_btn", classNuDragOptionsButton, "nuDragOptionsIcon fa fa-bars", "Vertical", "nuSpaceVertically")}</td>
+							<td>${nuDragCreateButton("move_left_btn", classNuDragOptionsButton, "nuDragOptionsIcon180 fa fa-step-forward", "Left", "nuAlignLeft")}</td>
+						</tr>
+						<tr>
+							<td>${nuDragCreateButton("move_hor_btn", classNuDragOptionsButton, "nuDragOptionsIcon90 fa fa-bars", "Horizontal", "nuSpaceHorizontally")}</td>
+							<td>${nuDragCreateButton("move_right_btn", classNuDragOptionsButton, "nuDragOptionsIcon fa fa-step-forward", "Right", "nuAlignRight")}</td>
+						</tr>
+						<tr>
+							<td>${nuDragCreateButton("move_short_btn", classNuDragOptionsButton, "nuDragOptionsIcon135 fa-solid fa-down-left-and-up-right-to-center", "Shortest", "nuResizeToLowest")}</td>
+							<td>${nuDragCreateButton("move_thin_btn", classNuDragOptionsButton, "nuDragOptionsIcon45 fa-solid fa-down-left-and-up-right-to-center", "Thinnest", "nuResizeToThinnest")}</td>
+						</tr>
+						<tr>
+							<td>${nuDragCreateButton("move_tall_btn", classNuDragOptionsButton, "nuDragOptionsIcon180 fa-solid fa-arrows-up-down", "Tallest", "nuResizeToHighest")}</td>
+							<td>${nuDragCreateButton("move_wide_btn", classNuDragOptionsButton, "nuDragOptionsIcon90 fa-solid fa-arrows-up-down", "Widest", "nuResizeToWidest")}</td>
+						</tr>
+						<tr>
+							<td>${nuDragCreateSelectBox("nuDragOptionsTabsDropdown", "nuDragOptionsButton", "border: none")}</td>
+							<td>${nuDragCreateButton("move_tab_btn", `${classNuDragOptionsButton} nuSaveButtonEdited`, "", "Move to Tab", "nuMoveNuDrag")}</td>
+						</tr>
+						<tr>
+							<td>
+								${nuDragCreateCheckbox("nuShowDragLabels", "Show Labels", "nuToggleDragLabels", "fas fa-text-slash")}
+								${nuDragCreateCheckbox("nuShowHiddenObjects", "Show Hidden Objects", "nuToggleHiddenObjects", "fas fa-eye-slash", "30px")}
+							</td>
+							<td>${nuDragCreateButton("save_btn", `${classNuDragOptionsButton} nuSaveButtonEdited`, "", "Save", "nuSaveNuDrag")}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>`;
+
+}
+
 function nuCreateDragOptionsBox(form) {
 
 	const dragOptionsBoxWidth = 400;
 	const dragOptionsBoxMinHeight = 520;
 	const classNuDragOptionsButton = "nuDragOptionsButton nuButton";
 
-	const optionsBoxHTML = `
-	<div id="nuDragOptionsBox" class="nuDragOptionsBox" style="width:${dragOptionsBoxWidth - 80}px;height:100%;min-height:${dragOptionsBoxMinHeight}px;">
-		<div class="nuDragOptionsBoxContainer">
-			<div id="dragOptionsTitle" class="nuDragOptionsBoxTitle">Options</div>
-			<label for="nuDragOptionsFields" class="nuDragOptionsFieldsLabel">Object Tab Order</label>
-			<select multiple id="nuDragOptionsFields" class="nuDragOptionsFields" onchange="nuUpdateDragSelections(this);"></select>
-				<table>
-					<tbody>
-						<tr>
-							<td><button id="move_up_btn" class="${classNuDragOptionsButton}" onclick="nuMoveUpOrder();"><i class="nuDragOptionsIcon fa fa-arrow-up fa-fw"></i> Up</button></td>
-							<td><button id="move_top_btn" class="${classNuDragOptionsButton}" onclick="nuAlignTop();"><i class="nuDragOptionsIcon270 fa fa-step-forward fa-fw"></i> Top</button></td>
-						</tr>
-						<tr>
-							<td><button id="move_down_btn" class="${classNuDragOptionsButton}" onclick="nuMoveDownOrder();"><i class="nuDragOptionsIcon fa fa-arrow-down fa-fw"></i> Down</button></td>
-							<td><button id="move_bottom_btn" class="${classNuDragOptionsButton}" onclick="nuAlignBottom();"><i class="nuDragOptionsIcon90 fa fa-step-forward fa-fw"></i> Bottom</button></td>
-						</tr>
-						<tr>
-							<td><button id="move_ver_btn" class="${classNuDragOptionsButton}" onclick="nuSpaceVertically();"><i class="nuDragOptionsIcon fa fa-bars fa-fw"></i> Vertical</button></td>
-							<td><button id="move_left_btn" class="${classNuDragOptionsButton}" onclick="nuAlignLeft();"><i class="nuDragOptionsIcon180 fa fa-step-forward fa-fw"></i> Left</button></td>
-						</tr>
-						<tr>
-							<td><button id="move_hor_btn" class="${classNuDragOptionsButton}" onclick="nuSpaceHorizontally();"><i class="nuDragOptionsIcon90 fa fa-bars fa-fw"></i> Horizontal</button></td>
-							<td><button id="move_right_btn" class="${classNuDragOptionsButton}" onclick="nuAlignRight();"><i class="nuDragOptionsIcon fa fa-step-forward fa-fw"></i> Right</button></td>
-						</tr>
-						<tr>
-							<td><button id="move_short_btn" class="${classNuDragOptionsButton}" onclick="nuResizeToLowest();"><i class="nuDragOptionsIcon135 fa-solid fa-down-left-and-up-right-to-center fa-fw"></i> Shortest</button></td>
-							<td><button id="move_thin_btn" class="${classNuDragOptionsButton}" onclick="nuResizeToThinnest();"><i class="nuDragOptionsIcon45 fa-solid fa-down-left-and-up-right-to-center fa-fw"></i> Thinnest</button></td>
-						</tr>
-						<tr>
-							<td><button id="move_tall_btn" class="${classNuDragOptionsButton}" onclick="nuResizeToHighest();"><i class="nuDragOptionsIcon180 fa-solid fa-arrows-up-down fa-fw"></i> Tallest</button></td>
-							<td><button id="move_wide_btn" class="${classNuDragOptionsButton}" onclick="nuResizeToWidest();"><i class="nuDragOptionsIcon90 fa-solid fa-arrows-up-down fa-fw"></i> Widest</button></td>
-						</tr>
-						<tr>
-							<td><select id="nuDragOptionsTabsDropdown" class="nuDragOptionsButton" style="border: none"></select></td>
-							<td><button id="move_tab_btn" class="${classNuDragOptionsButton} nuSaveButtonEdited" style="font-weight: bold; text-align: center;" onclick="nuMoveNuDrag();">Move to Tab</button></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td>&nbsp;</td>
-						</tr>
-						<tr>
-							<td><input type="checkbox" checked id="nuShowDragLabels" title="Show Labels" onclick="nuToggleDragLabels();"><label for="nuShowDragLabels"><i class="fas fa-text-slash"></i></label>
-							<input type="checkbox" id="nuShowHiddenObjects" style="margin-left: 30px;" title="Show Hidden Objects" onclick="nuToggleHiddenObjects();"><label for="nuShowHiddenObjects"><i class="fas fa-eye-slash"></i></label></td>						 
-							<td><button id="save_btn" class="${classNuDragOptionsButton} nuSaveButtonEdited" style="font-weight: bold; text-align: center;" onclick="nuSaveNuDrag();">Save</button></td>
-						</tr>
-					</tbody>
-				</table>
-		</div>
-	</div>`;
+	const optionsBoxHTML = nuDragGenerateOptionsControlPanel(dragOptionsBoxWidth, dragOptionsBoxMinHeight, classNuDragOptionsButton);
 
 	$('#nuWindow', window.parent.document.body).css('right', 15);
 	$('#nuDragDialog', window.parent.document.body)
-	.css('top', 35)
-	.prepend(optionsBoxHTML)
-	.css('height', Math.max(dragOptionsBoxMinHeight + 10, window.innerHeight + 40))
-	.css('width', nuFormWH().width + dragOptionsBoxWidth - 15);
+		.css('top', 35)
+		.prepend(optionsBoxHTML)
+		.css('height', Math.max(dragOptionsBoxMinHeight + 10, window.innerHeight + 40))
+		.css('width', nuFormWH().width + dragOptionsBoxWidth - 15);
 
 	$('#nuBreadcrumbHolder').remove();
 
@@ -631,26 +624,26 @@ function nuCreateDragOptionsBox(form) {
 	nuPopulateTabDropdown(tab);
 
 	$('.nuTab[id^="nuTab"]').prop('onclick', '')
-	.on('click', function () {
+		.on('click', function () {
 
-		if ($(this).hasClass('nuTabSelected')) {
-			return;
-		}
+			if ($(this).hasClass('nuTabSelected')) {
+				return;
+			}
 
-		nuClearFieldsList();
-		nuUnselectAllDragObjects();
-		nuSelectTab(this);
-		nuShowContentBoxFrames();
+			nuClearFieldsList();
+			nuUnselectAllDragObjects();
+			nuSelectTab(this);
+			nuShowContentBoxFrames();
 
-		const nuTabFilter = Number($(this).attr('data-nu-tab-filter'));
-		nuPopulateFieldsList(nuTabFilter);
-		nuPopulateTabDropdown(nuTabFilter);
+			const nuTabFilter = Number($(this).attr('data-nu-tab-filter'));
+			nuPopulateFieldsList(nuTabFilter);
+			nuPopulateTabDropdown(nuTabFilter);
 
-		const $nuDragOptionsFields = $('#nuDragOptionsFields', window.parent.document.body);
-		nuCheckIfMovingTabOrderAllowed($nuDragOptionsFields);
-		nuCheckIfMovingFieldToOtherTabAllowed($nuDragOptionsFields);
+			const $nuDragOptionsFields = $('#nuDragOptionsFields', window.parent.document.body);
+			nuCheckIfMovingTabOrderAllowed($nuDragOptionsFields);
+			nuCheckIfMovingFieldToOtherTabAllowed($nuDragOptionsFields);
 
-	});
+		});
 
 	nuCheckIfMovingTabOrderAllowed($('#nuDragOptionsFields'));
 	nuCheckIfMovingFieldToOtherTabAllowed($('#nuDragOptionsFields'));
@@ -663,7 +656,7 @@ function nuCreateDragOptionsBox(form) {
 	];
 
 	let help = `<input id='run_sam' type='button' class='input_button nuButton' value='?'
-	  onclick='nuMessage(${JSON.stringify(helpMessages)})' 
+	  onclick='nuMessage(${JSON.stringify(helpMessages)})'
 	  style='top: 2px; right: 15px; width: 21px; height: 21px; text-align: center; padding-left: 5px; position: absolute;'>`;
 
 	$('body').append(help);
@@ -865,7 +858,7 @@ function nuSpacingNotSupported() {
 
 	const supported = $('.nuDragSelected', nuGetNuDragDialogIframes(true)).filter('.nu_contentbox').length == 0;
 	if (!supported) {
-		nuMessage(`${nuTranslate('Information')}`,'Vertical spacing of ContentBox is not supported yet.');
+		nuMessage(`${nuTranslate('Information')}`, 'Vertical spacing of ContentBox is not supported yet.');
 	}
 
 	return supported;
@@ -1227,7 +1220,7 @@ function nuCheckIfMovingTabOrderAllowed(fieldsSelectBox) {
 
 	function nuToggleButtonState(buttons, enabled) {
 		buttons.prop('disabled', !enabled)
-			   .toggleClass('nuDragOptionsButtonDisabled', !enabled);
+			.toggleClass('nuDragOptionsButtonDisabled', !enabled);
 	}
 
 	const upDownBtn = $('#move_down_btn, #move_up_btn'),
@@ -1246,7 +1239,7 @@ function nuCheckIfMovingFieldToOtherTabAllowed(fieldsSelectBox) {
 	var tabDropdown = $('#nuDragOptionsTabsDropdown', window.parent.document.body);
 
 	if ($('option:selected', fieldsSelectBox).length >= 1) {
-		tabDropdown.removeAttr('disabled');
+		tabDropdown.prop('disabled', false);
 	} else {
 		tabDropdown.prop('disabled', 'disabled');
 	}
@@ -1434,9 +1427,9 @@ function nuPopulateTabDropdown(currentlySelectedTabNo) {
 function nuDragElement(element, dragHeaderOffset) {
 
 	var startX = 0,
-	startY = 0,
-	endX = 0,
-	endY = 0;
+		startY = 0,
+		endX = 0,
+		endY = 0;
 	element.onmousedown = dragStart;
 	element.ontouchstart = dragStart;
 
@@ -1461,7 +1454,7 @@ function nuDragElement(element, dragHeaderOffset) {
 			startY = e.clientY;
 		} else { // touchmove - assuming a single touchpoint
 			startX = e.touches[0].clientX
-				startY = e.touches[0].clientY
+			startY = e.touches[0].clientY
 		}
 		document.onmouseup = dragStop;
 		document.ontouchend = dragStop;

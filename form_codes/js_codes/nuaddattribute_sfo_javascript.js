@@ -16,6 +16,13 @@ nuHideTabs(0);
 nuSelectRemoveEmpty('plh_attribute', '-1');
 nuAddActionButton('nuAddAttribute', 'Add', 'addAttribute();');
 
+function nuOnMobileViewComplete() { debugger;
+  const currentTop = $('#plh_value_text').css('top');
+  const currentTopLabel = $('#label_plh_value_text').css('top');
+  $('#plh_value_select').css('top', currentTop);
+  $('#label_plh_value_select').css('top',  currentTopLabel);
+}
+
 if (typeObj().val() !== 'input') {
     nuSelectRemoveOption('plh_attribute', '7').val('');
 }

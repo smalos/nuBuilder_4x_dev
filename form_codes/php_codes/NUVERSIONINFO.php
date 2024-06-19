@@ -10,5 +10,5 @@ $versionInfo =
 'nuBuilder DB: ' . $nuDbVersion . '<br>' .
 'nuBuilder Files: ' . $nuFilesVersion;
 
-$js = "nuMessage('$versionInfo').css('width','400px')";
+$js = "nuMessage('$versionInfo').css('max-width','400px')";
 nuJavaScriptCallback($js);

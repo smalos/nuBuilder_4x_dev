@@ -1,1 +1,1 @@
-nuTogglePasswordVisibility();
+nuUserTogglePasswordVisibility();

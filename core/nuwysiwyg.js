@@ -17,8 +17,6 @@ function nuInitTinyMCE(id, options, mobile, toolbar, toolbar_groups, menubar, co
 	}
 
 	let idContainer = id + '_container';
-
-	let useDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
 	let obj = document.getElementById(idContainer);
 
 	var _plugins;
@@ -108,21 +106,21 @@ function nuInitTinyMCE(id, options, mobile, toolbar, toolbar_groups, menubar, co
 		toolbar_mode: 'sliding',
 		content_style: "p { margin: 0; }",
 		contextmenu: _contextmenu,
-		skin: useDarkMode ? 'oxide-dark' : 'oxide',
-		content_css: useDarkMode ? 'dark' : 'default',
+		skin: 'oxide',
+		content_css: 'default',
 		cache_suffix: '?v=7.0.0',
 		license_key: 'gpl',
 		setup: function (editor) {
 
 			editor.addShortcut('ctrl+shift+S', 'Save', function () {
-			  nuSaveAction();
+				nuSaveAction();
 			});
 
 			editor.on('init', function (e) {
 
 				e.target.setContent(nuGetValue(id));
 				if (window.nuTinyMCEOnInit) {
-					nuTinyMCEOnInit(e, editor);
+					nuTinyMCEOnInit(e, editor, id);
 				}
 			});
 
@@ -158,5 +156,31 @@ function nuSaveEditor() {
 		let id = element.id.slice(0, -10);
 		nuSetValue(id, myContent);
 	});
+
+}
+
+function nuTinyMCESetBounds(id, left, top, width, height) {
+
+	const idParentContainer = `${id}_parent_container`;
+	const element = document.getElementById(idParentContainer);
+
+	if (element) {
+		if (left) element.style.left = `${left}px`;
+		if (top) element.style.top = `${top}px`;
+		if (width) element.style.width = `${width}px`;
+		if (height) element.style.height = `${height}px`;
+	} else {
+		return;
+	}
+
+	id += '_container';
+	const editor = tinymce.get(id);
+	if (editor) {
+		const container = editor.getContainer();
+		if (width) container.style.width = `${width}px`;
+		if (height) container.style.height = `${height}px`;
+		if (left) container.style.left = `${left}px`;
+		if (top) container.style.top = `${top}px`;
+	}
 
 }

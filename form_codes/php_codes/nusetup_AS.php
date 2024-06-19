@@ -70,6 +70,10 @@ if ($DEV_MODE) {
                 DELETE FROM `zzzzsys_user_permission`;
                 DELETE FROM `zzzzsys_email_log`;
                 DELETE FROM `zzzzsys_report_data`;
+                DELETE zzzzsys_event
+                FROM zzzzsys_event
+                LEFT JOIN zzzzsys_object ON zzzzsys_object.zzzzsys_object_id = zzzzsys_event.sev_zzzzsys_object_id
+                WHERE zzzzsys_object.zzzzsys_object_id IS NULL;
                 UPDATE `zzzzsys_object` SET `sob_input_attribute` = NULL WHERE `sob_input_attribute` = '';
                 UPDATE `zzzzsys_form` SET `sfo_browse_javascript` = NULL WHERE TRIM(`sfo_browse_javascript`) = '';
                 UPDATE `zzzzsys_form` SET `sfo_javascript` = NULL WHERE TRIM(`sfo_javascript`) = '';

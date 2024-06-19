@@ -7,7 +7,7 @@ function nuSelectBrowse(event) {
     const primaryKey = $element.attr('data-nu-primary-key');
 
     const row = $element.attr('data-nu-row');
-    const phpFunction = $('#nucell_' + row + '_0').html();
+    const phpFunction = $('#nucell_' + row + '_3').html();
 
     nuGetPHP(phpFunction, primaryKey);
 
