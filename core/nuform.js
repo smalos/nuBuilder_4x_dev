@@ -143,7 +143,7 @@ function nuBuildForm(formObj) {
 		});
 	}
 
-	nuEvaluateOnLoadEvents();
+	nuEvaluateOnLoadEvents(formType);
 
 	if (window.nuLoadEditGlobal && formType == 'edit') {
 		nuLoadEditGlobal(formObj.form_id, formObj.form_code);
@@ -476,7 +476,7 @@ function nuCloseAfterSave() {
 
 	nuDelay(100).then(() => {
 		nuHasNotBeenEdited();
-		if (nuIsIframe()) {
+		if (nuIsPopup()) {
 			nuClosePopup();
 		} else {
 			if (!nuOpenPreviousBreadcrumb()) {
@@ -583,7 +583,9 @@ function nuSaveScrollPositions() {
 
 }
 
-function nuEvaluateOnLoadEvents() {
+function nuEvaluateOnLoadEvents(formType) {
+
+	if (formType === 'browse') return;
 
 	const serverResponse = JSON.parse(JSON.stringify(nuSERVERRESPONSE));
 
@@ -672,7 +674,7 @@ function nuSetBody(f) {
 	$body.html('');
 	$body.removeClass('nuBrowseBody nuEditBody');
 
-	if (nuFormType() == 'browse') {
+	if (nuFormType() === 'browse') {
 		$body.addClass('nuBrowseBody');
 	} else {
 
@@ -5024,15 +5026,8 @@ function nuPopulateLookup(form, targetId, setFocus) {
 				nuReformat($element[0]);
 				$element.addClass('nuEdited');
 				$('#' + prefix + 'nuDelete').prop('checked', false);
-
-				if (window.nuOnLookupPopulatedGlobal) {
-					nuOnLookupPopulatedGlobal(id, prefix);
-				}
-
-				if (window.nuOnLookupPopulated) {
-					nuOnLookupPopulated(id, prefix);
-				}
 			}
+
 		}
 
 		if (i === 1 && setFocus !== false) {
@@ -7461,5 +7456,16 @@ function nuPopupCalendar(pThis, d) {
 	datepicker.setOptions({ defaultViewDate: d });
 	datepicker.show();
 
+	nuSetCalendarOnTop();
+
 }
 
+function nuSetCalendarOnTop() {
+
+	const $innerDiv = $('.datepicker');
+	const offset = $innerDiv.offset();
+
+	$innerDiv.appendTo('body');
+	$innerDiv.css({ position: 'absolute', top: offset.top, left: offset.left });
+
+}

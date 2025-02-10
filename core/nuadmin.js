@@ -527,6 +527,21 @@ var nuContextMenuDefinitionTab = [
 
 ];
 
+var nuContextMenuDefinitionAdminButton = [
+
+	{
+		text: "Hide Buttons",
+		tag: "Hide",
+		action: function (e) {
+			const id = nuContextMenuCurrentTargetId();
+			const $id = $('#' + id);
+			$id.siblings('.nuAdminButton').remove();
+			$id.remove();
+		}
+	}
+
+];
+
 var nuContextMenuDefinitionSubform = [
 
 	menuObject, {
@@ -948,23 +963,34 @@ function nuContextMenuUpdateObject(value, column) {
 
 function nuContextMenuUpdate() {
 
-	let typeEdit = nuFormType() == 'edit';
-	let selector = typeEdit ? 'label, button, .nu_run, .nuWord, .nuImage, .nuContentBoxTitle, .nuTab, .nuSubformTitle' : '.nuSort';
-	//not('.nuDragLabel')
+	const typeEdit = nuFormType() === 'edit';
+	const selector = typeEdit
+		? 'label, button, .nu_run, .nuWord, .nuImage, .nuContentBoxTitle, .nuTab, .nuSubformTitle, .nuAdminButton'
+		: '.nuSort, .nuAdminButton';
+
 	$(selector).each((index, element) => {
+		const el = `#${element.id}`;
+		const $el = $(el);
+		
+		if (el !== '#' && $el.length > 0) {
+			let menuDefinition;
 
-		let el = "#" + element.id;
-		if (el !== '#' && $(el).length > 0) {
-
-			if ($(el).hasClass('nuTab')) {
-				ctxmenu.update(el, nuContextMenuDefinitionTab, nuContextMenuBeforeRender);
-			} else if ($(el).hasClass('nuSubformTitle')) {
-				ctxmenu.update(el, nuContextMenuDefinitionSubform, nuContextMenuBeforeRender);
+			if ($el.hasClass('nuAdminButton')) {
+				menuDefinition = nuContextMenuDefinitionAdminButton;
+			} else if ($el.hasClass('nuTab')) {
+				menuDefinition = nuContextMenuDefinitionTab;
+			} else if ($el.hasClass('nuSubformTitle')) {
+				menuDefinition = nuContextMenuDefinitionSubform;
 			} else {
-				ctxmenu.update(el, typeEdit ? nuContextMenuDefinitionEdit : nuContextMenuDefinitionBrowse, nuContextMenuBeforeRender);
+				menuDefinition = typeEdit
+					? nuContextMenuDefinitionEdit
+					: nuContextMenuDefinitionBrowse;
 			}
-		}
 
+			ctxmenu.update(el, menuDefinition, {
+				onBeforeShow: (menu, event) => nuContextMenuBeforeRender(menu, event),
+			});
+		}
 	});
 
 }

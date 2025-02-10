@@ -10,16 +10,16 @@ function nuAjax(w, successCallback, errorCallback) {
 			method: "POST",
 			data: { nuSTATE: data }
 		})
-		.done(successCallback)
-		.fail((jqXHR, textStatus, errorThrown) => {
-			let showError = true;
-			if (typeof errorCallback === "function") {
-				showError = errorCallback(jqXHR, textStatus, errorThrown);
-			}
-			if (showError) {
-				nuAjaxShowError(jqXHR, errorThrown);
-			}
-		});
+			.done(successCallback)
+			.fail((jqXHR, textStatus, errorThrown) => {
+				let showError = true;
+				if (typeof errorCallback === "function") {
+					showError = errorCallback(jqXHR, textStatus, errorThrown);
+				}
+				if (showError) {
+					nuAjaxShowError(jqXHR, errorThrown);
+				}
+			});
 
 	} catch (error) {
 		console.error('nuAjax Error:', error);
@@ -43,6 +43,7 @@ function nuAjaxShowError(jqXHR, errorThrown) {
 	}
 
 }
+
 function nuHasHiddenModalDragDialog() {
 	return parent.$('#nuModal').length > 0 && parent.$('#nuModal').siblings(".nuDragDialog").css("visibility") == "hidden";
 }
@@ -113,12 +114,12 @@ function nuForm(f, r, filter, search, n, like) {
 			parent.$('#nuModal').remove();
 
 			if (!fm) {
-			nuMessage(`${nuTranslate('Error')}`, `${nuTranslate('Error loading the form')}`);
+				nuMessage(`${nuTranslate('Error')}`, `${nuTranslate('Error loading the form')}`);
 			} else
-			if (parent.$('#nuDragDialog').css('visibility') == 'hidden') {
-				parent.nuDisplayError(fm);
-				parent.$('#nuDragDialog').remove();
-			}
+				if (parent.$('#nuDragDialog').css('visibility') == 'hidden') {
+					parent.nuDisplayError(fm);
+					parent.$('#nuDragDialog').remove();
+				}
 
 			nuFORM.breadcrumbs.pop();
 
@@ -138,11 +139,10 @@ function nuForm(f, r, filter, search, n, like) {
 
 }
 
-
 function nuGetReport(formId, recordId) {
 
-	if (nuOpenNewBrowserTab('getreport', formId, recordId, '')) { 
-		return; 
+	if (nuOpenNewBrowserTab('getreport', formId, recordId, '')) {
+		return;
 	}
 
 	let last = window.nuFORM.addBreadcrumb();
@@ -192,7 +192,7 @@ function nuRunReport(formId, iFrame) {
 
 }
 
-function nuRunReportSave(formId, tag = null, callback = null) {
+function nuRunReportSave(formId, tag = null, callback = null, fileName = '') {
 
 	const current = nuFORM.getCurrent();
 	const last = $.extend(true, {}, current);
@@ -211,6 +211,7 @@ function nuRunReportSave(formId, tag = null, callback = null) {
 			let formData = new FormData();
 			formData.append('ID', fm.id);
 			formData.append('tag', tag);
+			formData.append('file_name', fileName);
 			let xhr = new XMLHttpRequest();
 
 			if (callback !== null) {
@@ -252,18 +253,18 @@ function nuLogout() {
 	last.session_id = window.nuSESSION;
 	last.call_type = 'logout';
 
-	const finalizeLogout = function() {
+	const finalizeLogout = function () {
 		sessionStorage.removeItem('nukeepalive');
 		winTop.window.open('index.php', '_self');
 	};
 
-	const successCallback = function(data, textStatus, jqXHR) {
+	const successCallback = function (data, textStatus, jqXHR) {
 		if (!nuDisplayError(data)) {
 			finalizeLogout();
 		}
 	};
 
-	const errorCallback = function(data, textStatus, jqXHR) {
+	const errorCallback = function (data, textStatus, jqXHR) {
 		finalizeLogout();
 		return false;
 	};
@@ -309,13 +310,13 @@ function nuGetPHP(formId, recordId) {
 }
 
 function nuRunPHP(code, iFrame = '', runBeforeSave = false) {
-	
+
 	if (runBeforeSave === true) {
 		if (window.nuBeforeSave) {
 			if (nuBeforeSave() === false) { return; }
 		}
 	}
-	
+
 	const current = nuFORM.getCurrent();
 	let last = $.extend(true, {}, current);
 
@@ -352,9 +353,8 @@ function nuRunPHP(code, iFrame = '', runBeforeSave = false) {
 
 }
 
-
 function nuRunPHPHidden(code, options = null) {
-	
+
 	// DEV: params passed
 	const params = null;
 	if (typeof options === 'object' && options !== null) {
@@ -367,13 +367,13 @@ function nuRunPHPHidden(code, options = null) {
 				param3: '234',
 			},
 		};
-		*/		
+		*/
 	} else
-	if (options === true) {
-		if (window.nuBeforeSave) {
-			if (nuBeforeSave() === false) { return; }
+		if (options === true) {
+			if (window.nuBeforeSave) {
+				if (nuBeforeSave() === false) { return; }
+			}
 		}
-	}
 
 	var current = nuFORM.getCurrent();
 	var last = $.extend(true, {}, current);
@@ -381,7 +381,7 @@ function nuRunPHPHidden(code, options = null) {
 	last.session_id = window.nuSESSION;
 	last.call_type = 'runhiddenphp';
 	last.form_id = 'doesntmatter';
-	last.params = params ? params: null;
+	last.params = params ? params : null;
 	last.hash_record_id = last.record_id;
 	last.record_id = code;					//-- php code
 	last.nuFORMdata = nuFORM.data();
@@ -418,16 +418,18 @@ function nuRunPHPWithParams(code, paramName, paramValue, iFrame = '', runBeforeS
 
 function nuSystemUpdate() {
 
-	var msg = nuTranslate("Update system? Be sure to backup first.");
-	if (confirm(msg) == false) { return; }
-
-	if (nuCurrentProperties().form_code == 'nuupdate') {
-		var myWindow = window.open("", "_self");
-		myWindow.document.write(nuTranslate('This tab can be closed after the update.') + ' <br> ' + nuTranslate('You will need to log in again for the changes to take effect.'));
+	const msg = `${nuTranslate("Do you want to update the system?")}\n${nuTranslate("Ensure you have a working backup and do not interrupt the update process.")}`;
+	if (confirm(msg) === false) {
+		return;
 	}
 
-	var current = nuFORM.getCurrent();
-	var last = $.extend(true, {}, current);
+	if (nuCurrentProperties().form_code === 'nuupdate') {
+		const myWindow = window.open("", "_self");
+		myWindow.document.write(`${nuTranslate('This tab can be closed after the update.')} <br> ${nuTranslate('You will need to log in again for the changes to take effect.')}`);
+	}
+
+	const current = nuFORM.getCurrent();
+	const last = $.extend(true, {}, current);
 
 	last.session_id = nuSESSION;
 	last.call_type = 'systemupdate';
@@ -435,17 +437,13 @@ function nuSystemUpdate() {
 	last.nuFORMdata = nuFORM.data();
 	last.hash = nuHashFromEditForm();
 
-	var successCallback = function (data, textStatus, jqXHR) {
-
-		var fm = data;
+	const successCallback = function (data, textStatus, jqXHR) {
+		const fm = data;
 
 		if (!nuDisplayError(fm)) {
-
-			var updateUrl = 'core/nusystemupdate.php?i=' + fm.id;
+			const updateUrl = 'core/nusystemupdate.php?i=' + fm.id;
 			window.open(updateUrl);
-
 		}
-
 	};
 
 	nuAjax(last, successCallback);
@@ -469,7 +467,7 @@ function nuAttachImage(i, code, fit) {
 		return;
 
 	}
-	
+
 	var PARENT = window.top.window;
 
 	if (PARENT.nuImages[code] !== undefined) {
@@ -518,9 +516,9 @@ function nuAttachButtonImage(i, c, cssClass = 'nuButtonImage') {
 
 		const imageUrl = 'core/graphics/' + c + '.png?' + window.nuSESSION;
 
-		$('#' + i).css({ 
-			'background-image': 'url("' + imageUrl + '")', 
-			'background-position': '3px 0' 
+		$('#' + i).css({
+			'background-image': 'url("' + imageUrl + '")',
+			'background-position': '3px 0'
 		}).addClass(cssClass);
 
 		return;
@@ -600,17 +598,23 @@ function nuGetLookupId(pk, id, setFocus, setEdited) {
 		if (!nuDisplayError(data)) {
 
 			nuPopulateLookup(data, id, setFocus);
+
 			$('#' + id).addClass('nuEdited');
-			
 			if (setEdited != false) {
 				nuHasBeenEdited();
 			}
 
 			var o = $('#' + id);
-
 			if (o.attr('data-nu-prefix') == '') { return; }
-
 			nuAddSubformRow(o[0], false);
+
+			if (window.nuOnLookupPopulatedGlobal) {
+				nuOnLookupPopulatedGlobal(id, prefix, lookupValues);
+			}
+
+			if (window.nuOnLookupPopulated) {
+				nuOnLookupPopulated(id, prefix, lookupValues);
+			}
 
 		}
 
@@ -621,9 +625,9 @@ function nuGetLookupId(pk, id, setFocus, setEdited) {
 }
 
 function nuGetLookupCode(event) {
-	
+
 	const nuTarget = event.target.getAttribute('data-nu-target');
-	
+
 	if (event.currentTarget && event.currentTarget.value.length == 0) {
 		window.nuLOOKUPCLEARING = true;
 		$('#' + nuTarget).addClass('nuEdited');
@@ -632,7 +636,7 @@ function nuGetLookupCode(event) {
 		window.nuLOOKUPCLEARING = false;
 		return;
 	}
-	
+
 	let last = window.nuFORM.getCurrent();
 
 	last.session_id = window.nuSESSION;
@@ -686,15 +690,15 @@ function nuUpdateData(action, instruction, close) {
 	if (action == 'save') {
 
 		if (window.nuBeforeSaveGlobal) {
-			if (nuBeforeSaveGlobal() === false) { 
-				return; 
+			if (nuBeforeSaveGlobal() === false) {
+				return;
 			}
 		}
 
-		if (window.nuBeforeSave) { 
-			if (nuBeforeSave() === false) { 
-				return; 
-			} 
+		if (window.nuBeforeSave) {
+			if (nuBeforeSave() === false) {
+				return;
+			}
 		}
 
 	}
@@ -827,7 +831,7 @@ function nuSaveAfterDrag() {
 			alert(data.errors[0]);
 		} else {
 
-			$('div#nuDragDialog div#dialogTitle img#dialogClose').trigger( "click" );
+			$('div#nuDragDialog div#dialogTitle img#dialogClose').trigger("click");
 			nuGetBreadcrumb();
 
 		}
@@ -866,5 +870,7 @@ function nuAbortSave() {
 
 	$("#nuProgressUpdate").hide();
 	$('.nuActionButton').show();
+
+	return true;
 
 }

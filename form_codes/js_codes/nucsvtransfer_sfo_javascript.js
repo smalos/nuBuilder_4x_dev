@@ -13,7 +13,7 @@ function nuCheckCSV(){
         if($('#csv_transfer').val() == 'export'){
             
             if(nuFORM.getJustTables().includes(csvFrom)){
-                nuRunPHP("CSVTRANSFER")
+                nuRunPHP('NUCSVTRANSFER')
             }else{
                 nuMessage([nuTranslate('No such tablename')+'...']);
             }

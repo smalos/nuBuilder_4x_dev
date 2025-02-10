@@ -273,7 +273,7 @@ function nuSelectFFObjects(e) {
         $('#fastform_table').trigger("focus");
         return;
     }
-debugger;
+
     const isObjectSelect = e.target.id === 'fastform_objects' ;
     
     var id = isObjectSelect ? nuGetValue('fastform_objects') : e.target.id;

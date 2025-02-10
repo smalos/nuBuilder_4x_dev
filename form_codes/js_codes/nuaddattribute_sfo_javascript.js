@@ -16,7 +16,7 @@ nuHideTabs(0);
 nuSelectRemoveEmpty('plh_attribute', '-1');
 nuAddActionButton('nuAddAttribute', 'Add', 'addAttribute();');
 
-function nuOnMobileViewComplete() { debugger;
+function nuOnMobileViewComplete() {
   const currentTop = $('#plh_value_text').css('top');
   const currentTopLabel = $('#label_plh_value_text').css('top');
   $('#plh_value_select').css('top', currentTop);
