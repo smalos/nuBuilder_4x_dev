@@ -1,42 +1,48 @@
 
 function nuInitJSOptions() {
 
-	if (window.nuUXOptions === undefined) {
+	const defaults = {
+		'nuEnableBrowserBackButton': true,		// Enable the browser's Back button
+		'nuPreventButtonDblClick': true,		// Disable a button for 1.5 s to prevent a double click
+		'nuShowPropertiesOnMiddleClick': true,	 // Show the Object Properties on middle mouse click
+		'nuAutosizeBrowseColumns': true,		// Autosize columns to fit the document width
+		'nuShowBackButton': false,				// Show a Back Button
+		'nuMobileView': false,					// Optimize view for mobile devices
+		'nuBrowsePaginationInfo': 'default',	// Default Format is: '{StartRow} - {EndRow} ' + nuTranslate('of') + ' ' + '{TotalRows}'
+		'nuShowNuBuilderLink': true,			// Show the link to nubuilder com
+		'nuShowLoggedInUser': false,			// Show the logged in User
+		'nuShowBrowserTabTitle': true,			// Show the Form Title in the Browser Tab
+		'nuDebugMode': true,					// Debug Mode
+		'nuBrowserTabTitlePrefix': 'nuBuilder',	// Prefix in the Browser Tab
+		'nuCalendarStartOfWeek': 'Sunday',		// nuCalendar: Start of Week: Sunday (default) or Monday
+		'nuCalendarWeekNumbers': 'None',		// nuCalendar: 0 = None, 1 = ISO 8601, 2 = Western traditional, 3 = Middle Eastern
+		'nuSelect2Theme': 'default',			// select2 theme (default, classic) Default: default
+		'nuEditCloseAfterSave': 'None',			// Close forms after saving. Values: None, All, User, System
+		'nuShowJSErrors': 'None',				// Show JS errors in alert message
+		'nuShowURLPermaLink': false,			// Show URL permalink
+		'nuDebugIcon': true,
+		'nuPHPIcon': true,
+		'nuRefreshIcon': true,
+		'nuObjectsIcon': true,
+		'nuPropertiesIcon': true
+	};
 
-		window.nuUXOptions =
-		{
-			'nuEnableBrowserBackButton': true,			// Enable the browser's Back button
-			'nuPreventButtonDblClick': true,			// Disable a button for 1 5 s to prevent a double click
-			'nuShowPropertiesOnMiddleClick': true,		// Show the Object Properties on middle mouse click
-			'nuAutosizeBrowseColumns': true,			// Autosize columns to fit the document width
-			'nuShowBackButton': false,					// Show a Back Button
-			'nuMobileView': false,						// Optimise view for mobile devices
-			'nuBrowsePaginationInfo': 'default',		// Default Format is: '{StartRow} - {EndRow} ' + nuTranslate('of') + ' ' + '{TotalRows}'
-			'nuShowNuBuilderLink': true,				// Show the link to nubuilder com
-			'nuShowLoggedInUser': false,				// Show the logged in User
-			'nuShowBrowserTabTitle': true,				// Show the Form Title in the Browser Tab
-			'nuDebugMode': true,						// Debug Mode
-			'nuBrowserTabTitlePrefix': 'nuBuilder',		// Prefix in the Browser Tab
-			'nuCalendarStartOfWeek': 'Sunday',			// nuCalendar: Start of Week: Sunday (default) or Monday
-			'nuCalendarWeekNumbers': 'None', 			// nuCalendar: 0 = None, 1 = ISO 8601, 2 = Western traditional, 3 = Middle Eastern
-			'nuSelect2Theme': 'default',				// select2 theme (default, classic) Default: default
-			'nuEditCloseAfterSave': 'None',				// Close forms after saving. Values: None, All, User, System
-			'nuShowJSErrors': 'None',					// Show JS errors in alert message
-			'nuShowURLPermaLink': false,				// Show URL permalink
-			'nuDebugIcon': true,
-			'nuPHPIcon': true,
-			'nuRefreshIcon': true,
-			'nuObjectsIcon': true,
-			'nuPropertiesIcon': true
-		};
-
+	if (typeof window.nuUXOptions === "undefined") {
+		window.nuUXOptions = defaults;
+	} else {
+		// Merge defaults only if the property is not already defined
+		for (var key in defaults) {
+			if (defaults.hasOwnProperty(key) && typeof window.nuUXOptions[key] === "undefined") {
+				window.nuUXOptions[key] = defaults[key];
+				console.log('added: ' + key + ' - ' + defaults[key]);
+			}
+		}
 	}
-
 }
 
-nuInitJSOptions();
-
 function nuBuildForm(formObj) {
+
+	nuInitJSOptions();
 
 	window.nuOnSetSelect2Options = null;		// can be overwritten by nuAddJavaScript()
 	window.nuSERVERRESPONSE = formObj;
@@ -232,6 +238,7 @@ function nuBuildForm(formObj) {
 	const globalAccess = nuGlobalAccess();
 	if (globalAccess) {
 		nuContextMenuUpdate();
+		nuUpdateDebugButton();
 	}
 
 	nuSetSaved(true);
@@ -318,6 +325,18 @@ function nuEditDoCloseAfterSave(formObj) {
 	}
 
 	return false;
+
+}
+
+function nuUpdateDebugButton() {
+
+	const debugMessages = nuSERVERRESPONSE && nuSERVERRESPONSE.nu_debug;
+
+	if (Array.isArray(debugMessages) && debugMessages.length > 0) {
+		$("#nuDebugButton")
+			.addClass("nuDebugButtonHighlight")
+			.attr("title", debugMessages.join(" "));
+	}
 
 }
 
@@ -3153,7 +3172,7 @@ function nuSubformToClipboard(id, delimiter, includeHeader, includeId) {
 	let s = "";
 
 	delimiter = delimiter || '\t';
-	includeId = !!includeId; // Ensure boolean
+	includeId = Boolean(includeId);
 
 	if (includeHeader) {
 		s = nuSubformHeaderToSeparatedString(obj.fields, delimiter, includeId);
@@ -5155,7 +5174,6 @@ function nuHighlightSearch() {
 	});
 
 }
-
 function nuOnSubformDeleteClick(event) {
 
 	const id = event.target.id;
@@ -5166,6 +5184,9 @@ function nuOnSubformDeleteClick(event) {
 	$('[id^=' + sf + nuPad3(row) + ']')
 		.not(':button, :checkbox')
 		.toggleClass('nuSubformDeleteTicked', checked)
+		.filter(function () {
+			return $(this).attr('data-nu-access') !== "1";
+		})
 		.toggleClass('nuReadonly', checked)
 		.nuEnable(!checked);
 
@@ -7404,6 +7425,7 @@ function nuConvertToVanillaJSCalendarFormat(format) {
 function nuPopupCalendar(pThis, d) {
 
 	if (pThis === null) { return; }
+	if ($(pThis).is("[nu-disable-calendar]")) return;
 
 	let id = pThis.id;
 	nuDestroyWindowProperty('nudatepickers', id)

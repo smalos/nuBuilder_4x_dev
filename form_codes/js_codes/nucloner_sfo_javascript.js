@@ -44,7 +44,8 @@ function runCloner() {
         return;
     }
 
-    if ($('#clo_tabs :selected').length === 0) {
+    const tabsLength = $("#clo_tabs option").length;
+    if ($('#clo_tabs :selected').length === 0 && tabsLength > 0) {
         nuMessage(nuTranslate('Validation Error'), nuTranslate('Select at least 1 Tab.'));
         return;
     }

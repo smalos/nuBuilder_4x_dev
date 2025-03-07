@@ -1,17 +1,17 @@
 function nuGetDisplayValue($formId, $id) {
-	
+
     $sql = "SELECT sob_display_sql, sob_display_procedure FROM `zzzzsys_object` WHERE sob_all_zzzzsys_form_id = ? AND sob_all_id = ?";
     $selectObject = nuRunQuery($sql, [$formId, $id]);
-	
+
     if (db_num_rows($selectObject) == 1) {
         $obj = db_fetch_object($selectObject);
-        
+
         if ($obj != false) {
-		
+
             $displayProcedure = $obj->sob_display_procedure;
-            
+
             if (empty($displayProcedure)) {
-              
+
                 $disS = nuReplaceHashVariables($obj->sob_display_sql);
                 $disT = nuRunQuery($disS);
 
@@ -21,7 +21,7 @@ function nuGetDisplayValue($formId, $id) {
                 } else {
                     return "";
                 }
-				
+
             } else {
 
                 $procedureCode = nuProcedure($displayProcedure);
@@ -38,25 +38,30 @@ function nuGetDisplayValue($formId, $id) {
 }
 
 
-function nuRefreshDisplayObject($displayId, $formIdHk, $prefixHK) {
+function nuRefreshDisplayObject() {
 
-    if (!nuHasProperty($formIdHk, $formId, false)) {
+    $HKPREFIX = "NUREFRESHDISPLAYOBJECT_";
+    
+    if (!nuHasProperty($HKPREFIX . 'displayid', $displayId, false)) {
+        return;
+    }
+
+    if (!nuHasProperty($HKPREFIX . 'formid', $formId, false)) {
         $formId = '#form_id#';
     }
 
-    if (!nuHasProperty($prefixHK, $prefix, false)) {
+    if (!nuHasProperty($HKPREFIX . 'prefix', $prefix, false)) {
         $prefix = '';
     }
 
-	$value = nuGetDisplayValue($formId, $displayId);
-	$displayId = $prefix.$displayId;
-		
-	if ($value === false && $value !== '') {
-		$js = "nuMessage(nuTranslate('Error'), nuTranslate('Failed to refresh the Display Object:') + ' $displayId'); ";
-	} else {
+    $value = nuGetDisplayValue($formId, $displayId);
+    $displayId = $prefix.$displayId;
 
-		$js = " 
-		    
+    if ($value === false && $value !== '') {
+        $js = "nuMessage(nuTranslate('Error'), nuTranslate('Failed to refresh the Display Object:') + ' $displayId'); ";
+    } else {
+
+        $js = "
 		    function nuRefreshDisplayObjectSetNewValue(displayId, value) {
     			let obj = $('#' + displayId);
     			const format = obj.attr('data-nu-format');
@@ -65,15 +70,14 @@ function nuRefreshDisplayObject($displayId, $formIdHk, $prefixHK) {
 		    }
 
 		    nuRefreshDisplayObjectSetNewValue('$displayId', '$value');
-			
 			if (window.nuDisplayObjectRefreshed) {
 				nuDisplayObjectRefreshed('$displayId', '$formId');
 			}
 		";
-	}
-    
+    }
+
     nuJavaScriptCallback($js);
 
 }
 
-nuRefreshDisplayObject('#NUREFRESHDISPLAYOBJECT_displayid#', 'NUREFRESHDISPLAYOBJECT_formid','NUREFRESHDISPLAYOBJECT_prefix');
+nuRefreshDisplayObject();

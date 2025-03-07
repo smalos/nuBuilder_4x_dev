@@ -43,15 +43,15 @@ window.nuBROWSERESIZE = {
 	last_moved_element: ''
 };
 
-String.prototype.nuEndsWith = function (substr, ignoreCase) {
-	if (ignoreCase === undefined || ignoreCase === false) return this.endsWith(substr);
+String.prototype.nuEndsWith = function (substr, ignoreCase = false) {
+	if (!ignoreCase) return this.endsWith(substr);
 	return this.toLowerCase().endsWith(substr.toLowerCase());
-}
+};
 
-String.prototype.nuStartsWith = function (substr, ignoreCase) {
-	if (ignoreCase === undefined || ignoreCase === false) return this.startsWith(substr);
+String.prototype.nuStartsWith = function (substr, ignoreCase = false) {
+	if (!ignoreCase) return this.startsWith(substr);
 	return this.toLowerCase().startsWith(substr.toLowerCase());
-}
+};
 
 String.prototype.nuReplaceAll = function (str1, str2, ignore) {
 	return this.replace(new RegExp(str1.replace(/([\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, function (c) { return "\\" + c; }), "g" + (ignore ? "i" : "")), str2);
@@ -1659,6 +1659,14 @@ function nuUserName() {
 	return nuSERVERRESPONSE.user_name;
 }
 
+function nuUserFirstName() {
+	return nuSERVERRESPONSE.user_first_name;
+}
+
+function nuUserLastName() {
+	return nuSERVERRESPONSE.user_last_name;
+}
+
 function nuUserPosition() {
 	return nuSERVERRESPONSE.user_position;
 }
@@ -2472,8 +2480,12 @@ function nuSetDateValue(id, date) {
 	const obj = $('#' + id);
 
 	if (!id || nuDebugOut(obj, id)) return false;
+	date = date instanceof Date && !isNaN(date) ? date : new Date(date);
 
-	date = date !== undefined ? date : new Date();
+	if (!(date instanceof Date) || isNaN(date)) {
+		date = new Date();
+	}
+
 	const df = date.getFullYear() + '-' + nuPad2(date.getMonth() + 1) + '-' + nuPad2(date.getDate());
 
 	const format = obj.attr('data-nu-format');
@@ -2610,6 +2622,17 @@ function nuDateIsValid(date) {
 	return (
 		Object.prototype.toString.call(date) === '[object Date]' && !isNaN(date)
 	);
+
+}
+
+function nuObjectIdIsValid(id) {
+
+	if (typeof id !== 'string' || id.length === 0) {
+		return false;
+	}
+
+	const validIdPattern = /^[^\d\s][^\s]*$/u;
+	return validIdPattern.test(id);
 
 }
 

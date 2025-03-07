@@ -1,22 +1,32 @@
 nuHide('nuAddButton');
 
-function addActionButton() {
-    const btn = nuAddActionButton('TerminateSession', 'Terminate Sessions', 'askTerminateSessions()');
+function nuSessionAddActionButton() {
+    const btn = nuAddActionButton('TerminateSession', 'Terminate Sessions', 'nuSessionAskTerminateSessions()');
     btn.addClass('nuSaveButtonEdited');
 }
 
-function runTerminateSessions(option = '') {
+function nuSessionRunTerminateSessions(option = '') {
     nuSetProperty('NUSESSIONTERMINATE_OPTION', option)
     nuRunPHPHidden("NUSESSIONTERMINATE");
 }
 
-function askTerminateSessions() {
+function nuSessionGetScreenWidth() {
+    return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+}
+
+function nuSessionGetBoxWidth() {
+    const screenWidth = nuSessionGetScreenWidth();
+    return Math.min(screenWidth * 0.9, 500) + 'px';
+}
+
+function nuSessionAskTerminateSessions() {
     $.confirm({
         title: 'Terminate sessions',
-        content: 'This will terminate all users\' sessions, which could result in unsaved work. Do you like to proceed?',
+        content: "This will end all user sessions, which could result in unsaved work. Would you like to continue?",
 
         opacity: 0.5,
-        boxWidth: '70%',
+        boxWidth: nuSessionGetBoxWidth(),
+        maxWidth: '500px',
         useBootstrap: false,
         modal: true,
         closeIcon: false,
@@ -29,14 +39,14 @@ function askTerminateSessions() {
                 text: 'Terminate all sessions',
                 btnClass: 'btn-confirm-green',
                 action: function () {
-                    runTerminateSessions("");
+                    nuSessionRunTerminateSessions("");
                 }
             },
             terminateExceptMine: {
                 text: 'Terminate all sessions but mine',
                 btnClass: 'btn-confirm-green',
                 action: function () {
-                    runTerminateSessions("others");
+                    nuSessionRunTerminateSessions("others");
                 }
             },
             cancel: {
@@ -50,6 +60,4 @@ function askTerminateSessions() {
     });
 }
 
-
-
-addActionButton();
+nuSessionAddActionButton();

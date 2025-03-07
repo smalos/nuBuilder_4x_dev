@@ -1,0 +1,1 @@
+nuUserSetNameParts(this);

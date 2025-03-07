@@ -211,6 +211,8 @@ function nuFormTypeChanged() {
 
     nuEnable([pb, pe, bb, be, bs, as, bd, ad]);
 
+    nuSetValue('js_browse_edit', 'Browse & Edit');
+
     if (t == 'browse') {
         nuDisable([pe, be, bs, as, bd, ad]);
     } else
@@ -219,6 +221,7 @@ function nuFormTypeChanged() {
     } else
         if (t == 'launch') {
         nuDisable([pb, bb, bs, as, bd, ad]);
+        nuSetValue('js_browse_edit', 'Launch');
     } else
         if (t == 'subform') {
         nuDisable([pb, bb, be, bs, as, bd, ad]);

@@ -1,31 +1,32 @@
 <?php
 
-function nuFormProperties($f, $columns = '') {
+function nuFormProperties($formId, $columns = '') {
 
 	$columns = $columns == '' ? '*' : $columns;
-	$query = "SELECT $columns FROM zzzzsys_form WHERE zzzzsys_form_id = ? ";
-	$stmt = nuRunQuery($query, [$f]);
+	$query = "SELECT $columns FROM zzzzsys_form WHERE zzzzsys_form_id = ?";
+	$stmt = nuRunQuery($query, [$formId]);
 
 	return db_num_rows($stmt) == 0 ? false : db_fetch_object($stmt);
 
 }
 
-function nuBeforeBrowse($f) {
+function nuBeforeBrowse($formId) {
 
 	$_POST['nuMessages'] = [];
 
-	$p = nuProcedure('nuBeforeBrowse');
-	if ($p != '') {
-		eval ($p);
+	$procedure = nuProcedure('nuBeforeBrowse');
+
+	if ($procedure != '') {
+		eval ($procedure);
 	}
+
 	if (count($_POST['nuErrors']) > 0) {
 		return;
 	}
 
-	nuEval($f . '_BB');
+	nuEval("{$formId}_BB");
 
 }
-
 function nuBeforeEdit($FID, $RID) {
 
 	$r = nuFormProperties($FID);
@@ -169,6 +170,7 @@ function nuGetFormObject($formId, $recordId, $numObjects, $defaultTabs = null) {
 function nuGetFormSetBasicProperties($formObject, $formId, $recordId) {
 
 	$formObject->form_id = $formId;
+
 	if ($recordId == '' && $formObject->form_type == 'launch') {
 		$recordId = '-1';
 	}
@@ -191,6 +193,13 @@ function nuGetFormData($formObject, $recordId) {
 
 function nuGetFormProcessObjects($formObject, $formId, $recordId, $data, $defaultTabs, $numObjects) {
 
+	$formObjects = [];
+	$cloneableObjects = [];
+
+	if ($recordId === '' && $formObject->form_type !== 'launch') { // Browse
+		return [$formObjects, $cloneableObjects];
+	}
+
 	$sqlQuery = "
 		SELECT
 			*
@@ -207,8 +216,6 @@ function nuGetFormProcessObjects($formObject, $formId, $recordId, $data, $defaul
 			sob_all_zzzzsys_tab_id
 	";
 
-	$formObjects = [];
-	$cloneableObjects = [];
 	$dbFields = ($data !== []) ? db_field_names($formObject->table) : [];
 
 	$stmt = nuRunQuery($sqlQuery, [$formId]);
@@ -519,46 +526,46 @@ function nuDefaultObject($r, $t) {
 	$labelOnTop = null;
 
 	/*
-							if (nuIsMobile() && isset($r->sob_all_json)) {
+																   if (nuIsMobile() && isset($r->sob_all_json)) {
 
-								$json = $r->sob_all_json;
-								if ($json != '') {
+																	   $json = $r->sob_all_json;
+																	   if ($json != '') {
 
-									$obj	= nuJsonDecode($json, true);
+																		   $obj	= nuJsonDecode($json, true);
 
-									$type		= nuObjKey($obj,'type', null);
+																		   $type		= nuObjKey($obj,'type', null);
 
-									if ($type != null) {
+																		   if ($type != null) {
 
-										$mobile		= nuObjKey($type,'mobile', null);
+																			   $mobile		= nuObjKey($type,'mobile', null);
 
-										if ($mobile == true) {
+																			   if ($mobile == true) {
 
-											$visible	= nuObjKey($mobile,'visible', null);
-											$name		= nuObjKey($mobile,'name', null);
-											$labelOnTop	= nuObjKey($mobile,'labelontop', null);
-											$labelOnTop	= $labelOnTop == null || $labelOnTop == true;
+																				   $visible	= nuObjKey($mobile,'visible', null);
+																				   $name		= nuObjKey($mobile,'name', null);
+																				   $labelOnTop	= nuObjKey($mobile,'labelontop', null);
+																				   $labelOnTop	= $labelOnTop == null || $labelOnTop == true;
 
-											$size		= nuObjKey($mobile,'size');
-											if ($size != null) {
-												$width		= nuObjKey($size, 'width', null);
-												$height		= nuObjKey($size, 'height', null);
-											}
+																				   $size		= nuObjKey($mobile,'size');
+																				   if ($size != null) {
+																					   $width		= nuObjKey($size, 'width', null);
+																					   $height		= nuObjKey($size, 'height', null);
+																				   }
 
-											$location		= nuObjKey($mobile,'location');
-											if ($location != null) {
-												$top		= nuObjKey($location, 'top', null);
-												$left		= nuObjKey($location, 'left', null);
-											}
+																				   $location		= nuObjKey($mobile,'location');
+																				   if ($location != null) {
+																					   $top		= nuObjKey($location, 'top', null);
+																					   $left		= nuObjKey($location, 'left', null);
+																				   }
 
-										}
+																			   }
 
-									}
+																		   }
 
-								}
+																	   }
 
-							}
-							*/
+																   }
+																   */
 
 	$o->mobile = $mobile;
 	$o->labelOnTop = $labelOnTop;
@@ -932,74 +939,51 @@ function nuSelectAddOption($text, $value) {
 function nuSelectOptions($sql) {
 
 	$options = [];
-
 	$sqlWithHk = $sql;
-	$sql = nuReplaceHashVariables($sql);
+	$processedSql = nuReplaceHashVariables($sql);
 
-	$sqlFirstChars = nuTrim(substr($sql, 0, 20));
-	$sqlFirstCharsNoSpacesNoLineBreaks = preg_replace('/\s+/', '', $sqlFirstChars);
+	$selectType = nuGetSelectType($processedSql);
 
-	//-- sql statement
-	if (
-		nuStringStartsWith('SELECT', $sqlFirstChars, true) ||
-		nuStringStartsWith('(SELECT', $sqlFirstCharsNoSpacesNoLineBreaks, true) ||
-		nuStringStartsWith('WITH', $sqlFirstChars, true)
-	) {
-
-		$stmt = nuRunQueryString($sql, $sqlWithHk);
-
-		if (nuErrorFound()) {
-			return;
-		}
-
-		while ($row = db_fetch_row($stmt)) {
-			$options[] = $row;
-		}
-
-		//-- Array style
-	} elseif (nuStringStartsWith('[', $sqlFirstChars) && is_array(nuJsonDecode($sql))) {
-
-		$arr = nuJsonDecode($sql);
-		foreach ($arr as $item) {
-			$options[] = nuSelectAddOption($item, $item);
-		}
-
-		//-- language Files
-	} elseif (nuStringStartsWith('%LANGUAGES%', $sqlFirstChars, true)) {
-
-		foreach (glob("languages/*.sql") as $file) {
-
-			$baseName = basename($file, '.sql');
-			$options[] = nuSelectAddOption($baseName, $baseName);
-
-		}
-
-		//-- SHOW (FULL) TABLES
-	} elseif (nuStringStartsWith('SHOW TABLES', $sqlFirstChars) || nuStringStartsWith('SHOW FULL TABLES', $sqlFirstChars)) {
-
-		$stmt = nuRunQuery($sql);
-		while ($row = db_fetch_row($stmt)) {
-			if (!nuStringStartsWith('__', $row[0])) {
-				$options[] = nuSelectAddOption($row[0], $row[0]);
+	switch ($selectType) {
+		case 'query':
+			$stmt = nuRunQueryString($processedSql, $sqlWithHk);
+			if (nuErrorFound()) {
+				return;
 			}
-		}
-
-		//-- comma delimited string
-	} else {
-
-		$parts = explode('|', nuRemoveNonCharacters($sql));
-
-		$count = count($parts);
-		for ($i = 0; $i < $count; $i++) {
-
-			$selectValue = $parts[$i];
-			$selectDescription = isset($parts[$i + 1]) ? $parts[$i + 1] : 'Undefined';
-
-			$options[] = nuSelectAddOption($selectValue, $selectDescription);
-			$i++;
-
-		}
-
+			while ($row = db_fetch_row($stmt)) {
+				$options[] = $row;
+			}
+			break;
+		case 'array':
+			$arr = nuJsonDecode($processedSql);
+			foreach ($arr as $item) {
+				$options[] = nuSelectAddOption($item, $item);
+			}
+			break;
+		case 'languages':
+			foreach (glob("languages/*.sql") as $file) {
+				$baseName = basename($file, '.sql');
+				$options[] = nuSelectAddOption($baseName, $baseName);
+			}
+			break;
+		case 'showTables':
+			$stmt = nuRunQuery($sql);
+			while ($row = db_fetch_row($stmt)) {
+				if (!nuStringStartsWith('__', $row[0])) {
+					$options[] = nuSelectAddOption($row[0], $row[0]);
+				}
+			}
+			break;
+		case 'delimited':
+		default:
+			$parts = explode('|', nuRemoveNonCharacters($processedSql));
+			for ($i = 0, $count = count($parts); $i < $count; $i++) {
+				$selectValue = $parts[$i];
+				$selectDescription = isset($parts[$i + 1]) ? $parts[$i + 1] : 'Undefined';
+				$options[] = nuSelectAddOption($selectValue, $selectDescription);
+				$i++; // Skip the next element (used as description)
+			}
+			break;
 	}
 
 	return $options;
@@ -1497,11 +1481,11 @@ function nuDisplayErrorAccessDenied($callType, $stmt) {
 	}
 
 	if ($callType == 'getform') {
-		nuDisplayError("Access To Form Denied" . $code);
+		nuDisplayError("Access To Form Denied$code");
 	} elseif ($callType == 'getphp') {
-		nuDisplayError("Access To Procedure Denied" . $code);
+		nuDisplayError("Access To Procedure Denied$code");
 	} elseif ($callType == 'getreport') {
-		nuDisplayError("Access To Report Denied" . $code);
+		nuDisplayError("Access To Report Denied$code");
 	}
 
 }
@@ -1584,6 +1568,11 @@ function nuReportAccessList($j) {
 function nuButtons($formid, $POST) {
 
 	$t = nuRunQuery("SELECT sss_access FROM zzzzsys_session WHERE zzzzsys_session_id = ? ", [$_SESSION['nubuilder_session_data']['SESSION_ID']]);
+
+	if (db_num_rows($t) == 0) {
+		return [array('Add' => 0, 'Print' => 0, 'Save' => 0, 'Clone' => 0, 'Delete' => 0, 'Run' => 'nuRunPHP("' . '' . '")', 'RunHidden' => ''), '', ''];
+	}
+
 	$r = db_fetch_object($t);
 	$nuJ = nuJsonDecode($r->sss_access);
 	$_POST['forms'] = $nuJ->forms;

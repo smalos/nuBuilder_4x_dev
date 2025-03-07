@@ -28,5 +28,5 @@ for ($i = 0;$i < $countFiles;$i++) {
     }
 }
 
-nuAddJavaScript("console.log('init nuCSVfiles');  var nuCSVfiles = [" . implode(',', $a) . "];");
+nuAddJavaScript("var nuCSVfiles = [" . implode(',', $a) . "];");
 

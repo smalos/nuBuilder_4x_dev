@@ -1,149 +1,172 @@
-if (nuDemo()) return;
+// Use the correct namespace
+use Ifsnop\Mysqldump\Mysqldump;
 
-// *******************************************************************
+// Get the JSON settings passed from JS via the 'params' property
+$params = nuGetProperty('NUBACKUP_params');
+$settings = $params ? nuDecode($params)['settings'] : [];
 
-// Settings:
+// Call backup process using the decoded settings
+nuBackupRun($settings);
 
-// Path where the mysqldump library will save the backup file. Modify this path if needed.
-$PATH_MYSQLDUMP = __DIR__ . '/libs/mysqldump/dumps/';
+function nuBackupRun($settings) {
 
-// Filename of the backup file, using the current date and time with a unique identifier and the name of the database.
-$FILE_NAME = date('m-d-Y_H:i:s') . '_' . uniqid() . '_' . 'nuBuilder_backup' . '.sql.gzip';
+	nuBackupLoadMysqldumpLibrary(__DIR__ . '/libs/mysqldump/Mysqldump.php');
 
-// Settings for the mysqldump library. Modify these if needed.
-$dumpSettings = [];
-$dumpSettings['single-transaction'] = false;
-$dumpSettings['no-create-info'] = false;
-$dumpSettings['lock-tables'] = false;
-$dumpSettings['add-locks'] = false;
-$dumpSettings['extended-insert'] = false;
-$dumpSettings['skip-definer'] = true;
-$dumpSettings['routines'] = true;
-$dumpSettings['compress'] = 'Gzip'; 
+	// Extract values with defaults using null coalescing operator
+	$directory = $settings['directory'] ?? '';
+	$fileName = $settings['fileName'] ?? '';
+	$includeTables = $settings['include-tables'] ?? [];
+	$excludeTables = $settings['exclude-tables'] ?? [];
+	$includeViews = $settings['include-views'] ?? [];
+	$nuRecordsFilter = $settings['nuRecordsFilter'] ?? ''; // nu, user, empty = all (default)
+	unset($settings['nuRecordsFilter']);
+	
+	$nuTableFilter = $settings['nuTableFilter'] ?? ''; // nu, user, empty = all (default)
+	unset($settings['nuTableFilter']);
 
+	// Merge default dump settings with any settings passed from JS
+	$dumpSettings = nuBackupBuildDumpSettings($settings);
 
-// *******************************************************************
+	// Prepare the backup directory and filename
+	$backupDirectory = nuBackupDirectory($directory);
+	$backupFileName = nuBackupFileName($fileName, $dumpSettings);
 
+	// Set which tables to include/exclude
+	nuBackupSetTables($dumpSettings, $includeTables, $excludeTables, $includeViews, $nuTableFilter);
 
-// Path to Mysqldump.php
-$path_mysqldump_php = __DIR__ . '/libs/mysqldump/Mysqldump.php';
+	$dumper = nuBackupCreateDumper($dumpSettings);
 
-try {
-    require_once ($path_mysqldump_php);
-} catch (Exception $e) {
-    nuDisplayError('require_once failed! Error: '.$e);
+	$tableWheres = nuBackupBuildTableWheres($nuRecordsFilter);
+	$dumper->setTableWheres($tableWheres);
+
+	$dumpFile = $backupDirectory . nuSanitizeFilename($backupFileName);
+	nuBackupCreateDirectoryIfNotExists($backupDirectory);
+
+	nuBackupStartDump($dumper, $dumpFile);
+
+	nuBackupCompleteNotification($backupDirectory, $backupFileName);
 }
 
+function nuBackupFileExtension($dumpSettings) {
+	if (!array_key_exists('compress', $dumpSettings) || $dumpSettings['compress'] === 'None' || $dumpSettings['compress'] === '') {
+		return '';
+	}
+	return '.' . strtolower($dumpSettings['compress']);
+}
+
+function nuBackupDirectory($directory) {
+	// If directory is provided, use it; otherwise use default path
+	return !empty($directory) ? $directory : __DIR__ . '/libs/mysqldump/dumps/';
+}
+
+function nuBackupFileName($fileName, $dumpSettings) {
+	// If fileName is provided, use it; otherwise generate a default filename
+	$extension = nuBackupFileExtension($dumpSettings);
+
+	return !empty($fileName)
+		? $fileName . $extension
+		: date('Y-m-d_H:i:s') . '_' . uniqid() . '_nuBuilder_backup.sql' . $extension;
+
+}
+
+function nuBackupBuildDumpSettings($settings = []) {
+
+	$defaults = [
+		'single-transaction' => false,
+		'no-create-info' => false,
+		'lock-tables' => false,
+		'add-locks' => false,
+		'extended-insert' => false,
+		'skip-definer' => true,
+		'routines' => true,
+                'events' => true,
+		'compress' => $settings['compress'] ?? 'None' // Mysqldump::NONE
+	];
 /*
-// DEV
-    includeTables($dumpSettings);
-    excludeTables($dumpSettings);
+	if (isset($settings['settings']) && is_array($settings['settings'])) {
+		$settings = array_merge($settings, $defaults);
+		unset($settings['settings']); // Remove the nested settings key
+	}
 */
-
-// Create Mysqldump
-global $nuConfigDBHost, $nuConfigDBName, $nuConfigDBUser, $nuConfigDBPassword, $nuConfigDBPort;
-$nuConfigDBPort = $nuConfigDBPort ?? '3306';
-
-$dumper = new Ifsnop\Mysqldump\Mysqldump("mysql:host=$nuConfigDBHost;dbname=$nuConfigDBName;port=$nuConfigDBPort", $nuConfigDBUser, $nuConfigDBPassword, $dumpSettings);
-
-$tableWheres = [
-    "zzzzsys_session" => "zzzzsys_session_id not like 's%' "
-];
-
-// Exclude nu records
-if ("#nubackup_user_records_only#" == "1") {
-
-    $tableWheresNotNu = [
-        "zzzzsys_access" => tableIdNotLikeNu("zzzzsys_access"),
-        "zzzzsys_access_form" => tableIdNotLikeNu("zzzzsys_access_form"),
-        "zzzzsys_access_php" => tableIdNotLikeNu("zzzzsys_access_php"),
-        "zzzzsys_access_report" => tableIdNotLikeNu("zzzzsys_access_report"),
-        "zzzzsys_browse" => tableIdNotLikeNu("zzzzsys_browse"),
-        "zzzzsys_cloner" => tableIdNotLikeNu("zzzzsys_cloner"),
-        "zzzzsys_code_snippet" => tableIdNotLikeNu("zzzzsys_code_snippet"),
-        "zzzzsys_debug" => tableIdNotLikeNu("zzzzsys_debug"),
-        "zzzzsys_event" => tableIdNotLikeNu("zzzzsys_event"),
-        "zzzzsys_file" => tableIdNotLikeNu("zzzzsys_file"),
-        "zzzzsys_form" => tableIdNotLikeNu("zzzzsys_form"),
-        "zzzzsys_format" => tableIdNotLikeNu("zzzzsys_format"),
-        "zzzzsys_info" => tableIdNotLikeNu("zzzzsys_info"),
-        "zzzzsys_note" => tableIdNotLikeNu("zzzzsys_note"),
-        "zzzzsys_note_category" => tableIdNotLikeNu("zzzzsys_note_category"),
-        "zzzzsys_object" => tableIdNotLikeNu("zzzzsys_object"),
-        "zzzzsys_php" => tableIdNotLikeNu("zzzzsys_php"),
-        "zzzzsys_report" => tableIdNotLikeNu("zzzzsys_report"),
-        "zzzzsys_select" => tableIdNotLikeNu("zzzzsys_select"),
-        "zzzzsys_select_clause" => tableIdNotLikeNu("zzzzsys_select_clause"),
-        "zzzzsys_setup" => tableIdNotLikeNu("zzzzsys_setup"),
-        "zzzzsys_tab" => tableIdNotLikeNu("zzzzsys_tab"),
-        "zzzzsys_timezone" => tableIdNotLikeNu("zzzzsys_timezone"),
-        "zzzzsys_translate" => tableIdNotLikeNu("zzzzsys_translate"),
-        "zzzzsys_user" => tableIdNotLikeNu("zzzzsys_user")
-    ];
-
-
-    $tableWheres = array_merge($tableWheresNotNu, $tableWheres);
+	return array_merge($defaults, $settings);
 
 }
 
-
-$downloadFile = true;
-$dumper->setTableWheres($tableWheres);
-
-$dump_file = $PATH_MYSQLDUMP . nuSanitizeFilename($FILE_NAME);
-
-// Start the dump
-try {
-
-    if (!is_dir($PATH_MYSQLDUMP)) {
-        mkdir($PATH_MYSQLDUMP, 0755);
-    }
-
-    $dumper->start($dump_file);
-
-    /*
-        // DEV
-        if ($downloadFile) {
-            header('Content-Type: text/plain;charset=utf-8');
-            header("Pragma: no-cache");
-            header("Expires: 0");
-            header('Content-Disposition: attachment; filename="dump.sql"');
-            $dumper->start('php://output');
-        } else {
-            $dumper->start($dump_file);
-        }
-    */
-}
-catch(\Exception $e) {
-    nuDisplayError('Export Error: ' . $e->getMessage());
+function nuBackupLoadMysqldumpLibrary($path) {
+	try {
+		require_once($path);
+	} catch (Exception $e) {
+		nuDisplayError('require_once failed! Error: ' . $e->getMessage());
+	}
 }
 
-$dump_file = base64_encode($PATH_MYSQLDUMP . $FILE_NAME);
-
-$js = "
-   nuMessage(['<h2>Export completed!</h2><br>SQL Dump saved in ' + atob('$dump_file')]);
-";
-
-nuJavaScriptCallback($js);
-
-function tableIdNotLikeNu($tableName) {
-    return "$tableName" . "_id not like 'nu%'";
+function nuBackupCreateDumper($dumpSettings) {
+	global $nuConfigDBHost,
+	$nuConfigDBName,
+	$nuConfigDBUser,
+	$nuConfigDBPassword,
+	$nuConfigDBPort;
+	$nuConfigDBPort = $nuConfigDBPort ?? '3306';
+	$dsn = "mysql:host={$nuConfigDBHost};dbname={$nuConfigDBName};port={$nuConfigDBPort}";
+	return new Ifsnop\Mysqldump\Mysqldump($dsn, $nuConfigDBUser, $nuConfigDBPassword, $dumpSettings);
 }
 
-function includeTables(array & $dumpSettings) {
+function nuBackupBuildTableWheres($nuRecordsFilter = '') {
+	$tableWheres = [
+		"zzzzsys_session" => "zzzzsys_session_id not like 's%'"
+	];
 
-    $tables = nuGetProperty('nubackup_tables_include');
-    if ($tables) {
-        $dumpSettings["include-tables"] = json_decode(stripslashes($tables));
-    }
+	if (in_array($nuRecordsFilter, ['user', 'nu'])) {
+		$sysTables = nuGetSysTables();
+		$conditionFunction = ($nuRecordsFilter === 'user') ? 'nuBackupTableIdNotLikeNu' : 'nuBackupTableIdLikeNu';
+		foreach ($sysTables as $tableName) {
+			$tableWheres[$tableName] = $conditionFunction($tableName);
+		}
+	}
 
+	return $tableWheres;
 }
 
-function excludeTables(array & $dumpSettings) {
+function nuBackupTableIdNotLikeNu($tableName) {
+	return "{$tableName}_id not like 'nu%'";
+}
 
-    $tables = nuGetProperty('nubackup_tables_exclude');
-    if ($tables) {
-        $dumpSettings["exclude-tables"] = json_decode(stripslashes($tables));
+function nuBackupTableIdLikeNu($tableName) {
+	return "{$tableName}_id like 'nu%'";
+}
+
+function nuBackupCreateDirectoryIfNotExists($directory) {
+	if (!is_dir($directory)) {
+		mkdir($directory, 0755, true);
+	}
+}
+
+function nuBackupStartDump($dumper, $dumpFile) {
+	try {
+		$dumper->start($dumpFile);
+	} catch (Exception $e) {
+		nuDisplayError('Export Error: ' . $e->getMessage());
+	}
+}
+
+function nuBackupCompleteNotification($backupDirectory, $backupFileName) {
+	$encodedPath = base64_encode($backupDirectory . $backupFileName);
+	$js = "nuMessage(['<h2>Export completed!</h2><br>SQL Dump saved in ' + atob('$encodedPath')]);";
+	nuJavaScriptCallback($js);
+}
+
+function nuBackupSetTables(&$dumpSettings, $includeTables, $excludeTables, $includeViews, $nuTableFilter) {
+
+	$dumpSettings["include-tables"] = is_array($includeTables) ? $includeTables : [];
+	$dumpSettings["exclude-tables"] = is_array($excludeTables) ? $excludeTables : [];
+	$dumpSettings["include-views"] = is_array($includeViews) ? $includeViews : [];
+
+    if ($nuTableFilter === 'nu') {
+        $dumpSettings["include-tables"] = array_merge($dumpSettings["include-tables"], nuGetSysTables());
+        $dumpSettings["exclude-tables"] = array_merge($dumpSettings["exclude-tables"], nuGetUserTables());
+    } else if ($nuTableFilter === 'user') {
+        $dumpSettings["exclude-tables"] = array_merge($dumpSettings["exclude-tables"], nuGetSysTables());
+        $dumpSettings["include-tables"] = array_merge($dumpSettings["exclude-tables"], nuGetUserTables());
     }
 
 }

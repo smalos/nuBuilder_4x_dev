@@ -33,6 +33,8 @@ function nuAddToFormat(e) {
         $srmFormat.val(si + space + '1' + se + '000' + de + String(0).repeat(pl)).trigger('change');
         $srmCurrency.nuSetValue(cu);
     }
+
+   nuFormatPreview();
 }
 
 function nuSetFormatType(a) {
@@ -63,4 +65,24 @@ function nuSetFormatType(a) {
 
     $("[data-nu-nunumber-format]").nuShow(srmTypeVal === 'Number');
 
+    nuFormatPreview();
+
+}
+
+
+function nuFormatPreview() {
+    const inputType = $('#srm_type').val();
+    const previewElement = $("#srm_preview");
+
+    if (inputType === 'Date') {
+        previewElement.attr("data-nu-format", `D|${nuGetValue('srm_format')}`);
+        nuSetDateValue('srm_preview');
+    }
+
+    if (nuGetValue('srm_preview') === '' &&  nuGetValue('srm_format') !== '') {
+        $("#srm_preview").removeAttr("data-nu-format");
+        nuSetValue('srm_preview', 'Format Error');
+    }
+
+    nuShow('srm_preview', inputType === 'Date');
 }

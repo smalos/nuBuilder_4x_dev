@@ -24,6 +24,8 @@ if (! recordId.startsWith('nu')) {
 if (!nuIsNewRecord()) {
     nuProcUpdateAclCount();
     nuAddActionButton('ProcRunProcedure', 'Run', 'nuProcRunProcedure();');
+} else {
+  nuSetValue('sph_demo', true);
 }
 
 

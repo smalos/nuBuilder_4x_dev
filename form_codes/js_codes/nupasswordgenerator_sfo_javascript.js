@@ -1,6 +1,6 @@
 nuHideHolders(2);
 
-nuAddActionButton('use_password', nuTranslate('Use Password'), 'usePassword();');
+nuAddActionButton('use_password', nuTranslate('Use Password'), 'nuPWGenUsePassword();');
 
 function nuPWGenUsePassword() {
    nuHasNotBeenEdited();

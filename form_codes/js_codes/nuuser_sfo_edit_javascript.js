@@ -29,3 +29,46 @@ function nuBeforeSave() {
     return true;
 
 }
+
+function nuUserSplitFullName(fullName) {
+
+  const name = fullName.split(' ');
+  const person = {};
+  
+  if (name.length > 1) {
+    person.lastName = name.pop();
+    person.firstName = name.join(' ');
+  } else {
+    person.lastName = "";
+    person.firstName = fullName;
+  }
+  
+  return person;
+ 
+}
+
+function nuUserSetNameParts(element) {
+
+    if (nuGetValue('sus_name') === '') {
+        const firstName = nuGetValue('sus_first_name');
+        const lastName = nuGetValue('sus_last_name');
+        if (firstName !== '' && lastName !== '') {
+        	nuSetValue('sus_name', nuGetValue('sus_first_name') + ' ' + nuGetValue('sus_last_name') );
+	}
+        return;
+    }
+    
+    const hasStar = element.value === '*';
+        
+    if (element.id === 'sus_first_name' && !hasStar) return;
+    if (element.id === 'sus_last_name'&& !hasStar) return;
+
+    if (!nuIsNewRecord() && !hasStar) return;
+
+    const nameParts = nuUserSplitFullName(nuGetValue('sus_name'));
+    nuSetValue('sus_first_name', nameParts.firstName, 'value', false);
+    $('#sus_first_name').addClass('nuEdited');
+    nuSetValue('sus_last_name', nameParts.lastName, 'value', false);
+    $('#sus_last_name').addClass('nuEdited');
+
+}

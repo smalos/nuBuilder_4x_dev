@@ -49,10 +49,11 @@ function nuHomeOpenCreateMenuConfig(menuType, event) {
             { text: nuContextMenuItemText("Fast Form", "fa fa-bolt"), action: () => nuHomeOpenForm('nufflaunch', '', event) }
         ],
         Database: [
-            { text: nuContextMenuItemText("CSV Transfer", "fas fa-file-csv"), action: () => nuHomeOpenForm('nucsvtransfer', '-1', event) },
+            { text: nuContextMenuItemText("Sessions", "fa-solid fa-key"), action: () => nuHomeOpenForm('nusession', '', event) },
             { text: nuContextMenuItemText("Backup", "backup far fa-hdd"), action: () => nuRunBackup() },
             { text: nuContextMenuItemText("Cloner", "far fa-clone"), action: () => nuHomeOpenForm('nucloner', '', event) },
-            { text: nuContextMenuItemText("Update", "fas fa-cloud-download-alt"), action: () => nuHomeOpenForm('nuupdate', '', event) }
+            { text: nuContextMenuItemText("Update", "fas fa-cloud-download-alt"), action: () => nuHomeOpenForm('nuupdate', '', event) },
+            { text: nuContextMenuItemText("CSV Transfer", "fas fa-file-csv"), action: () => nuHomeOpenForm('nucsvtransfer', '-1', event) }
         ],
         Setup: [
             { text: nuContextMenuItemText("Format", "fa fa-calendar"), action: () => nuHomeOpenForm('nuFormat', '', event) },

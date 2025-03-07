@@ -11,7 +11,7 @@ function nuUserHomeCheckNoObjectsOnForm() {
     
     if (nuSERVERRESPONSE.objects.length === 0 && window.global_access) {
         const title = nuTranslate('Information');
-        const message = `${nuTranslate('Currently there are no objects on this Form')}. <a href="javascript:openNuObject();"><br><br>${nuTranslate('Start adding some')}</a>.`;
+        const message = `${nuTranslate('There are currently no objects on this form.')}. <a href="javascript:openNuObject();"><br><br>${nuTranslate('Start adding some')}</a>.`;
         const msg = nuMessage(title, message);
         msg.css({'top': '60px', 'max-width': '500px'});
     }

@@ -422,6 +422,11 @@ input[type=radio] {
 	position: relative
 }
 
+.nuSubformCheckbox {
+	margin: 0 !important;
+	margin-top: 3px !important;
+}
+
 .nuOptionsSubform {
 	border-style: none;
 	color: transparent !important;
@@ -987,9 +992,8 @@ input[type=radio] {
 }
 
 .nuAdminButtonUsed {
-	background-color: #437430;
-	border-color: #000000ad;
-	color: #ffffff;
+	background-color: #a7a7a7ab;
+	color: #000000;
 }
 
 #nuBackBtnButton.nuActionButton {

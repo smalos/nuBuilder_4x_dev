@@ -1,6 +1,6 @@
 $('#deb_message')
 .css('font-size', 10 + 'px')
-.css('background-color', '#FFEEA6')
+// .css('background-color', '#FFEEA6')
 .prop('readonly', true)
 .on('dblclick', function() {
     nuOpenAce('Text', this.id);

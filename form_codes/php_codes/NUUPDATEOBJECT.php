@@ -1,5 +1,3 @@
-if (nuDemo()) return;
-
 $id = "#NUUPDATEOBJECT_id#";
 $value = "#NUUPDATEOBJECT_value#";
 $formId = "#NUUPDATEOBJECT_form_id#";

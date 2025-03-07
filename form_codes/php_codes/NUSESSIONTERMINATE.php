@@ -1,5 +1,3 @@
-if (nuDemo()) return;
-
 $option = nuGetProperty('NUSESSIONTERMINATE_OPTION');
 if (!$option) {
     nuRunQuery('DELETE FROM `zzzzsys_session`');

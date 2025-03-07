@@ -8,6 +8,7 @@
     6|title|
     7|value|
     8|nu-label-position
+    9|nu-disable-calendar
 */
 
 nuHide('plh_value_select');
@@ -30,7 +31,7 @@ if (typeObj().val() !== 'input') {
 function onAttributeChanged(value) {
 
     nuShow('plh_value_select', value === '0' || value === '5' || value === '8');
-    nuShow('plh_value_text', !(value === '0' || value === '5' || value === '8'));
+    nuShow('plh_value_text', !(value === '0' || value === '5' || value === '8' || value === '9'));
     nuShow('plh_attribute_name', value === '2');
     
     nuSetValue('plh_value_text','');
@@ -85,7 +86,7 @@ function addAttribute() {
     let v = valueObjText();
     let an = nuGetValue('plh_attribute_name');
 
-    if (v === '') {
+    if (v === '' && nuGetValue('plh_attribute') != 9) {
         nuMessage(`${nuTranslate('Error')}`, `${nuTranslate("Missing value")}`);
         return;
     }
@@ -104,7 +105,11 @@ function addAttribute() {
         return;
     }
 
-    let kv = kEquals + v + '"';
+    if (kEquals.includes('nu-disable-calendar')) {
+        kv = 'nu-disable-calendar';
+    } else {
+         let kv = kEquals + v + '"';
+    }
 
     if (t.val() === '') {
         t.val(kv).change();

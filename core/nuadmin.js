@@ -256,7 +256,7 @@ function nuInitSetBrowseWidthHelper() {
 				});
 
 				w.prop('onclick', null).off('click');
-				w.click(function (e) {
+				w.on('click', function (e) {
 					nuSetBrowseColumnWidths();
 				});
 			}
@@ -718,20 +718,32 @@ function nuContextMenuItemPositionChanged(t, update) {
 
 }
 
-function nuContextMenuItemPosition(label, v) {
+function nuContextMenuItemPosition(label, value) {
 
-	const lwidth = nuContextMenuGetWordWidth(label);
-	let left = 70 - lwidth + 17;
-	if (label == 'Top')
-		left += 2;
-	if (label == 'Left')
-		left += 1;
-	if (label == 'Height')
-		left -= 1;
+	const labelHTML = `<span style="
+		width: 100px;
+		padding-left: 20px;
+		font-family: Verdana, sans-serif;
+		white-space: nowrap;
+		display: inline-block;">
+	  ${label}
+	</span>`;
 
-	return '<span style="width: 100px; padding-left:20px; font-family: font-family: Verdana, sans-serif;white-space:nowrap; display: inline;">' + label + '</span>' +
-		' <input data-property="' + label + '" onChange="nuContextMenuItemPositionChanged(this, false)" onBlur="nuContextMenuItemPositionChanged(this, true)" style="text-align: right; margin: 3px 10px 3px ' + left + 'px; width: 50px; height: 22px" type="number" min="0" class="input_number" value="' + v + '"> </input>';
+	const inputHTML = `<input
+		data-property="${label}"
+		onChange="nuContextMenuItemPositionChanged(this, false)"
+		onBlur="nuContextMenuItemPositionChanged(this, true)"
+		style="
+		  text-align: right;
+		  margin: 3px 10px 3px 0;
+		  width: 50px;
+		  height: 22px"
+		type="number"
+		min="0"
+		class="input_number"
+		value="${value}">`;
 
+	return labelHTML + inputHTML;
 }
 
 function nuContextMenuUpdateAccess(v) {
@@ -969,9 +981,12 @@ function nuContextMenuUpdate() {
 		: '.nuSort, .nuAdminButton';
 
 	$(selector).each((index, element) => {
+
+		if (!element.id) return;
+
 		const el = `#${element.id}`;
 		const $el = $(el);
-		
+
 		if (el !== '#' && $el.length > 0) {
 			let menuDefinition;
 
@@ -1119,22 +1134,23 @@ var nuPrettyPrint = (function () {
 					}
 				};
 
-			util.forEach(cells, function (cell) {
+			util.forEach(cells, function (cell, index) {
 
 				if (cell === null) {
 					return;
 				}
-				/* Default cell type is <td> */
-				td = util.el(cellType, attrs);
-
+				// Create a copy of the attributes for this cell.
+				var cellAttrs = util.merge({}, attrs);
+				if (index === 0) {
+					// Merge the first cell's style.
+					cellAttrs.style = util.merge({}, cellAttrs.style, prettyPrintThis.settings.styles['default'].td_first);
+				}
+				td = util.el(cellType, cellAttrs);
 				if (cell.nodeType) {
-					/* IsDomElement */
 					td.appendChild(cell);
 				} else {
-					/* IsString */
 					td.innerHTML = util.shorten(cell.toString());
 				}
-
 				tr.appendChild(td);
 			});
 
@@ -1796,6 +1812,7 @@ var nuPrettyPrint = (function () {
 					borderCollapse: 'collapse',
 					width: '100%'
 				},
+
 				td: {
 					padding: '5px',
 					fontSize: '12px',
@@ -1805,6 +1822,9 @@ var nuPrettyPrint = (function () {
 					verticalAlign: 'top',
 					fontFamily: '"Consolas","Lucida Console",Courier,mono',
 					whiteSpace: 'nowrap'
+				},
+				td_first: {
+					minWidth: '150px'
 				},
 				td_hover: {
 					/* Styles defined here will apply to all tr:hover > td,
@@ -1854,9 +1874,13 @@ function nuPrettyPrintMessage(event, properties) {
 	} else {
 		const message = nuMessage(title, prettyPrintedTable);
 		message.css({
-			'max-width': '700px',
+			'max-width': '90vw',
+			'max-height': '80vw',
 			'text-align': 'left',
-			'background-color': 'white'
+			'background-color': 'white',
+			'width': '70vw',
+			'left': '50px',
+			'overflow': 'auto',
 		}).attr('id', 'nuPropertiesMsgDiv');
 
 		nuDragElement(document.getElementById('nuPropertiesMsgDiv'), 40);

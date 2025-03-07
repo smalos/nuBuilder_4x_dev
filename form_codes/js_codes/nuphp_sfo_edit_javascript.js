@@ -45,11 +45,21 @@ function setStyles() {
 
 }
 
+function nuPHPStartsWithPHPTag(str) {
+    return str.toLowerCase().startsWith("<?php");
+}
 
 function nuBeforeSave() {
 
+    $php = $('#sph_php');
+
+    if (nuPHPStartsWithPHPTag($php.val())) {
+       nuMessage(nuTranslate('The script must not start with a PHP tag'));
+       return false;
+    }
+
     if (nuFormType() == 'edit') {
-        window.scrollTop = $('#sph_php').scrollTop();
+        window.scrollTop = $php.scrollTop();
     }
 
     return true;

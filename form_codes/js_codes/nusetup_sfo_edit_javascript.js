@@ -36,6 +36,7 @@ if (window.configImport == '1') {
   nuSetupSetConfigDatalist('nuShowJSErrors', ['none','globeadmin',"everyone"]);
   nuSetupSetConfigDatalist('nuEditCloseAfterSave', ['None','AllForms',"UserForms","SystemForms"]);
   nuSetupSetConfigDatalist('nuCalendarWeekNumbers', ['None','ISO 8601',"Western traditional","Middle Eastern"]);
+ // nuSetupSetConfigDatalist('nuTheme', ['Light','Dark',"System default"]);
 
   nuSelectAddEnglishOption('set_language');
   

@@ -23,5 +23,5 @@ if (count($result) == 2) {
 }
 
 function showMessage($title, $msg) {
-    nuJavaScriptCallback("nuMessage($title, $msg);");
+    nuJavaScriptCallback("nuMessage('$title', '$msg');");
 }

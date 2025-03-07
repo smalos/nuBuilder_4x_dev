@@ -1,6 +1,14 @@
 $getDistinctUserColumnQuery = function($column) {
-    return "SELECT DISTINCT `$column` FROM `zzzzsys_user` WHERE IFNULL(`$column`,'') <> '' ORDER BY `$column`";
+    
+    $sqlWhereExpired = "(
+        (('#nuBrowseTitle9_select#' LIKE '#%' OR '#nuBrowseTitle9_select#' = '') AND (sus_expires_on > NOW() OR sus_expires_on IS NULL)) OR
+        ('#nuBrowseTitle9_select#' = 'Expired' AND sus_expires_on < NOW()))";
+        
+    return "SELECT DISTINCT IFNULL(`$column`,'') FROM `zzzzsys_user` 
+    WHERE IFNULL(`$column`,'') <> '' 
+    AND " . $sqlWhereExpired . " ORDER BY `$column`";
 };
+
 
 $sqlPosition = function() use ($getDistinctUserColumnQuery) {
     return $getDistinctUserColumnQuery('sus_position');
@@ -11,7 +19,9 @@ $sqlTeam = function() use ($getDistinctUserColumnQuery) {
 };
 
 $sqlDepartment = function() use ($getDistinctUserColumnQuery) {
-    return $getDistinctUserColumnQuery('sus_department');
+    $x = $getDistinctUserColumnQuery('sus_department');
+nuDebug($x);
+    return $x;
 };
 
 $sqlLanguage = function() use ($getDistinctUserColumnQuery) {
@@ -19,11 +29,17 @@ $sqlLanguage = function() use ($getDistinctUserColumnQuery) {
 };
 
 $sqlAccessLevel = function() {
-    $sql = " SELECT DISTINCT CONCAT(sal_code,' : ',sal_description) FROM `zzzzsys_user`
-            INNER JOIN zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id ORDER BY sal_code ";
+    
+    $sqlWhereExpired = "(
+        (('#nuBrowseTitle9_select#' LIKE '#%' OR '#nuBrowseTitle9_select#' = '') AND (sus_expires_on > NOW() OR sus_expires_on IS NULL)) OR
+        ('#nuBrowseTitle9_select#' = 'Expired' AND sus_expires_on < NOW()))";
+        
+    $sql = " SELECT DISTINCT CONCAT(sal_code,' : ',sal_description) FROM `zzzzsys_user` 
+            INNER JOIN zzzzsys_access ON zzzzsys_access_id = sus_zzzzsys_access_id 
+            WHERE $sqlWhereExpired
+            ORDER BY sal_code ";
     return $sql;
 };
-
 
 $position = nuEncodeQueryRowResults($sqlPosition(), [], ['']);
 $team = nuEncodeQueryRowResults($sqlTeam(), [], ['']);

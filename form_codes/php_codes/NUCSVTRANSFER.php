@@ -1,5 +1,3 @@
-if (nuDemo()) return;
-
 $csvTransfer = '#csv_transfer#';
 
 if ($csvTransfer == 'export') {

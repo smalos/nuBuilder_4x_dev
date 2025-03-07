@@ -457,11 +457,22 @@ function nuObjectInputTypeChanged(t) {
 
         });
 
+       nuSetProperty('NUFORMATGETDEFAULT_INPUTTYPE', nuGetValue('sob_input_type').slice(2));
+       nuRunPHPHidden('NUFORMATGETDEFAULT');
+    
+
+
     }
 
     nuObjectDisplayInputIcon();
     nuObjectDisplayAllTypeInput();
 
+}
+
+function nuSetDefaultFormat(format) {
+   if (format !== '' && nuGetValue('sob_input_format') === '') {
+       nuSetText('sob_input_format', format);
+   }
 }
 
 
@@ -616,6 +627,11 @@ function nuBeforeSave() {
     nuObjectAdjustProperties();
 
     nuObjecEnsureAutoNumberEndsWithNumber(sob_input_count.value);
+    
+    if (!nuObjectIdIsValid(nuGetValue('sob_all_id'))) {
+        nuMessage(nuTranslate('Validation Error'), nuTranslate('Invalid ID'));
+        return false;
+    }
 
     if ($('#sob_all_type').val() == 'select') {
         $('#sob_select_multiple').addClass('nuEdited');
@@ -745,52 +761,60 @@ function nuObjectFileUploadScript() {
     if (nuGetValue('sob_input_file_target') == '0' && ! htmlCode.val().includes('Uppy')) {
 
         const uppyScript = `
-        <div id="#uppy_div#"></div>
+<div id="#uppy_div#"></div>
 
-        <script>
+<script>
 
-        nuInitUppy();
+nuInitUppy();
 
-        function nuInitUppy() {
+function nuInitUppy() {
 
-        const $objId = $('#' + '#this_object_id#');
-        const target = '#' + '#uppy_div#';
+	const $objId = $('#' + '#this_object_id#');
+	const target = '#' + '#uppy_div#';
 
-        let uppy = nuUppyCreate();
+	let uppy = nuUppyCreate();
 
-        uppy.use(Uppy.Dashboard, {
-        inline: true,
-        bundle: true,
-        height: $objId.nuCSSNumber('height'),
-        width: $objId.nuCSSNumber('width'),
-        target: target,
-        showProgressDetails: true,
-        replaceTargetContent: true,
-        method: 'post'
-        })
-        .use(Uppy.XHRUpload, {
-        endpoint: 'core/nuapi.php'
-        })
+	uppy.use(Uppy.Dashboard, {
+			inline: true,
+			bundle: true,
+			height: $objId.nuCSSNumber('height'),
+			width: $objId.nuCSSNumber('width'),
+			target: target,
+			showProgressDetails: true,
+			replaceTargetContent: true,
+			method: 'post'
+		})
+		.use(Uppy.XHRUpload, {
+			endpoint: 'core/nuapi.php',
+			shouldRetry: (xhr) => { return false;},
+			async onAfterResponse(xhr) {
+			   if (xhr.status === 401) {
+						const jsonData = JSON.parse(xhr.responseText);
+						uppyResponseMessage = jsonData.message;
+						throw new Error('\n ' + message);   
+			   }
+            }
+				   
+		})
 
-        uppy.on('upload', (file) => {
-        uppy.setMeta({
-        procedure: 'NUUPLOADFILE_TEMPLATE',
-        session_id: window.nuSESSION
-        })
-        });
+	uppy.on('upload', (file) => {
+		uppy.setMeta({
+			procedure: 'NUUPLOADFILE_TEMPLATE',
+			session_id: window.nuSESSION
+		})
+	});
 
-        uppy.on('complete', (result) => {
+	uppy.on('complete', (result) => {
 
-        if (window.nuOnFileUploadComplete) {
-        nuOnFileUploadComplete('FS', $objId.attr('id'), result);
-        }
+		if (window.nuOnFileUploadComplete) {
+			nuOnFileUploadComplete('FS', $objId.attr('id'), result, uppyResponseMessage);
+		}
 
-        })
+	})
 
-        }
+}
 
-        </script>
-        `;
+</script>`;
 
         nuSetValue('sob_html_code', htmlCode.val() + uppyScript.trim());
 

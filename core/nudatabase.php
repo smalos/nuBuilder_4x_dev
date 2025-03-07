@@ -118,6 +118,31 @@ function nuDebugMessageString($user, $message, $sql, $trace) {
 
 }
 
+function nuQueryExtractQueryComponents($query) {
+
+	$lines = explode("\n", $query);
+	if (stripos(ltrim($lines[0] ?? ''), '#') !== 0) {
+		return ['commands' => [], 'query' => $query];
+	}
+
+	$commentLines = [];
+	$otherLines = [];
+
+	foreach ($lines as $line) {
+		$trimmed = ltrim($line);
+		if (str_starts_with($trimmed, '#')) {
+			$commentLines[] = substr($trimmed, 1); // Remove leading '#'
+		} else {
+			$otherLines[] = $line;
+		}
+	}
+
+	return [
+		'commands' => array_map('trim', $commentLines),
+		'query' => implode("\n", array_map('trim', $otherLines))
+	];
+}
+
 function nuRunQuery($sql, $params = [], $isInsert = false) {
 
 	global $nuDB;
@@ -139,7 +164,15 @@ function nuRunQuery($sql, $params = [], $isInsert = false) {
 		return $params;
 	}
 
-	$stmt = $nuDB->prepare($sql);
+	$sqlParts = nuQueryExtractQueryComponents($sql);
+	$commands = $sqlParts['commands'];
+	if (!empty($commands)) {
+		foreach ($commands as $command) {
+			$nuDB->exec($command);
+		}
+	}
+
+	$stmt = $nuDB->prepare($sqlParts['query']);
 
 	try {
 		$stmt->execute($params);
@@ -456,6 +489,30 @@ function nuViewExists($view) {
 
 }
 
+function nuGetSysTables() {
+
+    $tables = [];
+    $stmt = nuRunQuery("SELECT table_name as TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'zzzzsys_%'");
+    while ($row = db_fetch_row($stmt)) {
+        $tables[] = $row[0];
+    }
+
+    return $tables;
+
+}
+
+function nuGetUserTables() {
+
+    $tables = [];
+    $stmt = nuRunQuery("SELECT table_name as TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = DATABASE() AND TABLE_NAME NOT LIKE 'zzzzsys_%'");
+    while ($row = db_fetch_row($stmt)) {
+        $tables[] = $row[0];
+    }
+
+    return $tables;
+
+}
+
 function nuCanCreateView() {
 
 	$testViewName = "nu_test_view_" . mt_rand();
@@ -543,7 +600,7 @@ function nuDebugCreateOutput(...$args) {
 	foreach ($args as $i => $arg) {
 
 		$type = gettype($arg);
-		if ($type === 'string' && nuStringStartsWith(' <html>', $arg)) {
+		if ($type === 'string' && strpos($arg, ' <html>') === 0) {
 			$message .= $arg;
 		} else {
 
@@ -599,27 +656,27 @@ function nuLog(...$args) {
 
 function nuID() {
 
-	global $DBUser;
+	global $nuConfigDBUser;
 	$i = uniqid();
 	$s = md5($i);
 
 	while ($i == uniqid()) {
 	}
 
-	$prefix = $DBUser == 'nudev' ? 'nu' : '';
+	$prefix = $nuConfigDBUser == 'nudev' ? 'nu' : '';
 	return $prefix . uniqid() . $s[0] . $s[1];
 
 }
 
 function nuID_DEV() {
 
-	global $DBUser;
+	global $nuConfigDBUser;
 
 	$uniqueId = uniqid();
 	$randomBytes = random_bytes(16);
 	$hash = hash('sha256', $randomBytes);
 
-	$prefix = $DBUser == 'nudev' ? 'nu' : '';
+	$prefix = $nuConfigDBUser == 'nudev' ? 'nu' : '';
 	return $prefix . $uniqueId . substr($hash, 0, 2);
 
 }

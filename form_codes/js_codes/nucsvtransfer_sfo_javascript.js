@@ -1,49 +1,46 @@
+function nuCheckCSV() {
 
+    const csvTo = $('#csv_to').val().trim();
+    const csvFrom = $('#csv_from').val().trim();
+    const csvDelimiter = $('#csv_delimiter').val().trim();
+    const csvTransfer = $('#csv_transfer').val().trim();
 
-function nuCheckCSV(){
-
-    var csvTo = $('#csv_to').val();
-    var csvFrom = $('#csv_from').val();
-    var csvDelimiter = $('#csv_delimiter').val();
-
-    if($('#csv_transfer').val() === '' || csvFrom === '' || csvTo === '' || csvDelimiter === ''){
-        nuMessage(nuTranslate('Validation Error'),nuTranslate('No fields can be left blank') + '...');
-    }else{
-        
-        if($('#csv_transfer').val() == 'export'){
-            
-            if(nuFORM.getJustTables().includes(csvFrom)){
-                nuRunPHP('NUCSVTRANSFER')
-            }else{
-                nuMessage([nuTranslate('No such tablename')+'...']);
-            }
-            
-        }
-        
-        if($('#csv_transfer').val() == 'import'){
-            
-            if(nuCSVfiles.includes(csvFrom)){
-
-                if (csvTo == 'zzzzsys_user') {
-                    nuImportUsersFromCSV(csvFrom, csvDelimiter);
-                } else {
-                    if(nuFORM.getJustTables().includes(csvTo)){
-                        nuMessage([nuTranslate('There is already a table named'), '<b>' + csvTo + '</b>']);
-                    }else{
-                        nuRunPHP("NUCSVTRANSFER")
-                    }
-                }
-                    
-            }else{
-                nuMessage([nuTranslate('File not found'), '', nuTranslate('CSV File must be located in the temp directory of the nubuilder directory')]);
-            }
-            
-        }
-        
+    if (!csvTransfer || !csvFrom || !csvTo || !csvDelimiter) {
+        return nuMessage(nuTranslate('Validation Error'), nuTranslate('No fields can be left blank') + '...');
     }
-    
+
+    if (csvTransfer === 'export') {
+        if (nuFORM.getJustTables().includes(csvFrom)) {
+            return nuRunPHP('NUCSVTRANSFER');
+        }
+        return nuMessage(nuTranslate('No such tablename') + '...');
+    }
+
+    if (csvTransfer === 'import') {
+        if (!nuCSVfiles.includes(csvFrom)) {
+            return nuMessage([
+                nuTranslate('File not found'),
+                '',
+                nuTranslate('CSV File must be located in the temp directory of the nuBuilder directory')
+            ]);
+        }
+
+        if (csvTo === 'zzzzsys_user') {
+            return nuImportUsersFromCSV(csvFrom, csvDelimiter);
+        }
+
+        if (nuFORM.getJustTables().includes(csvTo)) {
+            return nuMessage([
+                nuTranslate('There is already a table named'),
+                `<b>${csvTo}</b>`
+            ]);
+        }
+
+        return nuRunPHP('NUCSVTRANSFER');
+    }
+
 }
-    
+
 
 
 nuAddActionButton('transfer', "Transfer", 'nuCheckCSV()', '');
@@ -55,30 +52,17 @@ nuHide('csv_delete_after_import');
 
 nuCSVTransfer('export');
 
-function nuCSVTransfer(t){
+function nuCSVTransfer(action) {
 
-    if(t == 'export'){
-                
-        $('#label_csv_from').html(nuTranslate('Export From (Table)'));
-        $('#label_csv_to').html(nuTranslate('Export To CSV File'));
-        
-        $( '#csv_from' ).addClass('input_nuScroll nuScroll').off('keydown').keydown(function() {
-            nuFORM.scrollList(event, nuFORM.getJustTables());
-        });     
-        
-        nuHide('csv_delete_after_import');
-        
-    }else{
+    const isExport = action === 'export';
 
-        $('#label_csv_from').html(nuTranslate('Import From CSV File'));
-        $('#label_csv_to').html(nuTranslate('Import To (Table)'));
+    $('#label_csv_from').html(nuTranslate(isExport ? 'Export From (Table)': 'Import From CSV File'));
+    $('#label_csv_to').html(nuTranslate(isExport ? 'Export To CSV File': 'Import To (Table)'));
 
-        $( '#csv_from' ).addClass('input_nuScroll nuScroll').off('keydown').keydown(function() {
-            nuFORM.scrollList(event, nuCSVfiles);
-        });
-        
-        nuShow('csv_delete_after_import');
+    const dataListValue = isExport ? nuFORM.getJustTables(): nuCSVfiles;
 
-    }
-        
+    isExport ? nuHide('csv_delete_after_import'): nuShow('csv_delete_after_import');
+
+    nuAddDatalist('csv_from', dataListValue, true);
+
 }
