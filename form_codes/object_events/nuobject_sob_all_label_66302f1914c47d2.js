@@ -1,1 +1,0 @@
-if (this.value === '' && sob_all_type.value === 'subform') $(this).val(' ').change();

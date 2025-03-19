@@ -1,1 +1,0 @@
-nuSetValue('sob_all_width', this.innerHTML)

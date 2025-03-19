@@ -1,1 +1,0 @@
-nuOpenAce('SQL', this.id);

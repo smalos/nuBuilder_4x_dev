@@ -1,1 +1,0 @@
-nuAvailableFieldsOnClick(event, this);

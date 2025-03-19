@@ -17,8 +17,7 @@ function nuUseMobileView() {
 function nuSetMobileView() {
 
 	const HEIGHT_MULTIPLIER = 1.5;
-	const MIN_SCALE = 0.9;
-	const MAX_SCALE = 1.2;
+	const MAX_SCALE = 0.9;
 	const SPACING = 10;
 	const visibleTabs = nuVisibleTabs();
 	const nuBody = $('#nubody');
@@ -131,8 +130,6 @@ function nuSetMobileView() {
 
 		const isCheckbox = element.is(':checkbox');
 
-
-
 		if (!isSameRow) {
 			newTopPosition += height + (hasLabel && !isCheckbox ? 30 : 5);
 			if (isCheckbox) {
@@ -150,9 +147,7 @@ function nuSetMobileView() {
 
 	const nuMobileViewSetTransformScale = (objectWidth, screenWidth) => {
 
-		let scale = Math.max(screenWidth / objectWidth, MIN_SCALE);
-		scale = Math.min(MAX_SCALE, scale);
-
+		const scale = Math.max(screenWidth / objectWidth, MAX_SCALE);
 		nuBody.css({
 			'width': objectWidth,
 			'transform': `scale(${scale})`
@@ -255,7 +250,7 @@ function nuSetMobileView() {
 		$('#nuRECORD').append(`<div id="nuMobileViewEnd" style="left:0px;height:100px;position:absolute;top:${maxHeight}px">&nbsp;</div>`);
 	}
 
-	function nuMobileViewSetTop(currentTab, index, objType, objTab, top, tabVisible) {
+	function nuMobileViewSetTopPosition(currentTab, index, objType, objTab, top, tabVisible) {
 
 		if (currentTab === -1 && index === 0) {
 			const tabHeight = nuMobileViewAppendTabSelect();
@@ -272,7 +267,7 @@ function nuSetMobileView() {
 			}
 		}
 
-		return { top, currentTab };
+		return top;
 
 	}
 
@@ -299,9 +294,7 @@ function nuSetMobileView() {
 		const tabElement = $(`#nuTab${objTab}`);
 		let tabVisible = tabElement.nuIsVisible();
 
-		const topInfo = nuMobileViewSetTop(currentTab, index, objType, objTab, top, tabVisible);
-		top = topInfo.top;
-		currentTab = topInfo.currentTab;
+		top = nuMobileViewSetTopPosition(currentTab, index, objType, objTab, top, tabVisible);
 
 		tabVisible = tabElement.nuIsVisible() || $('.nuTab').length === 1;
 
@@ -344,7 +337,6 @@ function nuSetMobileView() {
 	}
 
 	const scale = nuMobileViewSetDimensionsAndScale();
-	//const scale = 1;
 	nuScrollToTopLeft();
 
 	if (window.nuOnMobileViewComplete) {
@@ -462,3 +454,5 @@ function nuMobileViewGetTransformScale(element) {
 	return 1;
 
 };
+
+

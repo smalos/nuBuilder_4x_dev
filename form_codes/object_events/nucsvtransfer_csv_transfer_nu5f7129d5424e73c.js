@@ -1,1 +1,0 @@
-nuCSVTransfer(this.value)

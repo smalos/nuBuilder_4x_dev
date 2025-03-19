@@ -1,1 +1,0 @@
-$('#sus_name').addClass('nuEdited');

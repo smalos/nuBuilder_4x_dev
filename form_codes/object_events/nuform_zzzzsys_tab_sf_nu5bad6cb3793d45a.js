@@ -1,1 +1,0 @@
-$("[id$='syt_help']").addClass('js')

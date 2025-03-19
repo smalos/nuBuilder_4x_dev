@@ -1,1 +1,0 @@
-nuDeleteForm('#RECORD_ID#');

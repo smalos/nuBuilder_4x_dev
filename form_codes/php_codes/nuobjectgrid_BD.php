@@ -1,1 +1,0 @@
-nuDisplayError(nuTranslate('The Delete Operation is not available.'));

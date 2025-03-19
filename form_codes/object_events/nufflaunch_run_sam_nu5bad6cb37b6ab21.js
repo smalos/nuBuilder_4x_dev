@@ -1,1 +1,0 @@
-nuPopup('nusample','-1');

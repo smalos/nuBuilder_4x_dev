@@ -1,1 +1,0 @@
-nuPopSQL(event, 'SE');

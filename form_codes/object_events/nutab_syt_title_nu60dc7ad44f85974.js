@@ -1,1 +1,0 @@
-nuFormOnTabsTitleChanged(event) 

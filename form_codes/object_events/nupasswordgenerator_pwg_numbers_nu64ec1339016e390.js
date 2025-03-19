@@ -1,1 +1,0 @@
-nuSetValue(this.id, true);

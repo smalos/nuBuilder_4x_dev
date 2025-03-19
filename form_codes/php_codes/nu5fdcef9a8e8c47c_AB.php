@@ -1,1 +1,0 @@
-nuSetFormValue('sfo_code_snippet_paste', nuLookupRecord()->cot_source_code);

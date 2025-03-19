@@ -1,1 +1,0 @@
-nuCopyToClipboard($('#sfo_table'));

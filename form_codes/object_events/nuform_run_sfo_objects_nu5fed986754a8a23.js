@@ -1,1 +1,0 @@
-nuForm("nuobjectgrid",nuCurrentProperties().record_id,"", "", 2)

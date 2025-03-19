@@ -1,1 +1,0 @@
-nuBuildFastForm('#fastform_table#', '#fastform_type#', '#fastform_primary_key#');

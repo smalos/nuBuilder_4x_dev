@@ -1,1 +1,0 @@
-nuRunPHPHidden('NUCREATETESTUSER');

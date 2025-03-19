@@ -1,1 +1,0 @@
-nuSelectAddSQLTable(event);

@@ -111,8 +111,7 @@
 	font-family: 'Noto Sans';
 	font-style: normal;
 	font-weight: 400;
-	src: url('../fonts/noto-sans-v27-latin-regular.woff2') format('woff2'),
-		url('../fonts/noto-sans-v27-latin-regular.woff') format('woff');
+	src: url('../fonts/noto-sans-v38-latin-regular.woff2') format('woff2')
 }
 
 /* noto-sans-italic - latin */
@@ -121,8 +120,7 @@
 	font-family: 'Noto Sans';
 	font-style: italic;
 	font-weight: 400;
-	src: url('../fonts/noto-sans-v27-latin-italic.woff2') format('woff2'),
-		url('../fonts/noto-sans-v27-latin-italic.woff') format('woff');
+	src: url('../fonts/noto-sans-v38-latin-italic.woff2') format('woff2')
 }
 
 /* noto-sans-700 - latin */
@@ -131,8 +129,7 @@
 	font-family: 'Noto Sans';
 	font-style: normal;
 	font-weight: 700;
-	src: url('../fonts/noto-sans-v27-latin-700.woff2') format('woff2'),
-		url('../fonts/noto-sans-v27-latin-700.woff') format('woff');
+	src: url('../fonts/noto-sans-v38-latin-700.woff2') format('woff2')
 }
 
 /* noto-sans-700italic - latin */
@@ -141,8 +138,7 @@
 	font-family: 'Noto Sans';
 	font-style: italic;
 	font-weight: 700;
-	src: url('../fonts/noto-sans-v27-latin-700italic.woff2') format('woff2'),
-		url('../fonts/noto-sans-v27-latin-700italic.woff') format('woff');
+	src: url('../fonts/noto-sans-v38-latin-700italic.woff2') format('woff2')
 }
 
 .input_file {
@@ -306,7 +302,8 @@ input[type=radio] {
 	padding: 10px 0;
 	background-color: white;
 	height: 22px;
-	text-align: left
+	text-align: left;
+	user-select: none
 }
 
 .nuBreadcrumbHolder {
@@ -319,6 +316,7 @@ input[type=radio] {
 	padding: 5px 0;
 	position: sticky;
 	top: 0;
+	min-height: 22.5px;
 	z-index: 999;
 	width: 100vw;
 	display: flex;
@@ -331,13 +329,15 @@ input[type=radio] {
 	color: white;
 	display: inline-block;
 	text-decoration: underline;
-	font-size: 12px
+	font-size: 12px;
+	user-select: none
 }
 
 .nuBreadcrumbArrow {
 	color: white;
 	display: inline-block;
-	font-size: 12px
+	font-size: 12px;
+	user-select: none
 }
 
 .nuBreadcrumb:hover {
@@ -389,7 +389,8 @@ input[type=radio] {
 .nuNotBreadcrumb {
 	color: white;
 	display: inline-block;
-	font-size: 12px
+	font-size: 12px;
+	user-select: none;
 }
 
 .nuOptions {
@@ -629,7 +630,8 @@ input[type=radio] {
 
 .nuBuilderLink {
 	text-decoration-line: none;
-	color: #eeeded
+	color: #eeeded;
+	user-select: none
 }
 
 .nuIcon {
@@ -988,12 +990,17 @@ input[type=radio] {
 	color: var(--nu-label);
 	border-color: #d3d3d3;
 	text-shadow: none;
-	border-radius: 3px
+	border-radius: 3px;
+}
+
+.nuAdminButton:not(.nuReadonly):active {
+	background-color: #096341 ! important;
+	transform: scale(0.90);
 }
 
 .nuAdminButtonUsed {
-	background-color: #a7a7a7ab;
-	color: #000000;
+	color: #2a2929;
+	font-weight: bold
 }
 
 #nuBackBtnButton.nuActionButton {
@@ -1012,6 +1019,10 @@ input[type=radio] {
 .nuSaveButtonEdited {
 	background-color: #f44336;
 	border-color: #dc3545
+}
+
+.nuDebugButtonHighlight {
+	color: #ff5454;
 }
 
 .nuSaveButton {}

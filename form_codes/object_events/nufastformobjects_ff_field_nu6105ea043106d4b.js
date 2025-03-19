@@ -1,1 +1,0 @@
-nuOnChangeFFField(this,event);

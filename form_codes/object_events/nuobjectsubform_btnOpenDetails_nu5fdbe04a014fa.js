@@ -1,1 +1,0 @@
-if (nuIsSaved()) {   var fid = nuSubformRowId(this); nuPopup('nuObject', fid);} else {  nuMessage(["Please save any changes before leaving this form."])}    

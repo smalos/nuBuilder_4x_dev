@@ -1,1 +1,0 @@
-nuOnBlurFFLabel(this, event);
