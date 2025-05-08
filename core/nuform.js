@@ -34,7 +34,6 @@ function nuInitJSOptions() {
 		for (var key in defaults) {
 			if (defaults.hasOwnProperty(key) && typeof window.nuUXOptions[key] === "undefined") {
 				window.nuUXOptions[key] = defaults[key];
-				console.log('added: ' + key + ' - ' + defaults[key]);
 			}
 		}
 	}
@@ -3497,7 +3496,7 @@ function nuBuildSubformTitle(o, l, w, id, col) {
 	});
 
 	if (nuGlobalAccess()) {
-		oTitle.on('dblclick', e => {
+		oTitle.on('dblclick', () => {
 			nuOptionsListAction("nuobject", o.object_id);
 		});
 	}
@@ -3865,7 +3864,7 @@ function nuGetOptionsList(formId, subformId, globalAccess, type) {
 		return '#label_' + parentId;
 	};
 
-	const subformAction = `$("` + getLabelSelector() + `").trigger("dblclick");`;
+	const subformAction = '$("' + getLabelSelector() + '").trigger("dblclick");';
 	const ITEMS = {
 		Divider: ['', '', '', ''],
 		AddObject: ['Add Object', 'nuPopup("nuobject","-1","")', 'fa fa-plus', 'H'],
@@ -3880,7 +3879,7 @@ function nuGetOptionsList(formId, subformId, globalAccess, type) {
 		Save: ['Save', 'nuSaveAction()', 'far fa-save', 'S'],
 		Delete: ['Delete', 'nuDeleteAction()', 'far fa-trash-alt', 'Y'],
 		Clone: ['Clone', 'nuCloneAction()', 'far fa-clone', 'C'],
-		Refresh: ['Refresh', `if (nuGlobalAccess()) { nuRunPHPHidden("NUSETREFRESHCACHE"); } else { nuGetBreadcrumb(); }`, 'fas fa-sync-alt', 'R'],
+		Refresh: ['Refresh', 'if (nuGlobalAccess()) { nuRunPHPHidden("NUSETREFRESHCACHE"); } else { nuGetBreadcrumb(); }', 'fas fa-sync-alt', 'R'],
 		Help: ['Help', nuFORMHELP[subformId], 'fa-question-circle', '?'],
 		ChangePassword: ['Change Password', 'nuPopup("nupassword","","")', 'fa-password', 'Q'],
 		DebugResults: ['nuDebug Results', 'nuOptionsListAction("nudebug","")', 'fa-bug', 'D'],
