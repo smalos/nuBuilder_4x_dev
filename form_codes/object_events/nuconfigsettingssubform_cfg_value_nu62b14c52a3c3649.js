@@ -1,0 +1,1 @@
+nuSetupOnConfigValueChanged(this);

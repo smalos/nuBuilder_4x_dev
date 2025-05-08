@@ -661,6 +661,8 @@ function nuCreateDialog(t) {
 				}
 
 			}
+
+			nuMessageRemove(true);
 			$('#nuDragDialog').remove();
 			$('#nuModal').remove();
 			$('body').off('.popup');
@@ -1961,12 +1963,17 @@ function nuAddBackButton() {
 
 function nuEnableBrowserBackButton() {
 
-	window.history.pushState({ page: 1 }, "", "");
+	if (window.history.length > 1) {
+		window.history.pushState({ page: 1 }, "", "");
+	} else {
+		window.history.replaceState({ page: 1 }, "", "");
+	}
+
 	window.onpopstate = function (event) {
 		if (event) {
 			nuOpenPreviousBreadcrumb();
 		}
-	}
+	};
 
 }
 
@@ -2031,15 +2038,26 @@ function nuAddDatalist(i, arr, showAllOnArrowClick = true) {
 		datalist.innerHTML = '';
 	}
 
-	arr.forEach(data => {
+	arr.forEach(item => {
 		let option = document.createElement('option');
-		option.value = Array.isArray(data) ? data[0] : data;
-		if (Array.isArray(data) && data.length == 2) option.text = data[1];
+		if (Array.isArray(item)) {
+			// Use the first element as the option value.
+			option.value = item[0];
+			// If more than one element exists, join the rest as the option text.
+			if (item.length > 1) {
+				option.text = item.slice(1).join(' ');
+			}
+		} else {
+			// If the item is not an array, use it directly.
+			option.value = item;
+		}
 		datalist.appendChild(option);
 	});
 
-	$(`#${i}`).attr('list', datalist.id).attr('autocomplete', 'off');
-
+	// Update attributes of the input element.
+	const inputElement = document.getElementById(i);
+	inputElement.setAttribute('list', datalist.id);
+	inputElement.setAttribute('autocomplete', 'off');
 }
 
 function nuLabelOnTop(include, exclude, offsetTop = -18, offsetLeft = 0) {
@@ -2287,44 +2305,90 @@ function nuCursor(c) {
 
 }
 
-/*	*** Based on highlight v5: Highlights arbitrary terms.
-	*** Renamed to nuHighlight using the className nuBrowseSearch
-	*** <http://johannburkard.de/blog/programming/javascript/highlight-javascript-text-higlighting-jquery-plugin.html>
-	*** MIT license.
-	*** Johann Burkard <http://johannburkard.de> / <mailto:jb@eaio.com>
-*/
+jQuery.fn.nuHighlight = function (pattern, accentInsensitive = true) {
+	if (!pattern || !pattern.length) return this;
 
-jQuery.fn.nuHighlight = function (pattern) {
+	// Flags + precomputed patterns
+	const useFold = accentInsensitive === true;
+	const upPat = pattern.toUpperCase();
+	const foldPat = useFold
+		? pattern
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.toUpperCase()
+		: null;
 
-	function nuApplyHighlight(node, pattern) {
+	function applyHighlight(node) {
+		let skip = 0;
 
-		let skipNode = 0;
+		// --- TEXT NODE: find a match ---
 		if (node.nodeType === 3) {
-			const regex = new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-			const match = node.data.match(regex);
-			if (match) {
-				const matchStart = match.index;
-				const spanElement = document.createElement('span');
-				spanElement.className = 'nuBrowseSearch';
-				const matchedText = node.splitText(matchStart);
-				const cloneMatchedText = matchedText.cloneNode(true);
-				spanElement.appendChild(cloneMatchedText);
-				matchedText.parentNode.replaceChild(spanElement, matchedText);
-				skipNode = 1;
+			const text = node.data;
+
+			if (useFold) {
+				// Build folded string + index map
+				let folded = '', map = [];
+				for (let i = 0; i < text.length; i++) {
+					const decomp = text[i].normalize('NFD');
+					folded += decomp[0];
+					map.push(i);
+				}
+				folded = folded.toUpperCase();
+				const idx = folded.indexOf(foldPat);
+				if (idx >= 0) {
+					const startOrig = map[idx];
+					const endMap = idx + foldPat.length;
+					const endOrig = endMap < map.length ? map[endMap] : text.length;
+
+					// Split into [before][match][after]
+					const afterMatch = node.splitText(startOrig);
+					const rest = afterMatch.splitText(endOrig - startOrig);
+
+					// Wrap only the matched text
+					const span = document.createElement('span');
+					span.className = 'nuBrowseSearch';
+					span.appendChild(afterMatch.cloneNode(true));
+					afterMatch.parentNode.replaceChild(span, afterMatch);
+
+					skip = 1;
+				}
+			} else {
+				// Plain case-insensitive
+				const upText = text.toUpperCase();
+				const idx = upText.indexOf(upPat);
+				if (idx >= 0) {
+					const afterMatch = node.splitText(idx);
+					const rest = afterMatch.splitText(pattern.length);
+
+					const span = document.createElement('span');
+					span.className = 'nuBrowseSearch';
+					span.appendChild(afterMatch.cloneNode(true));
+					afterMatch.parentNode.replaceChild(span, afterMatch);
+
+					skip = 1;
+				}
 			}
-		} else if (node.nodeType === 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
-			for (let i = 0; i < node.childNodes.length; ++i) {
-				i += nuApplyHighlight(node.childNodes[i], pattern);
+
+			// --- ELEMENT NODE: recurse, skipping script/style ---
+		} else if (
+			node.nodeType === 1 &&
+			node.childNodes &&
+			!/(script|style)/i.test(node.tagName)
+		) {
+			for (let i = 0; i < node.childNodes.length; i++) {
+				i += applyHighlight(node.childNodes[i]) || 0;
 			}
 		}
-		return skipNode;
+
+		return skip;
 	}
 
-	return this.length && pattern && pattern.length ? this.each(function () {
-		nuApplyHighlight(this, pattern);
-	}) : this;
-
+	// Apply to each element in the jQuery collection
+	return this.each(function () {
+		applyHighlight(this);
+	});
 };
+
 
 function nuInputMaxLength(id, maxLength, labelId) {
 
@@ -2365,12 +2429,26 @@ function nuDebugOut(obj, i) {
 
 function nuGetValue(id, method) {
 
-	const obj = $('#' + id);
-	if (!id || nuDebugOut(obj, id)) return null;
+	if (!id) return null;
 
-	if (obj.is(':checkbox')) return obj.is(":checked");
-	if (obj.is('select') && method === 'text') return $("#" + id + " option:selected").text().nuReplaceNonBreakingSpaces();
-	if (!method && obj.is(':button')) return obj.text();
+	const obj = $('#' + id);
+	if (nuDebugOut(obj, id)) return null;
+
+	if (obj.is(':checkbox') || obj.is(':radio')) {
+		return obj.is(":checked");
+	}
+
+	if (obj.hasClass('nuEditor')) {
+		return nuTinyMCEGetContent(id);
+	}
+
+	if (obj.is('select') && method === 'text') {
+		return obj.find("option:selected").text().nuReplaceNonBreakingSpaces();
+	}
+
+	if (!method && obj.is(':button')) {
+		return obj.text();
+	}
 
 	switch (method) {
 		case 'html':
@@ -2393,38 +2471,38 @@ function nuGetHTML(id) {
 	return nuGetValue(id, 'html');
 }
 
-function nuSetValue(i, v, method, change) {
+function nuSetValue(id, value, method, change) {
 
-	var obj = $('#' + i);
+	var obj = $('#' + id);
 
-	if (i === undefined || nuDebugOut(obj, i)) return false;
+	if (id === undefined || nuDebugOut(obj, id)) return false;
 
 	change = (change || change === undefined);
 
 	if (method === undefined && obj.is(':button')) {
-		obj.text(v);
-	} else if (obj.is(':checkbox')) {
-		if (change) obj.prop('checked', v).trigger("change");
+		obj.text(value);
+	} else if (obj.is(':checkbox') || obj.is(':radio')) {
+		if (change) obj.prop('checked', value).trigger("change");
 	} else if (obj.is('select') && method === 'text') {
-		$('#' + i + ' option').each(function () {
-			if ($(this).text().nuReplaceNonBreakingSpaces() === v) {
+		$('#' + id + ' option').each(function () {
+			if ($(this).text().nuReplaceNonBreakingSpaces() === value) {
 				$(this).prop("selected", "selected");
 				if (change) obj.trigger("change");
 				return true;
 			}
 		});
-
+	} else if (obj.hasClass('nuEditor')) {
+		nuTinyMCESetContent(id, value)
 	} else {
-
 		switch (method) {
 			case 'html':
-				obj.html(v);
+				obj.html(value);
 				break;
 			case 'text':
-				obj.text(v);
+				obj.text(value);
 				break;
 			default:
-				obj.val(v);
+				obj.val(value);
 				if (change) obj.trigger("change");
 		}
 	}
@@ -2522,11 +2600,12 @@ function nuSetLabelText(id, text, translate) {
 	}
 
 	const label = $('#label_' + id);
-	const lwidth = nuGetWordWidth(text);
-
 	const obj = $('#' + id);
 	const left = obj.nuCSSNumber('left');
 	const top = obj.nuCSSNumber('top');
+
+	// Use the same font styling as the label or fallback to obj
+	const lwidth = nuGetWordWidth(text, label.length ? label : obj);
 
 	label.css({
 		'top': top,

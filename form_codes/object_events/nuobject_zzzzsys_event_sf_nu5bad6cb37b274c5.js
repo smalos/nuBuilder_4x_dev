@@ -1,0 +1,1 @@
+$("[id$='sev_javascript']").addClass('js')

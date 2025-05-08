@@ -112,19 +112,27 @@ function nuInitTinyMCE(id, options, mobile, toolbar, toolbar_groups, menubar, co
 		license_key: 'gpl',
 		setup: function (editor) {
 
-			editor.addShortcut('ctrl+shift+S', 'Save', function () {
+			editor.addShortcut('ctrl+shift+S', 'Save', function (e) {
+				window.isShortcutSave = true;
+
 				nuSaveAction();
+				setTimeout(() => { window.isShortcutSave = false; }, 1000);
+
+				return false;
 			});
 
 			editor.on('init', function (e) {
 
-				e.target.setContent(nuGetValue(id));
+				e.target.setContent($('#' + id).val());
 				if (window.nuTinyMCEOnInit) {
 					nuTinyMCEOnInit(e, editor, id);
 				}
 			});
 
 			editor.on("change", function () {
+				if (window.isShortcutSave) {
+					return;
+				}
 				nuTinyMCEOnChangeHandler(editor);
 			});
 
@@ -154,8 +162,31 @@ function nuSaveEditor() {
 	$('.nuTinyMCE').each((index, element) => {
 		let myContent = tinymce.get(element.id).getContent();
 		let id = element.id.slice(0, -10);
-		nuSetValue(id, myContent);
+		$('#' + id).val(myContent).trigger("change");
 	});
+
+}
+
+function nuGetTinyMCEEditor(elementId) {
+
+	const tinyMCEId = $(`#${elementId}_parent_container`).find('.nuTinyMCE').attr('id');
+	return tinymce.get(tinyMCEId);
+
+}
+
+function nuTinyMCESetContent(elementId, html) {
+
+	const editor = nuGetTinyMCEEditor(elementId);
+	if (editor) {
+		editor.setContent(html);
+	}
+
+}
+
+function nuTinyMCEGetContent(elementId) {
+
+	const editor = nuGetTinyMCEEditor(elementId);
+	return editor ? editor.getContent() : '';
 
 }
 

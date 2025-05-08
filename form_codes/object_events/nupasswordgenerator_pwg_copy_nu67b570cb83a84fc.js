@@ -1,0 +1,1 @@
+nuCopyToClipboard($('#pwg_input'));

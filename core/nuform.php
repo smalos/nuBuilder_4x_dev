@@ -13,7 +13,6 @@ function nuFormProperties($formId, $columns = '') {
 function nuBeforeBrowse($formId) {
 
 	$_POST['nuMessages'] = [];
-
 	$procedure = nuProcedure('nuBeforeBrowse');
 
 	if ($procedure != '') {
@@ -132,8 +131,16 @@ function nuFormCode($f) {
 	return nuFormProperties($f, 'sfo_code')->sfo_code;
 }
 
-function nuRunType($r) {
-	return $r->sob_run_type ?? '';
+function nuRunType($runType, $formId) {
+
+	if ($runType === 'P' || nuIsProcedure($formId)) {
+		return 'P';
+	} elseif ($runType === 'R' || nuIsReport($formId)) {
+		return 'R';
+	} else {
+		return 'F';
+	}
+
 }
 
 function nuEvents($r) {
@@ -143,10 +150,10 @@ function nuGetFormObject($formId, $recordId, $numObjects, $defaultTabs = null) {
 
 	$defaultTabs = $defaultTabs ?? nuBuildTabList($formId);
 
+	$response = new stdClass();
 	$formObject = nuGetEditForm($formId, $recordId);
 
 	if ($formObject === null) {
-		$response = new stdClass();
 		$response->forms[] = $formObject;
 		return $response->forms[0];
 	}
@@ -157,7 +164,6 @@ function nuGetFormObject($formId, $recordId, $numObjects, $defaultTabs = null) {
 	list($formObjects, $cloneableObjects) = nuGetFormProcessObjects($formObject, $formId, $recordId, $data, $defaultTabs, $numObjects);
 	nuGetFormFinalize($formId, $formObject, $defaultTabs, $formObjects, $cloneableObjects);
 
-	$response = new stdClass();
 	$response->forms[] = $formObject;
 
 	if ($formObject->browse_filtered_rows == 0) {
@@ -171,7 +177,7 @@ function nuGetFormSetBasicProperties($formObject, $formId, $recordId) {
 
 	$formObject->form_id = $formId;
 
-	if ($recordId == '' && $formObject->form_type == 'launch') {
+	if (empty($recordId) && $formObject->form_type == 'launch') {
 		$recordId = '-1';
 	}
 
@@ -186,6 +192,7 @@ function nuGetFormData($formObject, $recordId) {
 	} else {
 		$query = "SELECT * FROM `$formObject->table` WHERE `$formObject->primary_key` = ?";
 		$stmt = nuRunQuery($query, [$recordId]);
+
 		return db_fetch_array($stmt);
 	}
 
@@ -227,7 +234,7 @@ function nuGetFormProcessObjects($formObject, $formId, $recordId, $data, $defaul
 	return [$formObjects, $cloneableObjects];
 }
 
-function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $numObjects, $cloneableObjects, $dbFields) {
+function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $numObjects, &$cloneableObjects, $dbFields) {
 
 	if ($row->sob_all_cloneable == '0') {
 		$cloneableObjects[] = ['subform' => $row->sob_all_type == 'subform', 'id' => $row->sob_all_id];
@@ -265,8 +272,12 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 		if ($inputType == 'nuScroll' && $row->sob_all_type == 'input') {
 			$object->scroll = $row->sob_input_javascript;
 		}
-		if (($inputType == 'nuDate' || $inputType == 'nuNumber' || $inputType == 'number' || $inputType == 'text' || $inputType == 'email' || $inputType == 'search' || $inputType == 'month') && $row->sob_all_type == 'input' && $row->sob_input_datalist != '') {
-			$object->datalist = json_encode(nuDataListOptions(nuReplaceHashVariables($row->sob_input_datalist)));
+		$supportedDatalistInputTypes = ['nuDate', 'nuNumber', 'number', 'text', 'email', 'search', 'month'];
+		if (in_array($inputType, $supportedDatalistInputTypes) &&
+			$row->sob_all_type === 'input' &&
+			!empty($row->sob_input_datalist)) {
+			$datalistOptions = nuDataListOptions(nuReplaceHashVariables($row->sob_input_datalist));
+			$object->datalist = json_encode($datalistOptions);
 		}
 		if ($row->sob_all_type == 'display') {
 			$object->value = null;
@@ -281,7 +292,7 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 				$displayResult = nuRunQuery($displaySql);
 				if (db_num_rows($displayResult) >= 1) {
 					$displayRow = db_fetch_row($displayResult);
-					$object->value = $displayRow[0];
+					$object->value = rtrim(implode("\n", $displayRow), "\n");
 				}
 			}
 		}
@@ -319,7 +330,7 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 			$horizontalLabel = $row->sob_html_horizontal_label ?? '';
 			$title = $row->sob_html_title ?? '';
 			$chart_options = [
-				'p' => ['type' => 'PieChart', 'stacked' => false],
+				'p' => ['type' => 'PieChart', 'stacked' => false, 'chart_type' => 'pie'],
 				'l' => ['type' => 'ComboChart', 'stacked' => false, 'chart_type' => 'lines'],
 				'b' => ['type' => 'ComboChart', 'stacked' => false, 'chart_type' => 'bars'],
 				'bs' => ['type' => 'ComboChart', 'stacked' => true, 'chart_type' => 'bars'],
@@ -353,11 +364,11 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 		$object->record_id = nuReplaceHashVariables($row->sob_run_id);
 		$object->parameters = $row->sob_all_id;
 
-		$runType = nuRunType($row);
+		$runType = nuRunType($row->sob_run_type ?? '', $formId);
 
-		if ($runType == 'F') {
+		if ($runType === 'F') {
 			$object->run_type = 'F';
-		} elseif ($runType == 'P' || nuIsProcedure($formId)) {
+		} elseif ($runType === 'P') {
 			$procedureQuery = nuRunQuery('SELECT sph_zzzzsys_form_id, sph_code FROM zzzzsys_php WHERE zzzzsys_php_id = ?', [$formId]);
 			$procedureObject = db_fetch_object($procedureQuery);
 			$object->form_id = $procedureObject->sph_zzzzsys_form_id;
@@ -366,7 +377,7 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 			$runTabQuery = nuRunQuery("SELECT sph_run FROM zzzzsys_php WHERE zzzzsys_php_id = ?", [$row->sob_run_zzzzsys_form_id]);
 			$object->run_hidden = db_fetch_object($runTabQuery)->sph_run == 'hide';
 
-		} elseif ($runType == 'R' || nuIsReport($formId)) {
+		} elseif ($runType === 'R') {
 			$reportQuery = nuRunQuery('SELECT sre_zzzzsys_form_id, sre_code FROM zzzzsys_report WHERE zzzzsys_report_id = ?', [$formId]);
 			$reportObject = db_fetch_object($reportQuery);
 			$object->form_id = $reportObject->sre_zzzzsys_form_id;
@@ -526,46 +537,46 @@ function nuDefaultObject($r, $t) {
 	$labelOnTop = null;
 
 	/*
-																   if (nuIsMobile() && isset($r->sob_all_json)) {
+																																		   if (nuIsMobile() && isset($r->sob_all_json)) {
 
-																	   $json = $r->sob_all_json;
-																	   if ($json != '') {
+																																			   $json = $r->sob_all_json;
+																																			   if ($json != '') {
 
-																		   $obj	= nuJsonDecode($json, true);
+																																				   $obj	= nuJsonDecode($json, true);
 
-																		   $type		= nuObjKey($obj,'type', null);
+																																				   $type		= nuObjKey($obj,'type', null);
 
-																		   if ($type != null) {
+																																				   if ($type != null) {
 
-																			   $mobile		= nuObjKey($type,'mobile', null);
+																																					   $mobile		= nuObjKey($type,'mobile', null);
 
-																			   if ($mobile == true) {
+																																					   if ($mobile == true) {
 
-																				   $visible	= nuObjKey($mobile,'visible', null);
-																				   $name		= nuObjKey($mobile,'name', null);
-																				   $labelOnTop	= nuObjKey($mobile,'labelontop', null);
-																				   $labelOnTop	= $labelOnTop == null || $labelOnTop == true;
+																																						   $visible	= nuObjKey($mobile,'visible', null);
+																																						   $name		= nuObjKey($mobile,'name', null);
+																																						   $labelOnTop	= nuObjKey($mobile,'labelontop', null);
+																																						   $labelOnTop	= $labelOnTop == null || $labelOnTop == true;
 
-																				   $size		= nuObjKey($mobile,'size');
-																				   if ($size != null) {
-																					   $width		= nuObjKey($size, 'width', null);
-																					   $height		= nuObjKey($size, 'height', null);
-																				   }
+																																						   $size		= nuObjKey($mobile,'size');
+																																						   if ($size != null) {
+																																							   $width		= nuObjKey($size, 'width', null);
+																																							   $height		= nuObjKey($size, 'height', null);
+																																						   }
 
-																				   $location		= nuObjKey($mobile,'location');
-																				   if ($location != null) {
-																					   $top		= nuObjKey($location, 'top', null);
-																					   $left		= nuObjKey($location, 'left', null);
-																				   }
+																																						   $location		= nuObjKey($mobile,'location');
+																																						   if ($location != null) {
+																																							   $top		= nuObjKey($location, 'top', null);
+																																							   $left		= nuObjKey($location, 'left', null);
+																																						   }
 
-																			   }
+																																					   }
 
-																		   }
+																																				   }
 
-																	   }
+																																			   }
 
-																   }
-																   */
+																																		   }
+																																		   */
 
 	$o->mobile = $mobile;
 	$o->labelOnTop = $labelOnTop;
@@ -741,7 +752,7 @@ function nuGetOtherLookupValues($lookupObject) {
 
 	if (db_num_rows($selectStmt) == 0) {
 		$_POST['lookup_row'] = new stdClass;
-		$_POST['lookup_row']->ID = '';
+		$_POST['lookup_row']->ID = $lookupRecordId;
 	}
 
 	$_POST['lookup_values'] = [];
@@ -899,30 +910,33 @@ function nuSetFormValue($f, $v) {
 
 }
 
-function nuDataListOptions($sql) {
+function nuDataListOptions($input) {
 
-	$result = [];
+	$options = [];
 
-	$s = strtoupper(nuTrim($sql));
+	$trimmedInput = nuTrim($input);
+	$upperInput = strtoupper($trimmedInput);
 
-	if (substr($s, 0, 6) == 'SELECT' || substr($s, 0, 4) == 'SHOW') {	//-- sql statement
-
-		$stmt = nuRunQuery($sql);
+	if (substr($upperInput, 0, 6) === 'SELECT' || substr($upperInput, 0, 4) === 'SHOW') {
+		// SQL query case
+		$queryResult = nuRunQuery($input);
 
 		if (nuErrorFound()) {
 			return;
 		}
 
-		while ($row = db_fetch_row($stmt)) {
-			$result[] = $row;
+		while ($row = db_fetch_row($queryResult)) {
+			$options[] = $row;
 		}
-	} else if (substr(nuTrim($s), 0, 1) == '[') {
-		$result = nuJsonDecode($sql);
+	} else if (substr($trimmedInput, 0, 1) === '[') {
+		// JSON array case
+		$options = nuJsonDecode($input);
 	} else {
-		return $sql;
+		// Plain string
+		return $input;
 	}
 
-	return $result;
+	return $options;
 
 }
 
@@ -1490,51 +1504,51 @@ function nuDisplayErrorAccessDenied($callType, $stmt) {
 
 }
 
-function nuGetFormPermission($f, $field) {
+function nuGetFormPermission($formId, $permissionField) {
 
-	$s = "SELECT $field FROM zzzzsys_access_form WHERE slf_zzzzsys_access_id = ? AND slf_zzzzsys_form_id = ?";
-	$t = nuRunQuery($s, [$_POST['nuHash']['USER_GROUP_ID'], $f]);
+	$sql = "SELECT $permissionField FROM zzzzsys_access_form WHERE slf_zzzzsys_access_id = ? AND slf_zzzzsys_form_id = ?";
+	$stmt = nuRunQuery($sql, [$_POST['nuHash']['USER_GROUP_ID'], $formId]);
 
-	if (db_num_rows($t) == 1) {
-		$r = db_fetch_row($t);
-		$r = $r[0] == null || $r[0] == '' ? null : (int) $r[0];
+	if (db_num_rows($stmt) === 1) {
+		$value = db_fetch_row($stmt);
+		$value = $value[0] == null || $value[0] == '' ? null : (int) $value[0];
 	} else {
-		$r = null;
+		$value = null;
 	}
 
-	return $r;
+	return $value;
 
 }
 
-function nuFormAccessList($j) {
+function nuFormAccessList($accessData) {
 
-	$a = [];
-	$t = nuRunQuery("SELECT zzzzsys_form_id FROM zzzzsys_form WHERE sfo_type = 'subform'");
+	$accessList = [];
+	$queryResult = nuRunQuery("SELECT zzzzsys_form_id FROM zzzzsys_form WHERE sfo_type = 'subform'");
 
-	while ($r = db_fetch_row($t)) {
-		$a[] = $r[0];
+	while ($row = db_fetch_row($queryResult)) {
+		$accessList[] = $row[0];
 	}
 
-	$count = count($j->forms);
-	for ($i = 0; $i < $count; $i++) {
-		$a[] = $j->forms[$i][0];
+	$formCount = count($accessData->forms);
+	for ($formIndex = 0; $formIndex < $formCount; $formIndex++) {
+		$accessList[] = $accessData->forms[$formIndex][0];
 	}
 
-	$count = count($j->reports);
-	for ($i = 0; $i < $count; $i++) {
-		$a[] = $j->reports[$i][1];
+	$reportCount = count($accessData->reports);
+	for ($reportIndex = 0; $reportIndex < $reportCount; $reportIndex++) {
+		$accessList[] = $accessData->reports[$reportIndex][1];
 	}
 
-	$count = count($j->procedures);
-	for ($i = 0; $i < $count; $i++) {
-		$a[] = $j->procedures[$i][1];
+	$procedureCount = count($accessData->procedures);
+	for ($procedureIndex = 0; $procedureIndex < $procedureCount; $procedureIndex++) {
+		$accessList[] = $accessData->procedures[$procedureIndex][1];
 	}
 
-	$__x = nuGetUserAccess();
-	$a[] = $__x['HOME_ID'];
-	unset($__x);
+	$userAccess = nuGetUserAccess();
+	$accessList[] = $userAccess['HOME_ID'];
+	unset($userAccess);
 
-	return $a;
+	return $accessList;
 
 }
 

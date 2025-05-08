@@ -114,7 +114,7 @@ function nuValidateForms() {
 				$field = $form->fields[$fieldIndex];
 				$validationType = nuObjKey($validationRules, $field);
 				$fieldLabel = nuWrapWithTag(nuObjKey($fieldLabels, $field), 'b');
-				$rowDeleted = $form->deleted[$rowIndex] == 0;
+				$rowDeleted = $form->deleted[$rowIndex] == 1;
 				$rowValue = $form->rows[$rowIndex][$fieldIndex];
 
 				$errorCount += nuValidateFormsRequiredFields($form, $formIndex, $subformFK, $rowIndex, $validationType, $rowValue, $fieldLabel, $formDescription, $rowDeleted, $fieldIndex);
@@ -141,32 +141,55 @@ function nuDisplayErrorRequiredFields($formIndex, $row, $label, $formDescription
 
 function nuValidateFormsRequiredFields($form, $formIndex, $subformFK, $row, $validationType, $rowValue, $label, $formDescription, $rowDeleted, $fieldLabel) {
 
+	if ($rowDeleted) {
+		return 0;
+	}
+
+	$isBlank = $rowValue === '' || $rowValue === '[]';
+
 	switch ($validationType) {
-		case 1:		// No blanks
-			if (($rowValue === '' || $rowValue === '[]') && $rowDeleted) {
+		case 1: // No blanks
+			if ($isBlank) {
 				nuDisplayErrorRequiredFields($formIndex, $row, $label, $formDescription, '%s cannot be left blank', 'cannot be left blank');
 				return 1;
 			}
 			break;
 
-		case 2:		// No duplicates
-			if (nuDuplicate($form, $subformFK, $row, $fieldLabel) && $rowDeleted) {
+		case 2: // No duplicates (but only if value is not empty)
+			$value = $form->rows[$row][$fieldLabel];
+			if ($value !== '' && $value !== '[]' && nuDuplicate($form, $subformFK, $row, $fieldLabel)) {
 				nuDisplayErrorRequiredFields($formIndex, $row, $label, $formDescription, '%s has a duplicate', 'has a duplicate');
 				return 1;
 			}
 			break;
 
-		case 3:		// No duplicates or blanks
+		case 3: // No duplicates or blanks
 			$isDuplicate = nuDuplicate($form, $subformFK, $row, $fieldLabel);
-			$isBlank = ($rowValue === '' || $rowValue === '[]');
-
-			if (($isDuplicate || $isBlank) && $rowDeleted) {
+			if ($isBlank || $isDuplicate) {
 				nuDisplayErrorRequiredFields($formIndex, $row, $label, $formDescription, '%s must be both unique and not blank', 'must be both unique and not blank');
 				return 1;
 			}
+			break;
 	}
 
 	return 0;
+}
+
+function nuDuplicate($form, $subformFK, $row, $fieldLabel) {
+
+	$field = $form->fields[$fieldLabel];
+	$pk = $form->rows[$row][0];
+	$value = $form->rows[$row][$fieldLabel];
+
+	$query = "SELECT `$form->primary_key` FROM `$form->table` WHERE `$field` = ? AND `$form->primary_key` != ?";
+
+	if (isset($subformFK) && trim($subformFK) !== '') {
+		$query .= " AND `$subformFK` = '" . nuRecordId() . "'";
+	}
+
+	$stmt = nuRunQuery($query, [$value, $pk]);
+
+	return db_num_rows($stmt) > 0;
 
 }
 
@@ -205,24 +228,6 @@ function nuCheckAccessLevel($data) {
 	}
 
 	return true;
-
-}
-
-function nuDuplicate($form, $subformFK, $row, $fieldLabel) {
-
-	$field = $form->fields[$fieldLabel];
-	$pk = $form->rows[$row][0];
-	$value = $form->rows[$row][$fieldLabel];
-
-	$query = "SELECT `$form->primary_key` FROM `$form->table` WHERE `$field` = ? AND `$form->primary_key` != ?";
-
-	if (isset($subformFK) && trim($subformFK) !== '') {
-		$query .= " AND `$subformFK` = '" . nuRecordId() . "'";
-	}
-
-	$stmt = nuRunQuery($query, [$value, $pk]);
-
-	return db_num_rows($stmt) > 0;
 
 }
 
@@ -377,8 +382,6 @@ function nuUpdateDatabase() {
 	$sql = [];
 
 	$countNuData = count($nudata);
-	nuDebug('nudata', $nudata);
-	
 	for ($formIndex = 0; $formIndex < $countNuData; $formIndex++) {
 
 		$sf = $nudata[$formIndex];
@@ -398,7 +401,7 @@ function nuUpdateDatabase() {
 		} else {
 			$formId = $sf->object_id;
 		}
-		
+
 		$autoNumbers = nuAutoNumbers($formId);
 		$tableCts = nuObjKey($clientTableSchema, $table);
 		$tableColumns = nuObjKey($tableCts, 'names') ?? [];
@@ -426,10 +429,9 @@ function nuUpdateDatabase() {
 				for ($r = 1; $r < $countR; $r++) {
 
 					$field = $fields[$r];
-					nuDebug('countR', $countR, $mainRecordId, $recordId , $field);
 					$isAutoNumber = in_array($field, $autoNumbers);
 					if ($edit[$r] == 1 || $isAutoNumber) { //-- has been edited
-						
+
 						if (!nuUpdateDatabaseIsValidTable($clientTableSchema, $table, $formType)) {
 							return;
 						}
@@ -520,15 +522,14 @@ function nuUpdateDatabaseIsValidTable($clientTableSchema, $table, $formType) {
 
 }
 
-function nuUpdateDatabaseGetUpdateValue($field, $value, $formId,$recordId, $table, $tableColumns, $clientTableSchema, $log, $isAutoNumber, $nuConfigDBTypesSetNullWhenEmpty, &$updateData) {
+function nuUpdateDatabaseGetUpdateValue($field, $value, $formId, $recordId, $table, $tableColumns, $clientTableSchema, $log, $isAutoNumber, $nuConfigDBTypesSetNullWhenEmpty, &$updateData) {
 
 	$idx = array_search($field, $tableColumns);
 	$isNulog = $log && nuStringEndsWith("_nulog", $field);
 
 	if ($idx !== false && !$isNulog) { //-- valid field name and not nulog column
-		
+
 		$v = $isAutoNumber ? nuAutoNumber($formId, $recordId, $field, $value) : $value;
-		if ($isAutoNumber) nuDebug('auto', $formId, $field, $value, $v);
 		$type = $clientTableSchema[$table]['types'][$idx];
 
 		$filteredNullableTypes = array_filter($nuConfigDBTypesSetNullWhenEmpty, function ($value) use ($type) {
@@ -765,7 +766,7 @@ function nuEditObjects($formId) {
 
 	return $objectIds;
 }
-// xxx
+
 function nuAutoNumber($formId, $recordId, $fieldId, $value) {
 
 	$query = "SELECT sob_all_type, sob_input_type, zzzzsys_object_id FROM zzzzsys_object WHERE sob_all_zzzzsys_form_id = ? AND sob_all_id = ?";
@@ -775,8 +776,8 @@ function nuAutoNumber($formId, $recordId, $fieldId, $value) {
 	$isInputType = $row->sob_all_type == 'input';
 	$isAutoNumber = $row->sob_input_type == 'nuAutoNumber';
 	$isNewRecord = nuHasNewRecordID() || nuHasNoRecordID() || $recordId == '-1';
-
 	if ($isInputType && $isAutoNumber && $isNewRecord) {
+
 		return nuUpdateCounter($row->zzzzsys_object_id);
 	} else {
 		return $value;
@@ -813,8 +814,6 @@ function nuUpdateCounter($id) {
 			return $newId;
 		}
 
-		return -1;
-
 	}
 
 	nuDisplayError(nuTranslate('Could not get AutoNumber'));
@@ -834,8 +833,6 @@ function nuAutoNumbers($formId) {
 				";
 
 	$stmt = nuRunQuery($query, [$formId, 'input', 'nuAutoNumber']);
-	nuDebug($query, $formId);
-
 	while ($row = db_fetch_object($stmt)) {
 		$autoNumbers[] = $row->sob_all_id;
 	}
@@ -1004,3 +1001,4 @@ function nuLogout() {
 	unset($_SESSION['nuinclude']);
 
 }
+
