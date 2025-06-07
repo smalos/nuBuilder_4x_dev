@@ -13,6 +13,7 @@ window.nuOnDisableGlobal = null;
 window.top.document.nuHideMessage = true;
 window.nuDragID = 1000;
 window.nuLastForm = '';
+window.nuLastFocus = null;
 window.nuNEW = '';
 window.nuColor = '';
 window.nuImage = '';
@@ -99,6 +100,22 @@ String.prototype.nuWithoutNumbers = function () {
 	return this.replace(/\d+/g, '');
 }
 
+String.prototype.nuStripBoundaryTags = function (openTag, closeTag) {
+
+	let result = this.trim().toString();
+
+	if (result.startsWith(openTag)) {
+		result = result.slice(openTag.length);
+	}
+
+	if (result.endsWith(closeTag)) {
+		result = result.slice(0, -closeTag.length);
+	}
+
+	return result;
+
+};
+
 String.prototype.nuInsertString = function (index, string) {
 	if (index > 0) {
 		return this.substring(0, index) + string + this.substring(index);
@@ -174,7 +191,7 @@ $.fn.nuFocusWithoutScrolling = function () {
 	let x = element.scrollX, y = element.scrollY;
 
 	this.attr('inputmode', 'none');
-	this.trigger("focus");
+	nuSetFocus(this);
 	this.removeAttr('inputmode');
 
 	element.scrollTo(x, y);
@@ -256,6 +273,9 @@ jQuery.fn.extend({
 	},
 	nuIsEnabled: function () {
 		return nuIsEnabled(this.attr('id'));
+	},
+	nuSetFocus: function () {
+		return nuSetFocus(this.attr('id'));
 	},
 	nuSetPlaceholder: function (placeholder, translate) {
 		return this.each(function () {
@@ -532,13 +552,13 @@ function nuLogin(loginTopRow, nuconfigNuWelcomeBodyInnerHTML, logonMode = 'norma
 	}
 
 	if (window.nuLoginU == '' && window.nuLoginP == '') {
-		$('#nuusername').trigger("focus");
+		$('#nuusername').nuSetFocus();
 	}
 
 	if (window.nuLoginU != '' && window.nuLoginP == '') {
 
 		$('#nuusername').val(window.nuLoginU);
-		$('#nupassword').trigger("focus");
+		$('#nupassword').nuSetFocus();
 
 	}
 
@@ -662,15 +682,21 @@ function nuCreateDialog(t) {
 
 			}
 
-			nuMessageRemove(true);
-			$('#nuDragDialog').remove();
-			$('#nuModal').remove();
-			$('body').off('.popup');
+			this.closeDialog();
 
 		}
 
 	}
 
+	this.closeDialog = function () {
+
+		nuMessageRemove(true);
+		$('#nuDragDialog').remove();
+		$('#nuModal').remove();
+		$('body').off('.popup');
+
+		nuSetFocus(window.nuLastFocus);
+	};
 
 	this.down = function (event) {
 
@@ -791,7 +817,7 @@ function nuReformat(element) {
 function nuOpenAce(lang, obj) {
 
 	const ts = Date.now();
-	const theme = nuUXOptions.nuAceTheme || 'default';
+	const theme = nuUXOptions.nuAceTheme || 'dawn';
 
 	window.nuAce = [lang, obj, theme];
 	window.open(`core/nuace.php?${ts}`);
@@ -834,9 +860,10 @@ function nuBindCtrlEvents() {
 				$('#nuOptionsListBox').remove();
 			} else if (parent.$('#nuModal').length === 1) {
 				let ae = document.activeElement;
-				$(ae).trigger("blur").trigger("focus");
+				$(ae).trigger("blur").nuSetFocus();
 				if (nuFormsUnsaved() == 0) {
 					nuClosePopup();
+					// nuDialog.closeDialog();
 				} else {
 					if (confirm(nuTranslate('Leave this form without saving?'))) {
 						nuClosePopup();
@@ -891,6 +918,7 @@ function nuBindCtrlEvents() {
 				// Actions available on 'browse' or 'edit' form types
 				...(isBrowseOrEdit && {
 					'f': { action: () => nuPopup("nuform", formId), condition: globalAccess },
+					'k': { action: () => nuPopup("nupromptgenerator", "-1", ''), condition: globalAccess },
 					'o': { action: () => nuPopup("nuobject", "", formId), condition: globalAccess },
 					'm': { action: () => nuShowFormInfo(), condition: globalAccess },
 					'v': { action: () => nuShowVersionInfo(), condition: globalAccess },
@@ -900,6 +928,7 @@ function nuBindCtrlEvents() {
 					'b': { action: () => nuRunBackup(), condition: globalAccess },
 					'u': { action: () => nuForm('nusetup', '1', '', '', 2), condition: globalAccess },
 					'd': { action: () => nuPopup("nudebug", ""), condition: globalAccess },
+					'z': { action: () => nuPopup("nucloner", "-1"), condition: globalAccess },
 					'x': { action: () => nuPrettyPrintMessage(e, nuCurrentProperties()), condition: globalAccess },
 					'l': { action: () => nuAskLogout(), condition: true }
 				}),
@@ -1386,6 +1415,7 @@ function nuOnFocus(e) {
 function nuClick(e) {
 
 	const target = $(e.target);
+
 	const parentClasses = target.parents().map(function () {
 		return this.className;
 	}).get();
@@ -1471,6 +1501,40 @@ function nuSelectNextTab(i, includeInvisible = false, byUser = true) {
 
 }
 
+function nuSelectToArray(id, type = 'value', selectedOnly = true) {
+
+	let result = [];
+	// Choose whether to loop only selected options or all options
+	const selector = selectedOnly
+		? '#' + id + ' option:selected'
+		: '#' + id + ' option';
+
+	$(selector).each(function () {
+		var txt = $(this).text();
+		// Skip blank-text options in all cases
+		if (txt.trim() === '') return;
+
+		switch (type) {
+			case 'text':
+				result.push(txt);
+				break;
+			case 'value':
+				result.push($(this).val());
+				break;
+			case 'index':
+				// +1 if you want 1-based indexing
+				result.push($(this).index() + 1);
+				break;
+			default:
+				throw new Error('nuSelectToArray: unknown type "' + type + '"');
+		}
+	});
+
+	return result;
+
+}
+
+
 function nuModifyHolders(action, ...args) {
 	const actions = {
 		0: '#nuActionHolder',
@@ -1505,7 +1569,7 @@ function nuAttachFontAwesome(id, iconClass, size = 'medium', appendToEnd = false
 	let targetObj = $(target);
 	if (targetObj.length === 0) return;
 
-	const needsSpace = targetObj.html().trim().length > 0 ? '&nbsp;' : '';
+	const needsSpace = targetObj.text().trim().length > 0 ? '&nbsp;' : '';
 	const content = appendToEnd ? needsSpace + iconHtml : iconHtml + needsSpace;
 
 	appendToEnd ? targetObj.append(content) : targetObj.prepend(content);
@@ -1571,6 +1635,93 @@ function nuButtonIcon(id) {
 		'background-repeat': 'no-repeat'
 	});
 
+}
+
+function nuButtonLoading(buttonId, spinning = true, autoEnableAfterSeconds = 0) {
+
+	const button = document.getElementById(buttonId);
+	if (spinning) {
+		if (!button || nuIsDisabled(button.id)) return;
+	} else {
+		if (!button) return;
+	}
+
+	// clear any old timers/monitors
+	if (button._spinnerTimer) {
+		clearTimeout(button._spinnerTimer);
+		delete button._spinnerTimer;
+	}
+	if (button._spinnerMonitor) {
+		clearInterval(button._spinnerMonitor);
+		delete button._spinnerMonitor;
+	}
+
+	// find the “real” icon (if any) so we can hide it
+	const originalIcon = button.querySelector('i:not([nu-data-spinner])');
+
+	if (spinning) {
+		button.dataset.spinnerStart = Date.now();
+		button.disabled = true;
+		button.classList.add('disabled');
+		if (originalIcon) originalIcon.style.display = 'none';
+
+		// only add one spinner
+		if (!button.querySelector('[nu-data-spinner]')) {
+			// create the spinner <i>
+			const spinner = document.createElement('i');
+			spinner.className = 'fa-fw fa fa-spinner fa-spin';
+			spinner.setAttribute('nu-data-spinner', 'true');
+
+			// decide where to put it:
+			const label = button.querySelector('.nuButtonLabel');
+			if (label) {
+				// insert right before the text label
+				label.parentNode.insertBefore(spinner, label);
+				// preserve a bit of spacing
+				label.parentNode.insertBefore(document.createTextNode(' '), label);
+			} else {
+				// no label ⇒ icon-only button
+				button.appendChild(spinner);
+			}
+		}
+
+		// if we should auto-re-enable later...
+		if (autoEnableAfterSeconds > 0) {
+			// watch for the button being removed from the DOM
+			button._spinnerMonitor = setInterval(() => {
+				if (!document.getElementById(buttonId)) {
+					clearInterval(button._spinnerMonitor);
+					clearTimeout(button._spinnerTimer);
+					delete button._spinnerMonitor;
+					delete button._spinnerTimer;
+				}
+			}, 300);
+
+			button._spinnerTimer = setTimeout(() => {
+				clearInterval(button._spinnerMonitor);
+				delete button._spinnerMonitor;
+
+				const stillThere = document.getElementById(buttonId);
+				const started = Number(button.dataset.spinnerStart || 0);
+				if (stillThere && (Date.now() - started >= autoEnableAfterSeconds * 1000)) {
+					nuButtonLoading(buttonId, false);
+				}
+			}, autoEnableAfterSeconds * 1000);
+		}
+
+	} else {
+		// turn it off
+		button.disabled = false;
+		button.classList.remove('disabled');
+
+		// remove the spinner
+		const oldSpinner = button.querySelector('[nu-data-spinner]');
+		if (oldSpinner) oldSpinner.remove();
+		// bring back the original icon
+		if (originalIcon) originalIcon.style.display = '';
+
+		delete button.dataset.spinnerStart;
+	}
 }
 
 function nuChart(chartId, chartType, dataArray, chartTitle, xAxisTitle, yAxisTitle, seriesType, isStacked) {
@@ -1640,7 +1791,7 @@ function nuAddRow(id, setFocus = true) {
 	if (setFocus) {
 		const newIndex = nuPad3(o.rows.length) + o.fields[1];
 		const $newInput = $(`#${id}${newIndex}`);
-		$newInput.trigger("focus");
+		$newInput.nuSetFocus();
 	}
 
 }
@@ -1737,6 +1888,7 @@ function nuClosePopup() {
 
 	parent.$('#nuModal').remove();
 	parent.$('#nuDragDialog').remove();
+
 
 }
 
@@ -2132,28 +2284,46 @@ function nuDisableAllObjects(excludeTypes, excludeIds) {
 
 }
 
-function nuInsertTextAtCaret(i, text) {
+function nuInsertTextAtCaret(id, textToInsert) {
 
-	var o = $('#' + i);
+	const $textarea = $('#' + id);
+	const element = $textarea[0];
 
-	const textarea = o[0];
+	element.focus();
 
-	textarea.setRangeText(
-		text,
-		textarea.selectionStart,
-		textarea.selectionEnd,
-		'end'
-	);
+	if (document.queryCommandSupported('insertText')) {
+		const selectionStart = element.selectionStart;
+		const selectionEnd = element.selectionEnd;
+		element.setSelectionRange(selectionStart, selectionEnd);
+		document.execCommand('insertText', false, textToInsert);
+	} else {
+		element.setRangeText(
+			textToInsert,
+			element.selectionStart,
+			element.selectionEnd,
+			'end'
+		);
+	}
 
-	o.trigger("change");
+	$textarea.trigger("change");
 
 }
 
-function nuObjectIdFromId(id) {
+function nuGetObjectId(id) {
 
-	if (id !== null && window.nuSERVERRESPONSE) {
-		const obj = window.nuSERVERRESPONSE.objects.find(object => object.id === id);
-		return obj ? obj.object_id : null;
+	const objects = window.nuSERVERRESPONSE?.objects;
+	if (!Array.isArray(objects)) {
+		return null;
+	}
+
+	const matchByObjectId = objects.find(item => item.object_id === id);
+	if (matchByObjectId) {
+		return matchByObjectId.id;
+	}
+
+	const matchById = objects.find(item => item.id === id);
+	if (matchById) {
+		return matchById.object_id;
 	}
 
 	return null;
@@ -2269,7 +2439,7 @@ function nuSelectSelectedTextArray(id) {
 }
 
 function nuSelectSetIndex(id, index) {
-	$("#" + id).prop("selectedIndex", index).change();
+	$("#" + id).prop("selectedIndex", index).trigger('change');
 }
 
 function nuPasteText(id, callback) {
@@ -2434,6 +2604,19 @@ function nuGetValue(id, method) {
 	const obj = $('#' + id);
 	if (nuDebugOut(obj, id)) return null;
 
+	if (obj.hasClass('nuHiddenLookup')) {
+		if (method === 'code') {
+			const codeId = id + 'code';
+			const codeObj = $('#' + codeId);
+			return codeObj.length ? codeObj.val() : null;
+		}
+		if (method === 'description') {
+			const descId = id + 'description';
+			const descObj = $('#' + descId);
+			return descObj.length ? descObj.val() : null;
+		}
+	}
+
 	if (obj.is(':checkbox') || obj.is(':radio')) {
 		return obj.is(":checked");
 	}
@@ -2448,6 +2631,17 @@ function nuGetValue(id, method) {
 
 	if (!method && obj.is(':button')) {
 		return obj.text();
+	}
+
+	if (obj.is('label')) {
+		switch (method) {
+			case 'for':
+				return obj.attr('for') || null;
+			case 'html':
+				return obj.html();
+			default:
+				return obj.text();
+		}
 	}
 
 	switch (method) {
@@ -2479,8 +2673,23 @@ function nuSetValue(id, value, method, change) {
 
 	change = (change || change === undefined);
 
-	if (method === undefined && obj.is(':button')) {
-		obj.text(value);
+	if (obj.hasClass('nuHiddenLookup')) {
+		nuGetLookupId(value, id, method, change);
+		return true;
+	}
+
+	if (method === undefined && (obj.is('button') || (obj.is('input') && obj.attr('type') === 'button'))) {
+		if (obj.is('button')) {
+			const label = obj.find('.nuButtonLabel');
+			if (label.length) {
+				label.text(value);
+			} else {
+				obj.text(value);
+			}
+		} else {
+			// It's an <input type="button">
+			obj.val(value);
+		}
 	} else if (obj.is(':checkbox') || obj.is(':radio')) {
 		if (change) obj.prop('checked', value).trigger("change");
 	} else if (obj.is('select') && method === 'text') {
@@ -2493,6 +2702,18 @@ function nuSetValue(id, value, method, change) {
 		});
 	} else if (obj.hasClass('nuEditor')) {
 		nuTinyMCESetContent(id, value)
+	} else if (obj.is('label')) {
+		switch (method) {
+			case 'for':
+				obj.attr('for', value);
+				break;
+			case 'text':
+				obj.text(value);
+				break;
+			default:
+				nuSetLabelText(id, value, change);
+
+		}
 	} else {
 		switch (method) {
 			case 'html':
@@ -2513,6 +2734,31 @@ function nuSetValue(id, value, method, change) {
 
 function nuSetText(i, v) {
 	return nuSetValue(i, v, 'text');
+}
+
+
+function nuSetFocus(id) {
+
+	const $el = nujQueryObj(id);
+	/*
+	if (!$el || $el.length === 0) {
+		console.warn("Element not found.", id);
+		return false;
+	}
+	*/
+	$($el).trigger("focus");
+
+	return new Promise((resolve) => {
+		setTimeout(() => {
+			const active = document.activeElement;
+			if (!active || typeof active === "undefined") {
+				resolve(false);
+			} else {
+				resolve(active === $el[0]);
+			}
+		}, 0);
+	});
+
 }
 
 function nuCurrentDate(format) {
@@ -2599,13 +2845,25 @@ function nuSetLabelText(id, text, translate) {
 		text = nuTranslate(text);
 	}
 
+	let obj = $('#' + id);
+	if (obj.is('label')) {
+		id = id.slice(6);  // Remove 'label_' prefix
+		obj = $('#' + id);
+	}
+
 	const label = $('#label_' + id);
-	const obj = $('#' + id);
 	const left = obj.nuCSSNumber('left');
 	const top = obj.nuCSSNumber('top');
 
+	let visibleText = text;
+	if (/<[a-z][\s\S]*>/i.test(text)) {
+		const tmp = document.createElement('div');
+		tmp.innerHTML = text;
+		visibleText = tmp.textContent || tmp.innerText || '';
+	}
+
 	// Use the same font styling as the label or fallback to obj
-	const lwidth = nuGetWordWidth(text, label.length ? label : obj);
+	const lwidth = nuGetWordWidth(visibleText, label.length ? label : obj);
 
 	label.css({
 		'top': top,
@@ -2749,11 +3007,29 @@ function nuInsertAtCaret(id, string) {
 	const value = txt.val();
 
 	txt.val(value.substring(0, caretPos) + string + value.substring(caretPos));
-	txt.trigger("focus");
+	txt.nuSetFocus();
 
 	const endOfText = caretPos + string.length;
 	txt.prop('selectionStart', endOfText);
 	txt.prop('selectionEnd', endOfText);
+
+}
+
+function nuComposeURL(url, text, target = '_blank', protocol = '', title = '') {
+
+	if (!url || typeof url !== 'string' || url.trim() === '') {
+		return text;
+	}
+
+	url = url.trim();
+	protocol = protocol.trim();
+	title = title.trim();
+
+	if (protocol === 'mailto:' || protocol === 'tel:') {
+		return `<a href="${protocol}${url}" title="${title}">${text}</a>`;
+	}
+
+	return `<a href="${protocol}${url}" target="${target}" title="${title}">${text}</a>`;
 
 }
 
@@ -2952,3 +3228,67 @@ function nuCountDefinedArguments(...args) {
 	return args.filter(arg => arg !== undefined).length;
 }
 
+function nuToggleStyleAttribute(id, attributes) {
+
+	const el = document.getElementById(id);
+
+	if (!el) {
+		console.error(`Element with id "${id}" not found.`);
+		return;
+	}
+
+	let isModified = attributes.some(attr => el.hasAttribute(attr.dataAttr));
+
+	if (isModified) {
+		attributes.forEach(attr => {
+			const originalValue = el.getAttribute(attr.dataAttr);
+			if (originalValue !== null) {
+				el.style[attr.styleProp] = originalValue;
+				el.removeAttribute(attr.dataAttr);
+			}
+		});
+	} else {
+		attributes.forEach(attr => {
+			el.setAttribute(attr.dataAttr, el.style[attr.styleProp] || '');
+			if (attr.value !== null) {
+				el.style[attr.styleProp] = typeof attr.value === 'number' ? `${attr.value}px` : attr.value;
+			}
+		});
+	}
+
+}
+
+function nuToggleSize(id, height = null, width = null) {
+
+	nuToggleStyleAttribute(id, [
+		{ styleProp: 'height', dataAttr: 'data-nu-org-height', value: height },
+		{ styleProp: 'width', dataAttr: 'data-nu-org-width', value: width }
+	]);
+
+}
+
+function nuTogglePosition(id, top = null, left = null) {
+
+	nuToggleStyleAttribute(id, [
+		{ styleProp: 'top', dataAttr: 'data-nu-org-top', value: top },
+		{ styleProp: 'left', dataAttr: 'data-nu-org-left', value: left }
+	]);
+
+}
+
+
+function nuGetSelectedText(inputOrId) {
+
+	const input = typeof inputOrId === 'string'
+		? document.getElementById(inputOrId)
+		: inputOrId;
+
+	if (!input || typeof input.selectionStart !== 'number') {
+		return '';
+	}
+
+	const start = input.selectionStart;
+	const end = input.selectionEnd;
+	return input.value.substring(start, end);
+
+}

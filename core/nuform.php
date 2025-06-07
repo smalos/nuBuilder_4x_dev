@@ -58,7 +58,9 @@ function nuBeforeEdit($FID, $RID) {
 
 		if (!$globalAccess) {
 			$ft = nuGetFormPermission($FID, 'slf_form_type');
-			if (($recordID == "" && $ft == '1') || ($recordID !== "" && $ft == '0')) {
+			$formSatus = nuGetFormStatus($FID);
+
+			if (($recordID == "" && $ft == '1') || ($recordID !== "" && $ft == '0') || $formSatus != '1' /* active */) {
 				nuDisplayError(nuTranslate('Access Denied'));
 				return;
 			}
@@ -289,6 +291,7 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 				}
 			} else {
 				$displaySql = trim(nuReplaceHashVariables($row->sob_display_sql));
+				$displaySql = str_replace("#OBJECT_ID#", $object->object_id, $displaySql);
 				$displayResult = nuRunQuery($displaySql);
 				if (db_num_rows($displayResult) >= 1) {
 					$displayRow = db_fetch_row($displayResult);
@@ -355,7 +358,7 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 	if ($row->sob_all_type == 'select') {
 		$object->multiple = $row->sob_select_multiple;
 		$object->select2 = $row->sob_select_2 ?? null;
-		$object->options = nuSelectOptions($row->sob_select_sql);
+		$object->options = nuSelectOptions($row->sob_select_sql, $object->object_id);
 	}
 
 	if ($row->sob_all_type == 'run') {
@@ -537,46 +540,46 @@ function nuDefaultObject($r, $t) {
 	$labelOnTop = null;
 
 	/*
-																																						  if (nuIsMobile() && isset($r->sob_all_json)) {
+																																																		  if (nuIsMobile() && isset($r->sob_all_json)) {
 
-																																							  $json = $r->sob_all_json;
-																																							  if ($json != '') {
+																																																			  $json = $r->sob_all_json;
+																																																			  if ($json != '') {
 
-																																								  $obj	= nuJsonDecode($json, true);
+																																																				  $obj	= nuJsonDecode($json, true);
 
-																																								  $type		= nuObjKey($obj,'type', null);
+																																																				  $type		= nuObjKey($obj,'type', null);
 
-																																								  if ($type != null) {
+																																																				  if ($type != null) {
 
-																																									  $mobile		= nuObjKey($type,'mobile', null);
+																																																					  $mobile		= nuObjKey($type,'mobile', null);
 
-																																									  if ($mobile == true) {
+																																																					  if ($mobile == true) {
 
-																																										  $visible	= nuObjKey($mobile,'visible', null);
-																																										  $name		= nuObjKey($mobile,'name', null);
-																																										  $labelOnTop	= nuObjKey($mobile,'labelontop', null);
-																																										  $labelOnTop	= $labelOnTop == null || $labelOnTop == true;
+																																																						  $visible	= nuObjKey($mobile,'visible', null);
+																																																						  $name		= nuObjKey($mobile,'name', null);
+																																																						  $labelOnTop	= nuObjKey($mobile,'labelontop', null);
+																																																						  $labelOnTop	= $labelOnTop == null || $labelOnTop == true;
 
-																																										  $size		= nuObjKey($mobile,'size');
-																																										  if ($size != null) {
-																																											  $width		= nuObjKey($size, 'width', null);
-																																											  $height		= nuObjKey($size, 'height', null);
-																																										  }
+																																																						  $size		= nuObjKey($mobile,'size');
+																																																						  if ($size != null) {
+																																																							  $width		= nuObjKey($size, 'width', null);
+																																																							  $height		= nuObjKey($size, 'height', null);
+																																																						  }
 
-																																										  $location		= nuObjKey($mobile,'location');
-																																										  if ($location != null) {
-																																											  $top		= nuObjKey($location, 'top', null);
-																																											  $left		= nuObjKey($location, 'left', null);
-																																										  }
+																																																						  $location		= nuObjKey($mobile,'location');
+																																																						  if ($location != null) {
+																																																							  $top		= nuObjKey($location, 'top', null);
+																																																							  $left		= nuObjKey($location, 'left', null);
+																																																						  }
 
-																																									  }
+																																																					  }
 
-																																								  }
+																																																				  }
 
-																																							  }
+																																																			  }
 
-																																						  }
-																																						  */
+																																																		  }
+																																																		  */
 
 	$o->mobile = $mobile;
 	$o->labelOnTop = $labelOnTop;
@@ -950,9 +953,14 @@ function nuSelectAddOption($text, $value) {
 
 }
 
-function nuSelectOptions($sql) {
+function nuSelectOptions($sql, $id) {
 
 	$options = [];
+
+	if (!empty($id)) {
+		$sql = str_replace("#OBJECT_ID#", $id, $sql);
+	}
+
 	$sqlWithHk = $sql;
 	$processedSql = nuReplaceHashVariables($sql);
 
@@ -1239,13 +1247,14 @@ function nuBrowseRows($f) {
 	$s .= " LIMIT " . ($start < 0 ? 0 : $start) . ", $rows";
 
 	$s = str_replace('$' . $f->primary_key . '$', $f->primary_key, $s);
+
 	$t = nuRunQuery($s);
 
 	while ($r = db_fetch_row($t)) {
 		$a[] = $r;
 	}
 
-	nuRunQuery(nuReplaceHashVariables('DROP TABLE IF EXISTS #TABLE_ID#'));
+	nuRunQuery(nuReplaceHashVariables('DROP TABLE IF EXISTS `#TABLE_ID#`'));
 
 	return [$a, $rowData, $S->SQL];
 
@@ -1519,6 +1528,11 @@ function nuGetFormPermission($formId, $permissionField) {
 	return $value;
 
 }
+
+function nuGetFormStatus($formId) {
+	return db_fetch_value('zzzzsys_form', 'zzzzsys_form_id', $formId, 'sfo_status');
+}
+
 
 function nuFormAccessList($accessData) {
 

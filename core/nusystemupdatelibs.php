@@ -29,6 +29,7 @@ function nuAlterSystemTables() {
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_style` MEDIUMTEXT NULL DEFAULT NULL AFTER `sfo_edit_javascript`;",
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_mobile_view` VARCHAR(1) NULL DEFAULT NULL AFTER `sfo_style`;",
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_group` VARCHAR(100) NULL DEFAULT NULL AFTER `sfo_description`;",
+		"ALTER TABLE `zzzzsys_form` ADD `sfo_status` VARCHAR(1) NULL DEFAULT NULL AFTER `sfo_group`;",
 		"ALTER TABLE `zzzzsys_session` ADD `sss_hashcookies` MEDIUMTEXT NULL DEFAULT NULL AFTER `sss_access`;",
 		"ALTER TABLE `zzzzsys_session` ADD COLUMN sss_login_time timestamp NULL DEFAULT current_timestamp() AFTER sss_time;",
 		"ALTER TABLE `zzzzsys_tab` ADD `syt_access` VARCHAR(1) NULL DEFAULT NULL AFTER `syt_help`;",
@@ -65,7 +66,12 @@ function nuAlterSystemTables() {
 		"ALTER TABLE `pdf_temp` ADD `pdf_tag` VARCHAR(100) NULL DEFAULT NULL AFTER `pdf_code`;",
 		"ALTER TABLE `zzzzsys_email_log` CHANGE `eml_created_at` `eml_created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP;",
 		"ALTER TABLE `zzzzsys_email_log` CHANGE `eml_sent_at` `eml_sent_at` TIMESTAMP NULL DEFAULT NULL;",
-		"ALTER TABLE `zzzzsys_config` ADD `cfg_title` VARCHAR(50) NULL DEFAULT NULL AFTER `cfg_category`;"
+		"ALTER TABLE `zzzzsys_config` ADD `cfg_title` VARCHAR(50) NULL DEFAULT NULL AFTER `cfg_category`;",
+		"ALTER TABLE `zzzzsys_prompt_generator` ADD `pge_tag` VARCHAR(3000) NULL DEFAULT NULL AFTER `pge_prompt`;",
+		"ALTER TABLE `zzzzsys_prompt_generator` ADD `sph_template` VARCHAR(1) NULL DEFAULT NULL AFTER `pge_tag`;",
+		"ALTER TABLE `zzzzsys_prompt_generator` DROP `sph_template`;",
+		"ALTER TABLE `zzzzsys_prompt_generator` ADD `pge_instruction` VARCHAR(3000) NULL DEFAULT NULL AFTER `sph_template`;",
+		"ALTER TABLE `zzzzsys_item` ADD `itm_group` VARCHAR(100) NULL DEFAULT NULL AFTER `itm_description`;"
 	];
 
 	foreach ($alterTableSQL as $sqlStatement) {
@@ -85,6 +91,13 @@ function nuAlterSystemTables() {
 		$style = "/* Define your own styles, override styles from nubuilder4.css */\r\n\r\n/*\r\n .nuActionButton {\r\n background-color: #579cb7\r\n}\r\n\r\n*/";
 
 		nuRunQueryNoDebug('UPDATE `zzzzsys_setup` SET set_style = ?', [$style]);
+	}
+
+	if (array_search('set_include', $setupColumns) == false) {
+		nuRunQueryNoDebug("ALTER TABLE `zzzzsys_setup` ADD `set_include` LONGTEXT NULL DEFAULT NULL AFTER `set_header`;");
+		$include = "// Add external CSS/JS file here\r\n\r\n/*\r\n<link rel=\"stylesheet\" href=\"path_to_css.css\"/>\r\n\r\n<script src=\"path_to_js.js\"></script>\r\n*/";
+
+		nuRunQueryNoDebug('UPDATE `zzzzsys_setup` SET set_include = ?', [$include]);
 	}
 
 	nuCreateJSONColumns();
@@ -334,6 +347,9 @@ function nuRemoveNuRecords() {
 		["table" => "sys_zzzzsys_permission_item"],
 		["table" => "sys_zzzzsys_user_permission"],
 		["table" => "sys_zzzzsys_timezone", "where" => '1'],
+		["table" => "sys_zzzzsys_prompt_generator"],
+		["table" => "sys_zzzzsys_item"]
+
 	];
 
 	foreach ($queries as $query) {
@@ -367,10 +383,6 @@ function nuAppendToSystemTables() {
 
 			nuDropDatabaseObject("sys_" . $table, ['TABLE']);
 		}
-
-
-		// $s		= "UPDATE zzzzsys_setup SET set_denied = '1'";
-		// nuRunQuery($s);
 
 	} catch (Throwable $e) {
 		nuInstallException($e);
@@ -413,6 +425,8 @@ function nuSystemList() {
 	$t[] = 'zzzzsys_user_permission';
 	$t[] = 'zzzzsys_permission_item';
 	$t[] = 'zzzzsys_email_log';
+	$t[] = 'zzzzsys_prompt_generator';
+	$t[] = 'zzzzsys_item';
 
 	return $t;
 }
@@ -453,12 +467,16 @@ function nuSetCollation() {
 
 }
 
+function nuOtherUpdates() {
+	nuRunQueryNoDebug("UPDATE `zzzzsys_form` SET sfo_status = '1' WHERE IFNULL(sfo_status,'') = '' ");
+}
+
 function nuGetSupportedLanguagesAsJson() {
 
 	$languages = [
 		"Afrikaans", "Arabic", "Armenian", "Catalan", "Chinese",
 		"Czech", "Danish", "Dutch", "French", "German", "Greek",
-		"Hindi", "Italian", "Japanese", "Malay", "Polish",
+		"Hindi", "Hungarian", "Italian", "Japanese", "Malay", "Polish",
 		"Portuguese", "Romanian", "Russian", "Slovak", "Spanish",
 		"Tamil", "Vietnamese"
 	];

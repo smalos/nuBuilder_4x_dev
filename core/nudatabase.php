@@ -63,7 +63,9 @@ $GLOBALS['sys_table_prefix'] = [
 	'translate' => 'trl',
 	'user' => 'sus',
 	'user_permission' => 'upe',
-	'permission_item' => 'pme'
+	'permission_item' => 'pme',
+	'prompt_generator' => 'pge',
+	'item' => 'itm'
 ];
 
 function nuRunQueryNoDebug($query, $params = [], $isInsert = false) {
@@ -247,7 +249,7 @@ function nuCreateTableFromSelect($tableName, $select, $params = [], $temporary =
 		$select
 	);
 
-	nuRunQuery($query, $params);
+	return nuRunQuery($query, $params);
 
 }
 
@@ -491,25 +493,25 @@ function nuViewExists($view) {
 
 function nuGetSysTables() {
 
-    $tables = [];
-    $stmt = nuRunQuery("SELECT table_name as TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'zzzzsys_%'");
-    while ($row = db_fetch_row($stmt)) {
-        $tables[] = $row[0];
-    }
+	$tables = [];
+	$stmt = nuRunQuery("SELECT table_name as TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = DATABASE() AND TABLE_NAME LIKE 'zzzzsys_%'");
+	while ($row = db_fetch_row($stmt)) {
+		$tables[] = $row[0];
+	}
 
-    return $tables;
+	return $tables;
 
 }
 
 function nuGetUserTables() {
 
-    $tables = [];
-    $stmt = nuRunQuery("SELECT table_name as TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = DATABASE() AND TABLE_NAME NOT LIKE 'zzzzsys_%'");
-    while ($row = db_fetch_row($stmt)) {
-        $tables[] = $row[0];
-    }
+	$tables = [];
+	$stmt = nuRunQuery("SELECT table_name as TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = DATABASE() AND TABLE_NAME NOT LIKE 'zzzzsys_%'");
+	while ($row = db_fetch_row($stmt)) {
+		$tables[] = $row[0];
+	}
 
-    return $tables;
+	return $tables;
 
 }
 

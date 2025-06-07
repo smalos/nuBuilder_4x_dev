@@ -46,13 +46,13 @@ function nuShowFormInfo() {
 	const formattedBrowseSQL = String(browseSQLRaw).replace(/\s{2,}/g, '\n');
 
 	const escapeForHTMLAttribute = str => str.replace(/\n/g, '\\n').replace(/'/g, "\\'");
-	const copyButtonHTML = (value, label) => `<button type="button" class="nuActionButton nuAdminButton" onclick="navigator.clipboard.writeText(nuTranslate('${escapeForHTMLAttribute(value)}'))">${nuTranslate(label)}</button>`;
+	const copyButtonHTML = (value, label) => `<button type="button" class="nuAdminButton" onclick="navigator.clipboard.writeText(nuTranslate('${escapeForHTMLAttribute(value)}'))">${nuTranslate(label)}</button>`;
 
 	const formIdCopyButton = copyButtonHTML(formId, 'Copy');
 	const formCodeCopyButton = copyButtonHTML(formCode, 'Copy');
 	const browseCopyButton = copyButtonHTML(formattedBrowseSQL, 'Copy SQL');
 	const permalinkButton = nuUXOptions.nuShowURLPermaLink ? copyButtonHTML(window.location.href, 'Copy Permalink') : '';
-	const currPropsButton = `<button type="button" class="nuActionButton nuAdminButton" onclick="nuFormInfoCurrentProperties()">${nuTranslate('Current Properties')}</button>`;
+	const currPropsButton = `<button type="button" class="nuAdminButton" onclick="nuFormInfoCurrentProperties()">${nuTranslate('Current Properties')}</button>`;
 
 	const recordIdCopyButton = isEditMode && recordId ? copyButtonHTML(recordId, 'Copy') : '';  // Adding Record ID copy button
 
@@ -87,7 +87,7 @@ function nuAddAdminButton(id, obj) {
 	const inputId = `nu${id}Button`;
 
 	const button = `
-	<input id="${inputId}" type="button" title="${nuTranslate(title)}" class="nuActionButton nuAdminButton" value="${nuTranslate(obj.value)}" onclick="${obj.func}">
+	<input id="${inputId}" type="button" title="${nuTranslate(title)}" class="nuAdminButton" value="${nuTranslate(obj.value)}" onclick="${obj.func}">
   `;
 
 	$('#nuActionHolder').prepend(button);
@@ -151,8 +151,18 @@ function nuAddAdminButtons() {
 	const isEdit = form_type.includes("edit");
 	const isLaunch = form_type.includes("launch");
 
-	if ((window.nuUXOptions.nuDebugIcon || devMode) && nuMainForm()) {
+	if ((window.nuUXOptions.nuDebugIcon || devMode) && (nuMainForm(true) || nuIsPopup())) {
 		nuAddIconToBreadcrumbHolder('nuDebugButton', 'nuDebug Results', 'nuOpenNuDebug(2)', 'fa fa-bug', '3px');
+	}
+
+	if ((window.nuUXOptions.nuToolsIcon || devMode) && (nuMainForm(true) || nuIsPopup())) {
+		nuAddIconToBreadcrumbHolder(
+			'nuToolsButton',
+			'Tools',
+			'nuAdminToolsClick(this, event, \'Tools\')',
+			'fa fa-gear',
+			'3px'
+		);
 	}
 
 	if (window.nuUXOptions.nuRefreshIcon) {
@@ -208,6 +218,59 @@ function nuAddAdminButtons() {
 
 	}
 
+}
+
+function nuAdminToolsRun(f, r, event, type = false) {
+
+	if (type === 'procedure') {
+		nuRunPHP(f);
+	} else if (type) {
+		nuPopup(f, r, '');
+	} else {
+		let n = event.ctrlKey ? '2' : '0';
+		nuForm(f, r, '', '', n);
+	}
+
+}
+
+function nuAdminToolsCreateMenuConfig(menuType, event) {
+
+	const baseMenus = {
+		Tools: [
+			{
+				text: nuContextMenuItemText("Prompt Generator", "fa-fw fa-solid fa-magic"),
+				action: () => nuAdminToolsRun('nupromptgenerator', '-1', event, 'popup')
+			},
+			...(nuSERVERRESPONSE.table !== '' && nuFormType() !== 'browse' ? [{
+				text: nuContextMenuItemText("Inspect Record", "fa-fw fa-solid fa-binoculars"),
+				action: () => {
+					nuAdminPreInspectRecordJS();
+					nuAdminToolsRun('NUINSPECTRECORD', null, event, 'procedure');
+				}
+			}] : [])
+		]
+	};
+
+	const menu = [{ text: nuTranslate(menuType) }, ...baseMenus[menuType]];
+	return menu;
+
+}
+
+function nuAdminPreInspectRecordJS() {
+
+	nuSetProperty('NUINSPECTRECORD_table', nuSERVERRESPONSE.table);
+	nuSetProperty('NUINSPECTRECORD_record_id', nuRecordId())
+
+}
+
+function nuAdminToolsOpenMenu(event, menu, element) {
+	event.stopPropagation();
+	ctxmenu.show(menu, element);
+}
+
+function nuAdminToolsClick(element, event, menuType) {
+	const menu = nuAdminToolsCreateMenuConfig(menuType, event);
+	nuAdminToolsOpenMenu(event, menu, element);
 }
 
 // Set Browse Column Widths in a Browse Screen
@@ -277,7 +340,7 @@ function nuOpenPropertiesOnMiddleClick(e) {
 				// Form Properties
 				nuForm('nuform', nuFormId(), '', '', 2);
 			} else {
-				const objId = nuObjectIdFromId(e.target.id);
+				const objId = nuGetObjectId(e.target.id);
 				if (objId !== null) {
 					// Object Properties
 					nuForm('nuobject', objId, '', '', '2');
@@ -388,6 +451,13 @@ var subMenuHidden = {
 	action: () => nuContextMenuUpdateAccess(2)
 };
 
+var subMenuTabVisible = {
+	text: nuContextMenuItemText("Visible", "fa fa-pencil-square-o"),
+	tag: "Visible",
+	faicon: "far fa-edit",
+	action: () => nuContextMenuUpdateAccess(null)
+};
+
 var subMenuHiddenUser = {
 	text: nuContextMenuItemText("Hidden (User)", "fa fa-eye-slash"),
 	tag: "Hidden (User)",
@@ -400,6 +470,18 @@ var subMenuHiddenUserReadonly = {
 	tag: "Hidden (User) + Readonly",
 	faicon: "fa fa-eye-slash",
 	action: () => nuContextMenuUpdateAccess(4)
+}
+
+var menuActions = {
+	text: "Actions",
+	tag: "Actions",
+	subMenu: [
+		{
+			text: "Delete",
+			tag: "Delete",
+			action: function () { nuContextMenuUpdateAction('delete') }
+		}
+	]
 }
 
 var menuAccess = {
@@ -519,6 +601,7 @@ var nuContextMenuDefinitionTab = [
 		text: "Access",
 		tag: "Access",
 		subMenu: [
+			subMenuTabVisible,
 			subMenuHidden,
 			subMenuHiddenUser
 		]
@@ -607,7 +690,43 @@ function nuContextMenuBeforeRender(menu, event) {
 	const id = nuContextMenuCurrentTargetId();
 	const $currentTarget = $('#' + contextMenuCurrentTarget.id);
 	const isButton = $currentTarget.is(":button");
+	const isTab = $currentTarget.hasClass('nuTab');
+	const isBrowseTitle = $currentTarget.hasClass('nuSort');
+	const isSubformTitle = $currentTarget.hasClass('nuSubformTitle');
+	const isAdmitButton = $currentTarget.hasClass('nuAdminButton');
 	const isSelect = $('#' + nuContextMenuCurrentTargetUpdateId()).is("select");
+	const disableMoveToTab = $('.nuTab').length < 2;
+
+	if (!isTab && !isBrowseTitle && !isSubformTitle && !isAdmitButton) {
+		const alreadyIncluded = menu.some(item => item && item.tag === "Actions");
+
+		if (!alreadyIncluded) {
+
+			const moveExists = menuActions.subMenu.some(item => item && item.tag === "Move");
+
+			if (disableMoveToTab) {
+				const moveIndex = menuActions.subMenu.findIndex(item => item && item.tag === "Move");
+				if (moveIndex !== -1) {
+					menuActions.subMenu.splice(moveIndex, 1);
+				}
+			}
+
+			if (!disableMoveToTab && !moveExists) {
+				menuActions.subMenu.splice(0, 0, {
+					text: "Move to Tab",
+					tag: "Move",
+					action: function () { nuContextMenuUpdateAction('move') }
+				});
+			}
+
+			const accessIndex = menu.findIndex(item => item && item.tag === "Access");
+			if (accessIndex !== -1) {
+				menu.splice(accessIndex, 0, menuActions, { isDivider: true });
+			} else {
+				menu.push(menuActions, { isDivider: true });
+			}
+		}
+	}
 
 	menu.forEach((item) => {
 		if (Object.prototype.hasOwnProperty.call(item, "tag")) {
@@ -616,7 +735,7 @@ function nuContextMenuBeforeRender(menu, event) {
 					item.html = nuContextMenuPositionText(id, item.tag);
 					break;
 				case 'Object':
-					item.text = `Object: ${(nuFormType() === 'edit' ? nuContextMenuCurrentTargetUpdateId() : nuContextMenuCurrentTargetBrowseId())}`;
+					item.text = `Object: ${(nuFormType() === 'edit' ? nuContextMenuCurrentTargetEditIdText() : nuContextMenuCurrentTargetBrowseIdText())}`;
 					break;
 				case 'Access':
 					item.subMenu.forEach((sub) => {
@@ -760,10 +879,96 @@ function nuContextMenuUpdateAccess(v) {
 		nuDisable(id);
 	}
 
-	$('#' + id).attr('data-nu-access', v);
+	$id = $('#' + id);
+	$id.attr('data-nu-access', v);
 
-	let column = $('#' + id).hasClass('nuTab') ? 'syt_access' : 'sob_all_access';
+	const isTab = $id.hasClass('nuTab');
+	if (isTab) {
+		if (v === null) { //-- visible
+			$id.removeClass('nuTabAccessHiddenUser')
+		}
+		else if (v == 3) { //-- hidden (user)
+			$id.addClass('nuTabAccessHiddenUser');
+		}
+	}
+
+	let column = isTab ? 'syt_access' : 'sob_all_access';
 	nuContextMenuUpdateObject(v, column);
+
+}
+
+function nuContextMenuShowTabSelector(callback) {
+
+	const selectedId = nuGetSelectedTabId();
+	const options = $('.nuTab').map(function (i, el) {
+		const tabId = $(el).attr('data-nu-tab-id')
+		if (tabId === selectedId) return null;
+		const html = $(el).html().trim();
+		return `<option value="${tabId}">${html}</option>`;
+	}).get().join('');
+
+	const confirmContent = `
+            <select id="nuSelectTabList" size="5" style="width: 97%; height: 100px;">
+            ${options}
+        </select>
+    `;
+
+	$.confirm({
+		title: 'Move to Tab',
+		content: confirmContent,
+		boxWidth: '250px',
+		container: '#nuhtml',
+		useBootstrap: false,
+		modal: true,
+		closeIcon: true,
+		buttons: {
+			confirm: {
+				text: 'OK',
+				btnClass: 'btn-blue',
+				action: function () {
+					const selected = this.$content.find('select').val();
+					if (callback) callback(selected);
+				}
+			},
+			cancel: {
+				text: 'Cancel',
+				btnClass: 'btn-default'
+			}
+		},
+		onContentReady: function () {
+			const $select = this.$content.find('select');
+			if ($select.find('option').length === 1) {
+				$select.prop('selectedIndex', 0).trigger('change');
+			}
+			$('.jconfirm-scrollpane').css('visibility', 'visible');
+			$('#nuSelectTabList').nuSetFocus();
+		}
+	});
+
+}
+
+
+function nuContextMenuUpdateAction(action) {
+
+	if (action === 'delete') {
+		if (!confirm(nuTranslate("Delete This Object?"))) {
+			return;
+		}
+
+	} else if (action === 'move') {
+
+		nuContextMenuShowTabSelector(function (selectedTab) {
+			if (selectedTab) {
+				nuContextMenuUpdateObject(null, selectedTab, action);
+				return;
+			}
+		});
+
+		return;
+	}
+
+	nuContextMenuUpdateObject(null, null, action);
+
 }
 
 function nuContextMenuUpdateAlign(v) {
@@ -901,7 +1106,7 @@ function nuContextMenuCurrentTargetUpdateId() {
 		if (nuObjectClassList(strIdNoLabel).containsAny(['nuHtml', 'nuImage', 'nuContentBoxContainer', 'nuSubform'])) {
 			return idNoLabel.attr('id');
 		} else if (idNoLabel.hasClass('select2-hidden-accessible')) {
-			return strIdNoLabel + '_select2';
+			return strIdNoLabel;
 		} else {
 			let id = t.hasClass('nuSubformTitle') ? t.attr('data-nu-field') : idNoLabel.attr('data-nu-field');
 			id = id === undefined ? contextMenuCurrentTarget.id : id;
@@ -927,10 +1132,39 @@ function nuContextMenuCurrentTargetBrowseId() {
 
 }
 
+function nuContextMenuCurrentTargetBrowseIdText() {
+
+	let id = contextMenuCurrentTarget.id;
+	return $('#' + id).parent().attr('id') + ' (' + $('#' + id).parent().attr('data-nu-title-id') + ')';
+
+}
+
+function nuContextMenuCurrentTargetEditIdText() {
+
+	const id = nuContextMenuCurrentTargetUpdateId();
+	let t = $('#' + contextMenuCurrentTarget.id);
+
+	if (t.hasClass('nuTab')) {
+		return contextMenuCurrentTarget.id + ' (' + t.attr('data-nu-tab-id') + ')';
+	} else {
+		return id;
+	}
+
+}
+
 function nuContextMenuCopyIdToClipboard() {
 
 	let t = $('#' + contextMenuCurrentTarget.id);
-	let id = t.hasClass('nuSubformTitle') ? nuContextMenuCurrentTargetUpdateId() : nuContextMenuCurrentTargetId();
+
+	let id = '';
+	if (t.hasClass('nuSort')) {
+		id = t.parent().attr('data-nu-title-id');
+	} else if (t.hasClass('nuTab')) {
+		id = t.attr('data-nu-tab-id');
+	} else {
+		id = t.hasClass('nuSubformTitle') ? nuContextMenuCurrentTargetUpdateId() : nuContextMenuCurrentTargetId();
+	}
+
 	nuCopyToClipboard(id);
 
 }
@@ -939,7 +1173,7 @@ function nuContextMenuClone() { }
 
 function nuContextMenuObjectPopup(e) {
 
-	let objId = nuObjectIdFromId(nuContextMenuCurrentTargetUpdateId());
+	let objId = nuGetObjectId(nuContextMenuCurrentTargetUpdateId());
 
 	if ((nuIsMacintosh() ? e.metaKey : e.ctrlKey) === true) {
 		nuForm('nuobject', objId, '', '', '2');
@@ -949,7 +1183,7 @@ function nuContextMenuObjectPopup(e) {
 
 }
 
-function nuContextMenuUpdateObject(value, column) {
+function nuContextMenuUpdateObject(value, column, action = 'update') {
 
 	let isSfTitle = $('#title_' + nuContextMenuCurrentTargetId()).hasClass('nuSubformTitle');
 	let isTab = $('#' + nuContextMenuCurrentTargetId()).hasClass('nuTab');
@@ -969,6 +1203,7 @@ function nuContextMenuUpdateObject(value, column) {
 	nuSetProperty(p + '_form_id', formId);
 	nuSetProperty(p + '_type', isTab ? 'tab' : nuFormType());
 	nuSetProperty(p + '_column', column);
+	nuSetProperty(p + '_action', action);
 	nuRunPHPHidden(p);
 
 }
@@ -980,33 +1215,35 @@ function nuContextMenuUpdate() {
 		? 'label, button, .nu_run, .nuWord, .nuImage, .nuContentBoxTitle, .nuTab, .nuSubformTitle, .nuAdminButton'
 		: '.nuSort, .nuAdminButton';
 
-	$(selector).each((index, element) => {
+	$(selector)
+		.filter((i, el) => !el.hasAttribute('data-nu-no-context-menu'))
+		.each((index, element) => {
 
-		if (!element.id) return;
+			if (!element.id) return;
 
-		const el = `#${element.id}`;
-		const $el = $(el);
+			const el = `#${element.id}`;
+			const $el = $(el);
 
-		if (el !== '#' && $el.length > 0) {
-			let menuDefinition;
+			if (el !== '#' && $el.length > 0) {
+				let menuDefinition;
 
-			if ($el.hasClass('nuAdminButton')) {
-				menuDefinition = nuContextMenuDefinitionAdminButton;
-			} else if ($el.hasClass('nuTab')) {
-				menuDefinition = nuContextMenuDefinitionTab;
-			} else if ($el.hasClass('nuSubformTitle')) {
-				menuDefinition = nuContextMenuDefinitionSubform;
-			} else {
-				menuDefinition = typeEdit
-					? nuContextMenuDefinitionEdit
-					: nuContextMenuDefinitionBrowse;
+				if ($el.hasClass('nuAdminButton')) {
+					menuDefinition = nuContextMenuDefinitionAdminButton;
+				} else if ($el.hasClass('nuTab')) {
+					menuDefinition = nuContextMenuDefinitionTab;
+				} else if ($el.hasClass('nuSubformTitle')) {
+					menuDefinition = nuContextMenuDefinitionSubform;
+				} else {
+					menuDefinition = typeEdit
+						? nuContextMenuDefinitionEdit
+						: nuContextMenuDefinitionBrowse;
+				}
+
+				ctxmenu.update(el, menuDefinition, {
+					onBeforeShow: (menu, event) => nuContextMenuBeforeRender(menu, event),
+				});
 			}
-
-			ctxmenu.update(el, menuDefinition, {
-				onBeforeShow: (menu, event) => nuContextMenuBeforeRender(menu, event),
-			});
-		}
-	});
+		});
 
 }
 

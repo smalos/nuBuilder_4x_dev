@@ -54,9 +54,9 @@ function nuSetTimeLimit($seconds) {
 
 function nuTT() {
 
-	$fn = '___nu' . uniqid('1') . '___';
-
-	return $fn;								//--create a unique name for a Temp Table
+	// Generate a unique table name with a prefix (used to create a temporary table)
+	$unique_name = '___nu' . uniqid('1', true) . '___';
+	return str_replace('.', '_', $unique_name);
 
 }
 
@@ -998,10 +998,19 @@ function nuGetUserAccess() {
 		$sessionData['SESSION_SSS_TIME_EXISTS'] = in_array("sss_time", db_field_names('zzzzsys_session'));
 	}
 
+
+	global $nuConfigTimeOut;
+	$gcLifetime = 36000; // 10 hours
+	if (isset($nuConfigTimeOut) && is_int($nuConfigTimeOut) && $nuConfigTimeOut > 0) {
+		$gcLifetime = 60 * $nuConfigTimeOut;
+	}
+
 	if ($sessionData['SESSION_SSS_TIME_EXISTS']) {
-		$s = time();
-		nuRunQuery("UPDATE zzzzsys_session SET sss_time = $s WHERE zzzzsys_session_id = ? ", [$sessionId]);
-		nuRunQuery("DELETE FROM zzzzsys_session WHERE sss_time < $s - 36000");										//-- 10 hours
+		$now = time();
+		nuRunQuery('UPDATE zzzzsys_session SET sss_time = ? WHERE zzzzsys_session_id = ?', [$now, $sessionId]);
+
+		$expiryThreshold = $now - $gcLifetime;
+		nuRunQuery('DELETE FROM zzzzsys_session WHERE sss_time < ?', [$expiryThreshold]);
 	}
 
 	return $A;
@@ -1248,7 +1257,7 @@ function nuJSInclude($filePath) {
 	$timestamp = filemtime($filePath);
 	$url = "{$filePath}?ts={$timestamp}";
 
-	echo '<script src="' . htmlspecialchars($url, ENT_QUOTES) . '" type="text/javascript"></script>' . PHP_EOL;
+	echo '<script src="' . htmlspecialchars($url, ENT_QUOTES) . '"></script>' . PHP_EOL;
 
 }
 
@@ -1444,7 +1453,7 @@ function nuFontList() {
 	$result = [];
 	$fonts = [['Helvetica', 'Helvetica'], ['Courier', 'Courier'], ['Times', 'Times'], ['Symbol', 'Symbol']];
 	$exclude = ['..', '.', DIRECTORY_SEPARATOR];
-	$folder = __DIR__ . DIRECTORY_SEPARATOR . 'libs/tcpdf' . DIRECTORY_SEPARATOR . 'fonts';
+	$folder = __DIR__ . DIRECTORY_SEPARATOR . '../third_party/tcpdf' . DIRECTORY_SEPARATOR . 'fonts';
 
 	$list = scandir($folder);
 
@@ -2476,23 +2485,22 @@ function nuGlobalAccess($post = false) {
 
 }
 
-function nuFormatDate($d, $format) {
-
-	if (nuTrim($d) == "")
-		return "";
-
-	$date = DateTime::createFromFormat('Y-m-d', $d);
-	return $date->format($format);
-
+function nuFormatDate($dateString, $outputFormat, $inputFormat = 'Y-m-d') {
+	return nuFormatDateTime($dateString, $outputFormat, $inputFormat);
 }
 
-function nuFormatDateTime($d, $format) {
+function nuFormatDateTime($dateString, $outputFormat, $inputFormat = 'Y-m-d H:i:s') {
 
-	if (nuTrim($d) == "")
+	if (nuTrim($dateString) == "") {
 		return "";
+	}
 
-	$date = DateTime::createFromFormat('Y-m-d H:i:s', $d);
-	return $date->format($format);
+	$dateObject = DateTime::createFromFormat($inputFormat, $dateString);
+	if ($dateObject === false) {
+		return "";
+	}
+
+	return $dateObject->format($outputFormat);
 
 }
 
@@ -2604,18 +2612,17 @@ function nuAddToHashCookies($i, $nj, $global = false) {
 }
 
 function nuDeleteFiles($file_list = []) {
-	if (!is_array($file_list) || empty($file_list())) {
+
+	if (!is_array($file_list) || empty($file_list)) {
 		return;
 	}
-	if (nuIsArrayAssociative($file_list)) {
-		foreach ($file_list as $filename => $filesource) {
-			@unlink($filesource);
-		}
-	} else {
-		foreach ($file_list as $file) {
+
+	foreach ($file_list as $file) {
+		if (is_string($file) && file_exists($file)) {
 			@unlink($file);
 		}
 	}
+
 }
 
 function nuIsArrayAssociative($arr) {

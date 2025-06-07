@@ -17,8 +17,9 @@ function nuInitJSOptions() {
 		'nuCalendarStartOfWeek': 'Sunday',		// nuCalendar: Start of Week: Sunday (default) or Monday
 		'nuCalendarWeekNumbers': 'None',		// nuCalendar: 0 = None, 1 = ISO 8601, 2 = Western traditional, 3 = Middle Eastern
 		'nuSelect2Theme': 'default',			// select2 theme (default, classic) Default: default
-		'nuEditCloseAfterSave': 'None',			// Close forms after saving. Values: None, All, User, System
+		'nuEditCloseAfterSave': 'None',			// Close forms after saving. Values: none, All, User, System
 		'nuShowJSErrors': 'None',				// Show JS errors in alert message
+		'nuHideTabTitleIfOnlyOne': 'None',		// Hide tab title if only one tab. Values: None, globeadmin, user, everyone
 		'nuShowURLPermaLink': false,			// Show URL permalink
 		'nuDebugIcon': true,
 		'nuPHPIcon': true,
@@ -99,6 +100,7 @@ function nuBuildForm(formObj) {
 	nuAddBreadcrumbs();
 
 	nuAddEditTabs('', formObj);
+	nuSetHideTabIfOnlyOne();
 
 	if (typeof window.nuBeforeAddActionButtons === 'function') {
 		nuBeforeAddActionButtons();
@@ -245,8 +247,8 @@ function nuBuildForm(formObj) {
 	nuCursor('default');
 
 	window.nuPORTRAITSCREEN = false;
-	if (!nuIsMobile()) {
-		$('#nuSearchField').trigger("focus");
+	if (!nuIsMobile() && formType == 'browse') {
+		$('#nuSearchField').nuSetFocus();
 	} else {
 		if (nuUXOptions.nuDevMobileView2) {
 			nuInitMobileView();
@@ -362,6 +364,34 @@ function nuInitShowJSErrors() {
 	}
 
 }
+
+function nuSetHideTabIfOnlyOne() {
+
+	if (window.nuUXOptions.nuHideTabTitleIfOnlyOne && $('.nuTab').length === 1) {
+
+		const nuHideTabTitleIfOnlyOne = window.nuUXOptions.nuHideTabTitleIfOnlyOne;
+		let hideTab = false;
+		switch (nuHideTabTitleIfOnlyOne.toLowerCase()) {
+			case "globeadmin":
+				hideTab = nuGlobalAccess()
+				break;
+			case "user":
+				hideTab = !nuGlobalAccess();
+				break;
+			case "everyone":
+				hideTab = true;
+				break;
+		}
+
+		if (hideTab) {
+			$('.nuTab').hide();
+			$('.nuTabHolder').hide();
+		}
+
+	}
+
+}
+
 
 function nuAddHome() {
 
@@ -804,38 +834,54 @@ function nuAddActionButtons(form) {
 
 	const recordId = nuRecordId();
 	const arrangingObjects = nuArrangingObjects(recordId);
-
-	var button = form.buttons;
+	const button = form.buttons;
 	const isMobile = nuIsMobile();
 
 	if (nuFormType() == 'browse') {
+		const searchValue = nuDefine(nuFORM.getProperty('search'));
+		const filter = nuDefine(nuFORM.getProperty('filter'));
 
-		var s = nuDefine(nuFORM.getProperty('search'));
-		var f = nuDefine(nuFORM.getProperty('filter'));
+		$('#nuActionHolder').append(
+			'<div class="nuSearchWrapper">' +
+			'<input '
+			+ 'id="nuSearchField" '
+			+ 'type="text" '
+			+ 'class="nuSearch" '
+			+ 'onkeypress="nuSearchPressed(event)" '
+			+ 'onkeydown="nuArrowPressed(event)" '
+			+ 'value="' + searchValue + '" '
+			+ '/>' +
+			'<button '
+			+ 'type="button" '
+			+ 'id="nuSearchBtn" '
+			+ 'class="nuSearchBtn" '
+			+ 'title="Search">'
+			+ '<i class="fa-solid fa-magnifying-glass"></i>' +
+			'</button>' +
+			'</div>'
+		).append(
+			"<input id='nuFilter' style='visibility:hidden;width:0px' value='" + filter + "'>"
+		);
 
-		$('#nuActionHolder').append("<input id='nuSearchField' type='text' class='nuSearch' onfocus='this.value = this.value;' onkeypress='nuSearchPressed(event)' onkeydown='nuArrowPressed(event)' value='" + s + "'>")
-			.append("<input id='nuFilter' style='visibility:hidden;width:0px' value='" + f + "'>");
+		$('#nuSearchBtn').on('click', function () {
+			nuSearchAction();
+		});
 
-		const searchCaption = isMobile ? "<i class='fa-fw fa fa-search fa-lg'></i>" : "<i class='fa-fw fa fa-search'></i>" + "&nbsp;" + nuTranslate('Search');
-		const printCaption = nuTranslate('Print');
-		const addCaption = isMobile ? "<i class='fa-fw fa fa-add fa-lg'></i>" : nuTranslate('Add');
-
-		nuAddActionButton("Search", searchCaption, 'nuSearchAction()');
+		const printCaption = "<i class='fa-solid fa-fw fa-print fa-lg'></i>";
+		const addCaption = "<i class='fa-fw fa fa-add fa-lg'></i>";
 
 		if (button.Add == 1) {
-			nuAddActionButton('Add', addCaption, 'nuAddAction()');
+			nuAddActionButton('Add', addCaption, 'nuAddAction()').attr('title', nuTranslate('Add'));
 		}
 
 		if (button.Print == 1 && nuFORM.getCurrent().browse_rows.length > 0 && !isMobile) {
-			nuAddActionButton('Print', printCaption, 'nuPrintAction()');
+			nuAddActionButton('Print', printCaption, 'nuPrintAction()').attr('title', nuTranslate('Print'));
 		}
 
 		nuSearchFieldSetSearchType(isMobile);
 
 	} else {
-
 		if (!arrangingObjects) {
-
 			if (button.Save == 1 && form.form_type != 'launch') {
 				if ((nuIsNewRecord() && form.data_mode == 0) || form.data_mode != 0) {
 					nuAddActionButton('Save');
@@ -843,17 +889,22 @@ function nuAddActionButtons(form) {
 			}
 
 			if (recordId != -1) {
-
-				if (button.Delete == 1) { nuAddActionButton('Delete'); }
-				if (button.Clone == 1) { nuAddActionButton('Clone'); }
-
+				if (button.Delete == 1) {
+					nuAddActionButton('Delete');
+				}
+				if (button.Clone == 1) {
+					nuAddActionButton('Clone');
+				}
 			}
 
-			if (button.RunHidden != '') { nuAddActionButton('runhidden', 'Run', button.RunHidden); }
-			if (button.Run != '') { nuAddActionButton('run', 'Run', button.Run); }
+			if (button.RunHidden != '') {
+				nuAddActionButton('RunHidden', 'Run', button.RunHidden);
+			}
 
+			if (button.Run != '') {
+				nuAddActionButton('Run', 'Run', button.Run);
+			}
 		}
-
 	}
 
 	if (isMobile) {
@@ -862,45 +913,97 @@ function nuAddActionButtons(form) {
 
 }
 
-function nuAddActionButton(id, value, func, text, e) {
+function nuAddActionButton(id, value, func, title, icon, insertAfterElement) {
 
-	if (arguments.length == 1) {
-		value = id;
-		func = 'nu' + id + 'Action()';
+	const ICON_BASE = 'fa-regular fa-fw fa-lg';
+
+	const defaults = {
+		Save: {
+			value: 'Save',
+			func: 'nuSaveAction()',
+			text: '',
+			iconSuffix: 'fa-floppy-disk'
+		},
+		Delete: {
+			value: 'Delete',
+			func: 'nuDeleteAction()',
+			text: '',
+			iconSuffix: 'fa-square-minus'
+		},
+		Clone: {
+			value: 'Clone',
+			func: 'nuCloneAction()',
+			text: '',
+			iconSuffix: 'fa-clone'
+		},
+		RunHidden: {
+			value: 'Run',
+			func: 'nuRunHiddenAction()',
+			text: '',
+			iconSuffix: 'fa-circle-play'
+		},
+		Run: {
+			value: 'Run',
+			func: 'nuRunAction()',
+			text: '',
+			iconSuffix: 'fa-circle-play'
+		}
+	};
+
+	if (['Save', 'Delete', 'Clone', 'Run'].includes(id)) {
+		const def = defaults[id] || {
+			value: id,
+			func: `nu${id}Action()`,
+			text: id,
+			iconSuffix: null
+		};
+
+		value = value ?? def.value;
+		func = func ?? def.func;
+		title = title ?? def.text;
+		icon = icon ?? (def.iconSuffix ? `${ICON_BASE} ${def.iconSuffix}` : null);
 	}
 
-	if (typeof (value) == 'object') {
+	if (typeof value === 'object') {
 		value = nuUseMobileView() ? value.valueMobile : nuTranslate(nuDefine('value'));
 	} else {
 		value = nuTranslate(nuDefine(value));
 	}
 
-	text = nuTranslate(nuDefine(text));
+	title = nuTranslate(nuDefine(title));
 
 	let nuClass = "nuActionButton";
-	if (id == 'Save' || id == 'Add' || id == 'Clone' || id == 'Delete') {
-		nuClass += " " + "nu" + id + "Button";
+	if (['Save', 'Add', 'Clone', 'Delete'].includes(id)) {
+		nuClass += " nu" + id + "Button";
 	}
 
-	id = "nu" + id + "Button";
-	let html = `<button id='${id}' type='button' class='${nuClass}' title = '${text}' onclick='${func}'>${value}` + "</button>";
+	const elementId = "nu" + id + "Button";
 
-	if (e) {
-		$(html).insertAfter('#' + e);
+	let html = `<button id="${elementId}" type="button" class="${nuClass}"
+						 title="${title}"
+						 onclick="${func}">${value}</button>`;
+
+	if (insertAfterElement) {
+		$(html).insertAfter('#' + insertAfterElement);
 	} else {
 		$('#nuActionHolder').append(html);
+	}
+
+	if (icon) {
+		nuAddInputIcon(elementId, icon);
 	}
 
 	if (nuIsMobile()) {
 		$('.nuActionButton').css('height', '28px');
 	}
 
-	return $('#' + id);
+	return $('#' + elementId);
+
 }
 
 function nuAddActionButtonSaveClose(caption) {
 
-	nuAddActionButton('SaveClose', nuTranslate(caption === undefined ? 'Save & Close' : caption), "nuSaveAction(true)", '', 'nuSaveButton');
+	nuAddActionButton('SaveClose', nuTranslate(caption === undefined ? 'Save & Close' : caption), "nuSaveAction(true)", '', '', 'nuSaveButton');
 	$('#nuSaveCloseButton').addClass('nuSaveButton');
 
 }
@@ -1374,7 +1477,7 @@ function nuINPUTCalc($id, thisObj, p) {
 function nuINPUTSetValue($id, thisObj, inputType) {
 
 	if (inputType == 'button') {
-		$id.html(nuTranslate(thisObj.value));
+		$id.html(`<span class="nuButtonLabel">${nuTranslate(thisObj.value)}</span>`)
 		$id.attr("data-nu-org-label", thisObj.value);
 	} else {
 
@@ -1981,7 +2084,7 @@ function nuRUN(w, i, l, p, prop) {
 			'value': nuTranslate(obj.label),
 			'onclick': nuRUNGetOnClickEvent(obj)
 		})
-			.html(nuTranslate(obj.label))
+			.html(`<span class="nuButtonLabel">${nuTranslate(obj.label)}</span>`)
 			.addClass('nuButton');
 
 		$('#' + id).attr("data-nu-org-label", obj.label);
@@ -2412,7 +2515,7 @@ function nuSubformFocusLastRow(id, f) {
 	const c = f === undefined ? sf.fields[1] : sf.fields.indexOf(f);
 	const r = sf.rows.length - 1;
 
-	$('#' + id + nuPad3(r) + c).trigger("focus");
+	$('#' + id + nuPad3(r) + c).nuSetFocus();
 
 }
 
@@ -2544,7 +2647,7 @@ function nuSubformMoveFocus(activeElement, d) {
 
 	let row = activeElement.attr('data-nu-prefix').slice(-3);
 	let nextRow = $('#' + activeElement.attr('data-nu-form') + nuPad3(Number(row) + d) + activeElement.attr('id').substr(activeElement.attr('data-nu-form').length + 3));
-	if (nextRow.length == 1 && !nextRow.prop('disabled')) nextRow.trigger("focus");
+	if (nextRow.length == 1 && !nextRow.prop('disabled')) nextRow.nuSetFocus();
 
 	return true;
 
@@ -3995,7 +4098,7 @@ function nuBuildOptionsList(items, parentId, contextType) {
 				position: 'absolute',
 				top: topPos - 4,
 				left: 30,
-				width: 35 + maxWidth - (contextType === 'subform' ? 55 : 0),
+				width: maxWidth - (contextType === 'subform' ? 55 : 0) + 10,
 				height: 0
 			})
 			: $('<div>')
@@ -4269,7 +4372,7 @@ function nuBrowseTitle(columns, index, left, multiline) {
 	const container = nuCreateElementWithId('div', elementId, 'nuRECORD');
 	const spanContent = `<span id="nusort_${index}" class="nuSort" onclick="nuSortBrowse(${index})" > ${nuTranslate(columns[index].title)} </span>`;
 	const sortedSpan = currentForm.sort === index ? nuGenerateSortSpan(index, columns[index].title, currentForm.sort_direction) : spanContent;
-	const titleClass = multiline === '1' ? 'nuBrowseTitleMultiline nuBrowseTitle' : 'nuBrowseTitle';
+	const titleClass = multiline === '1' ? 'nuBrowseTitle nuBrowseTitleMultiline' : 'nuBrowseTitle nuBrowseTitleSingeleline';
 	const columnWidth = Number(columns[index].width);
 
 	const element = $(container);
@@ -4622,6 +4725,7 @@ function nuBrowseSetCellAttributes(div, rowIndex, colIndex, column) {
 
 	div.setAttribute('data-nu-row', rowIndex);
 	div.setAttribute('data-nu-column', colIndex);
+	div.setAttribute('data-nu-column-id', column.id);
 	div.style.textAlign = nuAlign(column.align);
 	div.style.overflow = 'hidden';
 	div.style.padding = (column.width < 0 ? 0 : undefined) + 'px';
@@ -4667,7 +4771,7 @@ function nuBrowseCreateFooter(currentForm, topOffset, leftOffset, rowHeight) {
 function nuBrowseCreateFooterHtml(currentForm) {
 
 	const last = `<span id="nuLast" onclick="nuGetPage(${currentForm.page_number})" class="nuBrowsePage">&#9668;</span>`;
-	const next = `<span id="nuNext" onclick="nuGetPage(${currentForm.page_number + 2})" class="nuBrowsePage">►</span>`;
+	const next = `<span id="nuNext" onclick="nuGetPage(${currentForm.page_number + 2})" class="nuBrowsePage">&#x25BA;</span>`;
 	const pageLabel = '&nbsp;Page&nbsp;';
 	const currentPageInput = `<input id="browsePage" style="text-align:center;margin:3px 0px 0px 0px;width:40px" onchange="nuGetPage(this.value)" value="${currentForm.page_number + 1}" class="browsePage"/>`;
 	const totalPagesLabel = ' / ' + (currentForm.pages === 0 ? 1 : currentForm.pages) + ' ';
@@ -4740,6 +4844,92 @@ function nuSetBrowseColumnWidth(column, width) {
 	}
 	cw.nuFORM.breadcrumbs[cw.nuFORM.breadcrumbs.length - 1].column_widths[column] = width;
 	cw.nuSetBrowseColumns(cw.nuFORM.breadcrumbs[cw.nuFORM.breadcrumbs.length - 1].column_widths);
+
+}
+
+function nuBrowseRow(elOrEvent, columnNumberOrId) {
+
+	// Normalise to a jQuery-wrapped element
+	const $invoked = (elOrEvent && elOrEvent.target)
+		? $(elOrEvent.currentTarget || elOrEvent.target)
+		: $(elOrEvent);
+
+	// Read the row index from the invoking element
+	const rowAttr = $invoked.attr('data-nu-row');
+	const row = rowAttr != null ? parseInt(rowAttr, 10) : null;
+
+	// If a columnNumberOrId was provided, select that cell in the same row,
+	// otherwise stick with the invoking element itself
+	let $cell = $invoked;
+
+	if (columnNumberOrId != null && row != null) {
+		// 1) try to find a cell in this row by data-nu-column-id override
+		const $byPk = $(`.nuCell[data-nu-row="${row}"][data-nu-column-id="${columnNumberOrId}"]`);
+		if ($byPk.length) {
+			$cell = $byPk;
+		}
+		// 2) otherwise fall back to the row/column-id lookup
+		else {
+			$cell = $(`#nucell_${row}_${columnNumberOrId}`);
+		}
+	}
+
+	const pk = $cell.attr('data-nu-primary-key');
+	const colAttr = $cell.attr('data-nu-column');
+	const column = parseInt(colAttr, 10);
+	const colId = $cell.attr('data-nu-column-id');
+	const html = $cell.html();
+	const value = $cell.text();
+
+	return {
+		pk,
+		row,
+		column,
+		colId,
+		html,
+		value,
+		$cell
+	};
+
+}
+
+function nuBrowseCells(row) {
+	return $(`div.nuBrowseTable[id^='nucell_${row}_']`);
+}
+
+function nuBrowseLoop(columns, callback) {
+
+	const props = nuCurrentProperties();
+	if (!Array.isArray(columns) || columns.length === 0) {
+		const colCount = props.column_widths.length;
+		columns = Array.from({ length: colCount }, (_, i) => i);
+	}
+
+	const cells = document.querySelectorAll('#nuRECORD .nuCell');
+	const results = [];
+
+	cells.forEach(cell => {
+		const row = parseInt(cell.getAttribute('data-nu-row'), 10);
+		const column = +cell.getAttribute('data-nu-column');
+		const columnId = cell.getAttribute('data-nu-column-id');
+
+		const isMatch = columns.some(colSpec =>
+			(typeof colSpec === 'number' && column === colSpec) ||
+			(typeof colSpec === 'string' && colSpec === columnId)
+		);
+		if (!isMatch) return;
+
+		const cellText = cell.textContent;
+		const cellHtml = cell.innerHTML;
+		const ret = callback(row, column, columnId, cellText, cellHtml);
+
+		if (ret !== undefined) {
+			results.push(ret);
+		}
+
+	});
+
+	return results;
 
 }
 
@@ -4825,7 +5015,7 @@ function nuSearchPressed(e) {
 	e.preventDefault();
 
 	if (window.nuBROWSEROW === -1) {
-		$('#nuSearchButton').trigger("click");
+		nuSearchAction();
 		return;
 	}
 
@@ -4969,6 +5159,7 @@ function nuBuildLookup(id, search, like) {
 	const target = obj.attr('data-nu-target');
 	const prefix = obj.attr('data-nu-prefix');
 	window.nuSubformRow = Number(prefix.substr(prefix.length - 3));
+	window.nuLastFocus = $('#' + target + 'code');
 
 	if (arguments.length < 3) {
 		like = '';
@@ -5039,7 +5230,7 @@ function nuPopulateLookup(form, targetId, setFocus) {
 		}
 
 		if (i === 1 && setFocus !== false) {
-			$element.trigger("focus");
+			$element.nuSetFocus();
 		}
 	}
 
@@ -5542,6 +5733,9 @@ function nuUpdateMessage(actionMessage) {
 	} else if (actionMessage === 'save') {
 		msg = 'Record Saved';
 		msgClass = 'nuUpdateMessageSave';
+	} else if (actionMessage === 'refresh_required') {
+		msg = 'Refresh Required';
+		msgClass = 'nuUpdateMessageRefreshRequired';
 	}
 
 	$("#nuProgressUpdate").hide();
@@ -5556,7 +5750,10 @@ function nuUpdateMessage(actionMessage) {
 
 	nuSetObjectBounds(div, top, left, null, null, true);
 
-	$("#nuNowUpdated").fadeToggle(3000);
+	if (actionMessage !== 'refresh_required') {
+		$("#nuNowUpdated").fadeToggle(3000);
+	}
+
 	$('.nuActionButton').show();
 
 }
@@ -7081,44 +7278,71 @@ function nuPrompt(text, caption, defaultValue, format, fctn) {
 function nuOnPromptClose(val, ok) {
 }
 
-function nuAddBrowseTitleSelect(index, data, w) {
+function nuAddBrowseTitleSelect(column, optionsData, customWidth, style) {
 
-	if (!Array.isArray(data)) return;
+	if (!Array.isArray(optionsData) || optionsData.length === 0) return null;
 
-	var id = "nuBrowseTitle" + index + "_select";
-	var list = document.createElement('select');
-	list.setAttribute("id", id);
+	let columnId = null;
+	const isNum = typeof column === 'number';
 
-	if (w === undefined) {
-		w = nuCurrentProperties().column_widths == 0 ? nuCurrentProperties().browse_columns[index].width : nuCurrentProperties().column_widths[index] - 3;
+	if (!isNum) {
+		columnId = column;
+		column = nuCurrentProperties().browse_columns.findIndex(
+			object => object.id === column
+		);
 	}
 
-	list.setAttribute('style', 'width:' + w + 'px');
+	const { column_widths: columnWidths, browse_columns: browseColumns } = nuCurrentProperties();
+	const selectId = `nuBrowseTitle${column}_select`;
+	let propertyId = '';
 
-	var is1DArray = data[0][0] === undefined;
-	data.forEach(function (a) {
-		var opt = document.createElement('option');
-		opt.value = is1DArray ? a : a[0];
-		opt.innerHTML = is1DArray ? a : a[1];
-		list.appendChild(opt);
+	if (isNum) {
+		propertyId = `nuBrowseTitle${column}_select`;
+	} else {
+		propertyId = `nuBrowseTitle_${columnId}_select`;
+	}
+
+	const containerSelector = `#nuBrowseTitle${column}`;
+
+	const computedWidth = typeof customWidth !== 'undefined'
+		? customWidth
+		: (columnWidths === 0
+			? browseColumns[column].width
+			: columnWidths[column] - 3
+		);
+
+	const cssProps = { width: `${computedWidth}px`, ...(style || {}) };
+	const $select = $('<select>', { id: selectId, css: cssProps });
+
+	const isSimpleArray = !Array.isArray(optionsData[0]);
+	optionsData.forEach(item => {
+		const [value, label] = isSimpleArray ? [item, item] : item;
+		$('<option>', { value, text: label }).appendTo($select);
 	});
 
-	var obj = $('#nuBrowseTitle' + index);
-	obj.append('<br/>').append(list);
+	const $container = $(containerSelector);
+	if ($container.length === 0) {
+		console.warn(`nuAddBrowseTitleSelect2: no container found for selector "${containerSelector}"`);
+		return null;
+	}
 
-	$('#' + id).on('change', function () {
-		nuSetProperty(this.id, this.value);
+	$container.append('<br/>', $select);
+
+	$select.on('change', () => {
+		nuSetProperty(propertyId, $select.val());
 		nuSearchAction();
 	});
 
-	obj.on('mousedown', '> select', function (e) {
-		e.stopPropagation();
-	});
+	$select.addClass('nuBrowseTitleSelect');
 
-	$("#" + id).val(nuGetProperty(id));
+	$container.on('mousedown', 'select', e => e.stopPropagation());
 
-	return $('#' + id);
+	$select.val(nuGetProperty(propertyId));
+	if (!isNum) {
+		$select.attr('data-nu-title-id', columnId)
+	}
 
+	return $select;
 }
 
 function nuDatalistValueRestoreValue(i) {
@@ -7289,24 +7513,33 @@ function nuSetBrowseNoSearchResultsMessage(str) {
 	$('.nuBrowseNoResults').html(nuTranslate(str));
 }
 
-function nuSetSaveButtonProperties(sb, t, l, h, w, fs) {
+function nuSetSaveButtonProperties(id, top, left, hight, width, fontSizeOrStyle) {
 
-	sb.css({
-		"top": t + "px",
-		"left": l + "px",
-		"width": w + "px",
+	id.css({
+		"top": top + "px",
+		"left": left + "px",
+		"width": width + "px",
 		"position": "absolute",
-		"height": h + "px",
+		"height": hight + "px",
 		"margin": "unset"
 	});
 
-	sb.attr('data-nu-tab', '0');
-	sb.attr('data-nu-form', '');
+	id.attr('data-nu-tab', '0');
+	id.attr('data-nu-form', '');
 
-	if (fs) sb[0].style.fontSize = fs + "px";
-	if (nuSelectedTabNumber() !== '0') sb.css('display', 'none');
+	if (fontSizeOrStyle !== undefined) {
+		if (typeof fontSizeOrStyle === 'number') {
+			id[0].style.fontSize = fontSizeOrStyle + "px";
+		} else {
+			id.css(fontSizeOrStyle);
+		}
+	}
 
-	return sb;
+	if (nuSelectedTabNumber() !== '0') {
+		id.css('display', 'none');
+	}
+
+	return id;
 
 }
 
@@ -7322,21 +7555,28 @@ function nuSetSaveButtonPosition(t, l, h, w, fs) {
 
 }
 
-function nuAttachSaveButtonTo(i, dx, dy, h, w, fs) {
+function nuAttachSaveButtonTo(id, dx, dy, hight, width, fontSize) {
 
-	var sb = $('#nuSaveButton');
-	var dest = $('#' + i);
+	const sb = $('#nuSaveButton');
 
-	if (dest === undefined || nuDebugOut(dest, i)) return false;
+	const dest = $('#' + id);
+	if (dest === undefined || nuDebugOut(dest, id)) return false;
 
 	dest.after(sb);
 
+	$('#nuSaveButton')
+		.append('<span style="margin-left:8px;">' + nuTranslate('Save') + '</span>')
+		.css({
+			'width': 'auto',
+			'padding-right': '10px'
+		});
+
 	if (!dx || dx == 0) dx = 0;
 	if (!dy || dy == 0) dy = 0;
-	if (!w || w == 0) w = sb.nuCSSNumber("width");
-	if (!h || h == 0) h = sb.nuCSSNumber("height");
+	if (!width || width == 0) width = sb.nuCSSNumber("width");
+	if (!hight || hight == 0) hight = sb.nuCSSNumber("height");
 
-	return nuSetSaveButtonProperties(sb, dest.nuCSSNumber("top") + dest.nuCSSNumber("height") + 15 + dy, dest.nuCSSNumber("left") + dx, h, w, fs);
+	return nuSetSaveButtonProperties(sb, dest.nuCSSNumber("top") + dest.nuCSSNumber("height") + 15 + dy, dest.nuCSSNumber("left") + dx, hight, width, fontSize);
 
 }
 
@@ -7357,6 +7597,7 @@ function nuUppyGetLanguageCodeAndLocale(language) {
 		{ language: 'Greek', code: 'el_GR', locale: Uppy.locales.el_GR },
 		{ language: 'German', code: 'de_DE', locale: Uppy.locales.de_DE },
 		{ language: 'French', code: 'fr_FR', locale: Uppy.locales.fr_FR },
+		{ language: 'Hungarian', code: 'hu_HU', locale: Uppy.locales.hu_HU },
 		{ language: 'Dutch', code: 'nl_NL', locale: Uppy.locales.nl_NL },
 		{ language: 'Danish', code: 'da_DK', locale: Uppy.locales.da_DK },
 		{ language: 'Czech', code: 'cs_CZ', locale: Uppy.locales.cs_CZ },
@@ -7405,7 +7646,7 @@ function nuUppySetLanguage(uppy, language, languageFallback) {
 	};
 
 	if (!langResult.locale) {
-		$.getScript(`core/libs/uppy/locales/${langResult.code}.min.js`, function (data, textStatus, jqxhr) {
+		$.getScript(`third_party/uppy/locales/${langResult.code}.min.js`, function (data, textStatus, jqxhr) {
 			langResult = nuUppyGetLanguageCodeAndLocale(userLanguage);
 			setUppyLanguage(langResult.locale);
 		});
