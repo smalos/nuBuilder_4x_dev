@@ -2,8 +2,14 @@ function nuEditPHP(type) {
 	nuForm('nuphp', nuFormId() + '_' + type, 'justphp', '', 2);
 }
 
-function nuOpenCurrentFormProperties() {
-	nuForm('nuform', nuFormId(), '', '', 2);
+function nuOpenCurrentFormProperties(event) {
+
+	if (event.ctrlKey || event.metaKey) {
+		nuPopup('nuform', nuFormId(), '');
+	} else {
+		nuForm('nuform', nuFormId(), '', '', 2);
+	}
+
 }
 
 function nuOpenCurrentObjectList() {
@@ -110,7 +116,7 @@ function nuAddAdminButtons() {
 		nuProperties: {
 			title: nuTranslate("Form Properties"),
 			value: "Prop",
-			func: "nuOpenCurrentFormProperties();"
+			func: "nuOpenCurrentFormProperties(event);"
 		},
 		nuObjects: {
 			title: nuTranslate("Object List"),
@@ -198,23 +204,12 @@ function nuAddAdminButtons() {
 
 	}
 
-	let heightToAdd = 50;
+	let heightToAdd = 40;
 	if (buttonCount > 0) {
-
-		const frame = parent.$('#nuDragDialog iframe');
-		const dragDialog = parent.$('#nuDragDialog');
-		if (frame.length !== 0) {
-			frame.outerHeight((i, h) => h + heightToAdd);
-		}
-		if (dragDialog.length !== 0) {
-			dragDialog.outerHeight((i, h) => h + heightToAdd);
-		}
-
-		if (isLaunch) heightToAdd = 20;
+		if (isLaunch) heightToAdd = 5;
 		$('#nuActionHolder').css('height', `+=${heightToAdd}px`);
-
 		const lastAdminButton = $('.nuAdminButton').last();
-		$('<br style="user-select:none">').insertAfter(lastAdminButton);
+		$('<p style="display:block; margin:0px; user-select:none;"></p>').insertAfter(lastAdminButton);
 
 	}
 
@@ -263,15 +258,16 @@ function nuAdminPreInspectRecordJS() {
 
 }
 
-function nuAdminToolsOpenMenu(event, menu, element) {
+function nuOpenContextMenu(event, menu, element) {
 	event.stopPropagation();
 	ctxmenu.show(menu, element);
 }
 
 function nuAdminToolsClick(element, event, menuType) {
 	const menu = nuAdminToolsCreateMenuConfig(menuType, event);
-	nuAdminToolsOpenMenu(event, menu, element);
+	nuOpenContextMenu(event, menu, element);
 }
+
 
 // Set Browse Column Widths in a Browse Screen
 
@@ -597,7 +593,13 @@ var nuContextMenuDefinitionTab = [
 	menuObject, {
 		isDivider: true
 	},
-	menuRename, {
+	menuRename,
+	{
+		text: nuTranslate('Add') + '...',
+		tag: "addTab",
+		action: () => nuContextMenuAddTabPrompt()
+	},
+	{
 		text: "Access",
 		tag: "Access",
 		subMenu: [
@@ -1072,23 +1074,63 @@ function nuContextMenuLabelPromptCallback(value, ok) {
 
 }
 
+
+function nuContextMenuAddTabPromptCallback(tabNr, tabName) {
+
+	const formId = nuFormId();
+	const title = tabName.trim() || nuTranslate("New Tab");
+	const order = (parseInt(tabNr) + 1) * 10 + 1;
+
+	nuRunPHPHiddenWithParams('NUBROWSEADDTAB', 'NUBROWSEADDTAB_params', {
+		form_id: formId,
+		title: title,
+		order: order
+	});
+
+}
+
+
 function nuContextMenuLabelPrompt() {
 
 	const label = contextMenuCurrentTarget.id;
 	const id = nuContextMenuCurrentTargetId();
 	const obj = $('#' + contextMenuCurrentTarget.id);
+	let caption = obj.attr('data-nu-org-label');
 
-	let value = obj.attr('data-nu-org-label');
-
-	if (typeof value === 'undefined') {
-		value = obj.is(":button") ? value : $('#' + label).html();
+	if (caption) {
+		caption = nuTranslate("Tab") + ': ' + caption
+	} else {
+		caption = nuTranslate("Object") + ': ' + id
 	}
 
-	value = obj.is(":button") && obj.attr('data-nu-label') ? obj.html() : value;
+	let defaultValue = obj.attr('data-nu-org-label');
+	if (typeof defaultValue === 'undefined') {
+		defaultValue = obj.is(":button") ? defaultValue : $('#' + label).html();
+	}
 
-	value = nuFormType() == 'edit' ? value : value.trim();
+	defaultValue = obj.is(":button") && obj.attr('data-nu-label') ? obj.html() : defaultValue;
+	defaultValue = nuFormType() == 'edit' ? defaultValue : defaultValue.trim();
 
-	nuPrompt(nuTranslate("Label") + ':', nuTranslate("Object") + ': ' + id, value, '', 'nuContextMenuLabelPromptCallback');
+	nuPrompt(nuTranslate("Label") + ':', caption, defaultValue, '', 'nuContextMenuLabelPromptCallback');
+
+}
+
+function nuContextMenuAddTabPrompt() {
+
+	const id = nuContextMenuCurrentTargetId();
+	const tabNr = id.slice(5);
+
+	nuPrompt(
+		nuTranslate("Tab Name") + ':',
+		nuTranslate("Add Tab"),
+		nuTranslate('New Tab'),
+		'',
+		function (tabName, confirmed) {
+			if (confirmed) {
+				nuContextMenuAddTabPromptCallback(tabNr, tabName);
+			}
+		}
+	);
 
 }
 
@@ -1145,7 +1187,7 @@ function nuContextMenuCurrentTargetEditIdText() {
 	let t = $('#' + contextMenuCurrentTarget.id);
 
 	if (t.hasClass('nuTab')) {
-		return contextMenuCurrentTarget.id + ' (' + t.attr('data-nu-tab-id') + ')';
+		return t.attr('data-nu-org-label');
 	} else {
 		return id;
 	}
@@ -1216,7 +1258,10 @@ function nuContextMenuUpdate() {
 		: '.nuSort, .nuAdminButton';
 
 	$(selector)
-		.filter((i, el) => !el.hasAttribute('data-nu-no-context-menu'))
+		.filter((i, el) =>
+			!el.hasAttribute('data-nu-no-context-menu') &&
+			!el.classList.contains('nuActionButton')
+		)
 		.each((index, element) => {
 
 			if (!element.id) return;

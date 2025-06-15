@@ -145,6 +145,31 @@ function nuCSSIndexInclude($files, $refreshCache = true) {
 	nuInclude($files, 'stylesheet', $refreshCache);
 }
 
+/*
+function nuArrayFlatten($data, $section = null) {
+
+	if (is_array($data) && $section !== null) {
+
+		if (!isset($data[$section])) {
+			return [];
+		}
+
+		$sectionData = $data[$section];
+		if (array_values($sectionData) === $sectionData) {
+			return $sectionData;
+		}
+		return array_merge(...array_values($sectionData));
+	}
+
+	if (array_values($data) === $data) {
+		return $data;
+	}
+
+	return array_merge(...array_values($data));
+
+}
+*/
+
 function nuIncludeFiles() {
 
 	global $nuConfigIncludeGoogleCharts, $nuConfigIncludeApexCharts;
@@ -179,9 +204,12 @@ function nuIncludeFiles() {
 		$jsFiles[] = 'third_party/tinymce/tinymce.min.js';
 	}
 
-	nuMergeIncludeFiles($jsFiles, $nuConfigIncludeJS);
-
 	echo "<script src=\"third_party/jquery/jquery-3.7.1.min.js\"></script>\n";
+
+	// $nuConfigIncludeJS = nuArrayFlatten($nuConfigIncludeJS, 'core');
+	if (isset($nuConfigIncludeJS) && !empty($nuConfigIncludeJS)) {
+		nuMergeIncludeFiles($jsFiles, $nuConfigIncludeJS);
+	}
 	nuJSIndexInclude($jsFiles);
 
 	$cssFiles = [
@@ -193,8 +221,9 @@ function nuIncludeFiles() {
 		'third_party/jquery/jquery-confirm.min.css'
 	];
 
-	nuMergeIncludeFiles($cssFiles, $nuConfigIncludeCSS);
-
+	if (isset($nuConfigIncludeCSS) && !empty($nuConfigIncludeCSS)) {
+		nuMergeIncludeFiles($cssFiles, $nuConfigIncludeCSS);
+	}
 	nuCSSIndexInclude($cssFiles);
 
 }

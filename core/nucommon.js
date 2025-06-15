@@ -634,13 +634,15 @@ function nuPopup(formId, recordId, filter) {
 
 }
 
-function nuOptionsListAction(f, r, filter) {
+function nuOptionsListAction(f, r, filter, e) {
 
-	if (!(nuIsMacintosh() ? window.event.metaKey : window.event.ctrlKey)) {
-		nuPopup(f, r, filter)
+	const isCtrlOrMetaPressed = e ? (nuIsMacintosh() ? e.metaKey : e.ctrlKey) : false;
+	if (!isCtrlOrMetaPressed) {
+		nuPopup(f, r, filter);
 	} else {
 		nuForm(f, r, filter, '', '');
 	}
+
 }
 
 //-- object for dragging dialog --//
@@ -2106,9 +2108,8 @@ function nuPreventButtonDblClick() {
 
 function nuAddBackButton() {
 
-	var b = $('.nuBreadcrumb').length;
-	if (b > 0) {
-		nuAddActionButton('BackBtn', nuTranslate('Back'), 'if (!nuFORM.edited) { nuDisable(this.id) }; nuOpenPreviousBreadcrumb();');
+	if ($('.nuBreadcrumb').length > 0) {
+		nuAddActionButton('Back');
 	}
 
 }
@@ -2691,7 +2692,8 @@ function nuSetValue(id, value, method, change) {
 			obj.val(value);
 		}
 	} else if (obj.is(':checkbox') || obj.is(':radio')) {
-		if (change) obj.prop('checked', value).trigger("change");
+		obj.prop('checked', value);
+		if (change) obj.trigger("change");
 	} else if (obj.is('select') && method === 'text') {
 		$('#' + id + ' option').each(function () {
 			if ($(this).text().nuReplaceNonBreakingSpaces() === value) {

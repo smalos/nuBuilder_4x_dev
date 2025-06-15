@@ -582,15 +582,15 @@ function nuDragGenerateOptionsControlPanel(dragOptionsBoxWidth, dragOptionsBoxMi
 						</tr>
 						<tr>
 							<td>${nuDragCreateSelectBox("nuDragOptionsTabsDropdown", "nuDragOptionsButton", "border: none")}</td>
-							<td>${nuDragCreateButton("move_tab_btn", `${classNuDragOptionsButton} nuSaveButtonEdited`, "", "Move to Tab", "nuMoveNuDrag")}</td>
+							<td>${nuDragCreateButton("move_tab_btn", `${classNuDragOptionsButton} nuDragOptionsSaveButtonEdited`, "", "Move to Tab", "nuMoveNuDrag")}</td>
 						</tr>
-						<tr>
-							<td>
-								${nuDragCreateCheckbox("nuShowDragLabels", "Show Labels", "nuToggleDragLabels", "fas fa-text-slash")}
-								${nuDragCreateCheckbox("nuShowHiddenObjects", "Show Hidden Objects", "nuToggleHiddenObjects", "fas fa-eye-slash", "30px")}
-							</td>
-							<td>${nuDragCreateButton("save_btn", `${classNuDragOptionsButton} nuSaveButtonEdited`, "", "Save", "nuSaveNuDrag")}</td>
-						</tr>
+						<td>
+							${nuDragCreateCheckbox("nuShowDragLabels", "Show Labels", "nuToggleDragLabels", "fas fa-text-slash")}
+							${nuDragCreateCheckbox("nuShowHiddenObjects", "Show Hidden Objects", "nuToggleHiddenObjects", "fas fa-eye-slash", "30px")}
+						</td>
+						<td>
+							${nuDragCreateButton("save_btn", `${classNuDragOptionsButton} nuDragOptionsSaveButtonEdited`, "fa-fw fa-regular fa-lg fa-floppy-disk", "Save", "nuSaveNuDrag")}
+						</td>
 					</tbody>
 				</table>
 			</div>
@@ -1433,7 +1433,6 @@ function nuDragElement(element, dragHeaderOffset) {
 	element.ontouchstart = dragStart;
 
 	function dragStart(e) {
-		e = e || window.event;
 		if (dragHeaderOffset !== undefined) {
 
 			let touch = (e.touches?.[0]) || (e.pointerType && e.pointerType === 'touch' && e);
@@ -1463,7 +1462,6 @@ function nuDragElement(element, dragHeaderOffset) {
 
 	function elementDrag(e) {
 
-		e = e || window.event;
 		e.preventDefault();
 
 		let clientX, clientY;

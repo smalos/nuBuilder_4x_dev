@@ -668,6 +668,7 @@ function nuGetEditForm($F, $R) {
 	$f->primary_key = $r->sfo_primary_key;
 	$f->redirect_form_id = $r->sfo_browse_redirect_form_id == '' ? $r->zzzzsys_form_id : $r->sfo_browse_redirect_form_id;
 	$f->redirect_other_form_id = $r->sfo_browse_redirect_form_id == '' ? '' : $r->sfo_browse_redirect_form_id;
+	$f->browse_target = $r->sfo_browse_target ?? '';
 	$f->order = $SQL->orderBy;
 	$f->where = $SQL->where;
 	$f->from = $SQL->from;
@@ -1105,6 +1106,59 @@ function nuRefineTabList($tabs) {
 	return $refinedTabList;
 
 }
+
+function nuReorderTabs($recordID) {
+
+	$sql = "
+        SELECT zzzzsys_tab_id
+        FROM zzzzsys_tab
+        WHERE syt_zzzzsys_form_id = ?
+        ORDER BY syt_order
+    ";
+
+	$result = nuRunQuery($sql, [$recordID]);
+	$order = 10;
+
+	while ($row = db_fetch_object($result)) {
+
+		$updateSql = "
+            UPDATE zzzzsys_tab
+            SET syt_order = ?
+            WHERE zzzzsys_tab_id = ?
+        ";
+
+		nuRunQuery($updateSql, [$order, $row->zzzzsys_tab_id]);
+		$order += 10;
+	}
+
+}
+
+function nuReorderBrowse($formId) {
+
+	$sql = "
+        SELECT zzzzsys_browse_id
+        FROM zzzzsys_browse
+        WHERE sbr_zzzzsys_form_id = ?
+        ORDER BY sbr_order
+    ";
+
+	$result = nuRunQuery($sql, [$formId]);
+	$order = 10;
+
+	while ($row = db_fetch_object($result)) {
+
+		$updateSql = "
+            UPDATE zzzzsys_browse
+            SET sbr_order = ?
+            WHERE zzzzsys_browse_id = ?
+        ";
+
+		nuRunQuery($updateSql, [$order, $row->zzzzsys_browse_id]);
+		$order += 10;
+	}
+
+}
+
 
 function nuGetSQLValue($sql) {
 

@@ -30,6 +30,7 @@ function nuAlterSystemTables() {
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_mobile_view` VARCHAR(1) NULL DEFAULT NULL AFTER `sfo_style`;",
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_group` VARCHAR(100) NULL DEFAULT NULL AFTER `sfo_description`;",
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_status` VARCHAR(1) NULL DEFAULT NULL AFTER `sfo_group`;",
+		"ALTER TABLE `zzzzsys_form` ADD `sfo_browse_target` VARCHAR(1) NULL DEFAULT NULL AFTER `sfo_browse_redirect_form_id`;",
 		"ALTER TABLE `zzzzsys_session` ADD `sss_hashcookies` MEDIUMTEXT NULL DEFAULT NULL AFTER `sss_access`;",
 		"ALTER TABLE `zzzzsys_session` ADD COLUMN sss_login_time timestamp NULL DEFAULT current_timestamp() AFTER sss_time;",
 		"ALTER TABLE `zzzzsys_tab` ADD `syt_access` VARCHAR(1) NULL DEFAULT NULL AFTER `syt_help`;",
@@ -71,7 +72,8 @@ function nuAlterSystemTables() {
 		"ALTER TABLE `zzzzsys_prompt_generator` ADD `sph_template` VARCHAR(1) NULL DEFAULT NULL AFTER `pge_tag`;",
 		"ALTER TABLE `zzzzsys_prompt_generator` DROP `sph_template`;",
 		"ALTER TABLE `zzzzsys_prompt_generator` ADD `pge_instruction` VARCHAR(3000) NULL DEFAULT NULL AFTER `sph_template`;",
-		"ALTER TABLE `zzzzsys_item` ADD `itm_group` VARCHAR(100) NULL DEFAULT NULL AFTER `itm_description`;"
+		"ALTER TABLE `zzzzsys_item` ADD `itm_group` VARCHAR(100) NULL DEFAULT NULL AFTER `itm_description`;",
+		"ALTER TABLE `zzzzsys_note` ADD `not_text` longtext NULL DEFAULT NULL AFTER `not_content`;"
 	];
 
 	foreach ($alterTableSQL as $sqlStatement) {
