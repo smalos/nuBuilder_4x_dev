@@ -1,4 +1,4 @@
-nuAddActionButton('nuRuntestemail', nuTranslate('Send'), 'nuRunPHPHidden("NUTESTEMAIL")');
+nuAddActionButton('nuRuntestemail', nuTranslate('Send'), 'nuRunPHPHidden("nu_test_email")');
 
 if (parent.$('#nuModal').length > 0) {
 

@@ -15,6 +15,7 @@ function nuNotesHandleEnterKey() {
 }
 
 $('#not_title').nuOnEnterKey(nuNotesHandleEnterKey, true);
+nuTabAdditionalSetMarker();
 
 
 function nuTinyMCEOnInit(e, editor, id) {
@@ -30,4 +31,9 @@ function nuTinyMCEOnInit(e, editor, id) {
         });
     }
 
+}
+
+
+function nuTabAdditionalSetMarker() {
+   nuTabSetMarker('nu684e16abd1b5744', 'not_text');
 }

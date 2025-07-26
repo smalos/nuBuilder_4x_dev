@@ -263,7 +263,7 @@ function nuUpdateDatabaseSave($recordId, $row, $pk, $table, $deleted, $log, $use
 
 			}
 
-			$je = addslashes(json_encode($logData));
+			$je = nuAddSlashes(json_encode($logData));
 			$sql[] = "UPDATE `$table` SET `$table" . "_nulog` = '$je' WHERE `$pk` = '$recordId';";
 
 		}
@@ -498,7 +498,7 @@ function nuUpdateDatabaseAddNuLog(&$updateData, $userId, $table) {
 
 	$jd = new stdClass;
 	$jd->added = ['user' => $userId, 'time' => time()];
-	$je = addslashes(json_encode($jd));
+	$je = nuAddSlashes(json_encode($jd));
 	$updateData->values[] = "'$je'";
 	$updateData->inserts[] = "`$table" . "_nulog`";
 
@@ -540,7 +540,7 @@ function nuUpdateDatabaseGetUpdateValue($field, $value, $formId, $recordId, $tab
 			$updateData->values[] = "null";
 			$updateData->columns[] = "`$field` = null";
 		} else {
-			$add = addslashes($v);
+			$add = nuAddSlashes($v);
 			$updateData->values[] = "'$add'";
 			$updateData->columns[] = "`$field` = '$add'";
 		}
@@ -614,7 +614,7 @@ function nuUpdateDatabaseExecStatements($sql, $nuMainTable, $mainRecordId) {
 
 function nuUpdateDatabaseRunBeforeDeleteEvent(&$nudata) {
 
-	$p = nuProcedure('nuBeforeDelete');
+	$p = nuProcedure('nu_before_delete');
 	if ($p != '') {
 		eval ($p);
 	}
@@ -629,7 +629,7 @@ function nuUpdateDatabaseRunBeforeDeleteEvent(&$nudata) {
 function nuUpdateDatabaseRunBeforeSaveEvents(&$nudata, $nuDataFormId) {
 
 	// Global Before Save event
-	$proc = nuProcedure('nuBeforeSave');
+	$proc = nuProcedure('nu_before_save');
 	if ($proc != '') {
 		eval ($proc);
 	}

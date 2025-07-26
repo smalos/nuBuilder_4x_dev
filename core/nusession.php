@@ -36,7 +36,7 @@ if ( nuCheckIsLoginRequest() ) {
 
 	if ($result != "1") {
 		// Failed login
-		nuRunLoginProcedure('nuInvalidLogin');
+		nuRunLoginProcedure('nu_invalid_login');
 
 		if ($result == "0") nuDie('Invalid login.');
 		if ($result == "-1") nuDie('This account is disabled.');
@@ -86,7 +86,6 @@ if ( $_SESSION['nubuilder_session_data']['SESSION_ID'] == 'tempanonreport' ) {
 	nuUpdateExistingSession();
 
 } else {
-
 	nuDie(nuTranslate('Your session has timed out.'));
 
 }

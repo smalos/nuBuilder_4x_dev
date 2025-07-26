@@ -1,1 +1,1 @@
-nuSetValue('sob_all_height', this.innerHTML)
+nuSetValue('sob_all_height', nuGetValue(this.id))

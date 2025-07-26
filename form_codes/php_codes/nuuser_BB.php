@@ -1,8 +1,8 @@
 $getDistinctUserColumnQuery = function($column) {
 
     $sqlWhereExpired = "(
-        (('#nuBrowseTitle9_select#' LIKE '#%' OR '#nuBrowseTitle9_select#' = '') AND (sus_expires_on > NOW() OR sus_expires_on IS NULL)) OR
-        ('#nuBrowseTitle9_select#' = 'Expired' AND sus_expires_on < NOW())
+        (('#nu5fe0352637b2e4f_filter#' LIKE '#%' OR '#nu5fe0352637b2e4f_filter#' = '') AND (sus_expires_on > NOW() OR sus_expires_on IS NULL)) OR
+        ('#nu5fe0352637b2e4f_filter#' = 'Expired' AND sus_expires_on < NOW())
     ) ";
 
     return "
@@ -35,8 +35,8 @@ $sqlLanguage = function() use ($getDistinctUserColumnQuery) {
 $sqlAccessLevel = function() {
 
     $sqlWhereExpired = "(
-        (('#nuBrowseTitle9_select#' LIKE '#%' OR '#nuBrowseTitle9_select#' = '') AND (sus_expires_on > NOW() OR sus_expires_on IS NULL)) OR
-        ('#nuBrowseTitle9_select#' = 'Expired' AND sus_expires_on < NOW()))";
+        (('#nu5fe0352637b2e4f_filter#' LIKE '#%' OR '#nu5fe0352637b2e4f_filter#' = '') AND (sus_expires_on > NOW() OR sus_expires_on IS NULL)) OR
+        ('#nu5fe0352637b2e4f_filter#' = 'Expired' AND sus_expires_on < NOW()))";
 
     $sql = "SELECT DISTINCT CONCAT(sal_code, ' : ', sal_description) AS display
         FROM `zzzzsys_user`
@@ -55,25 +55,25 @@ $language = nuEncodeQueryRowResults($sqlLanguage(), [], ['']);
 $accessLevel = nuEncodeQueryRowResults($sqlAccessLevel(), [], ['']);
 
 $filterJS = "
-    function getData(data) {
+    function nuUserFilterGetData(data) {
         return JSON.parse(atob(data));
     }
-    function getPosition() {
-        return getData('$position');
+    function nuUserFilterGetPosition() {
+        return nuUserFilterGetData('$position');
     }
-    function getTeam() {
-        return getData('$team');
-    }
-
-    function getDepartment() {
-        return getData('$department');
-    }
-    function getLanguage() {
-        return getData('$language');
+    function nuUserFilterGetTeam() {
+        return nuUserFilterGetData('$team');
     }
 
-    function getAccessLevel() {
-        return getData('$accessLevel');
+    function nuUserFilterGetDepartment() {
+        return nuUserFilterGetData('$department');
+    }
+    function nuUserFilterGetLanguage() {
+        return nuUserFilterGetData('$language');
+    }
+
+    function nuUserFilterGetAccessLevel() {
+        return nuUserFilterGetData('$accessLevel');
     }
 ";
 

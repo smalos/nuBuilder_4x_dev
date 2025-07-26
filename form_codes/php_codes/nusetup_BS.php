@@ -26,7 +26,6 @@ function nuSetupHasNonNuPrefixes() {
         SELECT 'zzzzsys_permission_item', `zzzzsys_permission_item_id` FROM `zzzzsys_permission_item` WHERE `zzzzsys_permission_item_id` NOT LIKE 'nu%' UNION ALL
         SELECT 'zzzzsys_php', `zzzzsys_php_id` FROM `zzzzsys_php` WHERE `zzzzsys_php_id` NOT LIKE 'nu%' UNION ALL
         SELECT 'zzzzsys_report', `zzzzsys_report_id` FROM `zzzzsys_report` WHERE `zzzzsys_report_id` NOT LIKE 'nu%' UNION ALL
-        SELECT 'zzzzsys_report_data', `zzzzsys_report_data_id` FROM `zzzzsys_report_data` WHERE `zzzzsys_report_data_id` NOT LIKE 'nu%' UNION ALL
         SELECT 'zzzzsys_select', `zzzzsys_select_id` FROM `zzzzsys_select` WHERE `zzzzsys_select_id` NOT LIKE 'nu%' UNION ALL
         SELECT 'zzzzsys_select_clause', `zzzzsys_select_clause_id` FROM `zzzzsys_select_clause` WHERE `zzzzsys_select_clause_id` NOT LIKE 'nu%' UNION ALL
         SELECT 'zzzzsys_tab', `zzzzsys_tab_id` FROM `zzzzsys_tab` WHERE `zzzzsys_tab_id` NOT LIKE 'nu%' UNION ALL
@@ -34,9 +33,9 @@ function nuSetupHasNonNuPrefixes() {
         SELECT 'zzzzsys_user_permission', `zzzzsys_user_permission_id` FROM `zzzzsys_user_permission` WHERE `zzzzsys_user_permission_id` NOT LIKE 'nu%' UNION ALL
         SELECT 'sob_all_zzzzsys_tab_id', `sob_all_zzzzsys_tab_id` FROM `zzzzsys_object` WHERE `sob_all_zzzzsys_tab_id` NOT LIKE 'nu%' UNION ALL
         SELECT 'sob_all_zzzzsys_form_id', `sob_all_zzzzsys_form_id` FROM `zzzzsys_object` WHERE `sob_all_zzzzsys_form_id` NOT LIKE 'nu%' UNION ALL
-        SELECT 'sob_run_zzzzsys_form_id', `sob_run_zzzzsys_form_id` FROM `zzzzsys_object` WHERE `sob_run_zzzzsys_form_id` NOT LIKE 'nu%' UNION ALL
-        SELECT 'sob_lookup_zzzzsys_form_id', `sob_lookup_zzzzsys_form_id` FROM `zzzzsys_object` WHERE `sob_lookup_zzzzsys_form_id` NOT LIKE 'nu%' UNION ALL
-        SELECT 'sob_subform_zzzzsys_form_id', `sob_subform_zzzzsys_form_id` FROM `zzzzsys_object` WHERE `sob_subform_zzzzsys_form_id` NOT LIKE 'nu%';
+        SELECT 'sob_run_zzzzsys_form_id', `sob_run_zzzzsys_form_id` FROM `zzzzsys_object` WHERE `sob_run_zzzzsys_form_id` NOT LIKE 'nu%' AND IFNULL(sob_run_zzzzsys_form_id, '') != '' UNION ALL
+        SELECT 'sob_lookup_zzzzsys_form_id', `sob_lookup_zzzzsys_form_id` FROM `zzzzsys_object` WHERE `sob_lookup_zzzzsys_form_id` NOT LIKE 'nu%' AND IFNULL(sob_lookup_zzzzsys_form_id, '') != ''  UNION ALL
+        SELECT 'sob_subform_zzzzsys_form_id', `sob_subform_zzzzsys_form_id` FROM `zzzzsys_object` WHERE `sob_subform_zzzzsys_form_id` NOT LIKE 'nu%' AND IFNULL(sob_subform_zzzzsys_form_id, '') != '' ;
     ";
     
     $stmt = nuRunQuery($select);

@@ -1,0 +1,1 @@
+nuGeneratorRunGetTags(this);

@@ -17,93 +17,97 @@
 }
 
 .nu_browse {
-	background-color: #8de2e2 !important
+	background-color: #b6e0fe !important;
 }
 
 .nu_button {
-	background-color: #98AFC7 !important
+	background-color: #1e53c6 !important;
+	color: #fff !important;
+}
+
+.nu_chart {
+	background-color: #c3e3e7 !important;
 }
 
 .nu_display {
-	background-color: #c79a63 !important
+	background-color: #f5d7a6 !important;
 }
 
 .nu_dropdown {
-	background-color: #7bce98 !important
+	background-color: #9ed9bb !important;
 }
 
 .nu_html {
-	background-color: #df7bb9 !important
+	background-color: #d0b3b3 !important;
 }
 
 .nu_contentbox {
-	background-color: #43cbdd !important
+	background-color: #cdbcb4 !important;
 }
 
 .nu_editor {
-	background-color: #918fd4 !important
+	background-color: #b8aeda !important;
 }
 
 .nu_input {
-	background-color: #8db3dd !important
+	background-color: #89c3e6 !important;
 }
 
 .nu_image {
-	background-color: #c3998a !important
+	background-color: #ffd1a3 !important;
 }
 
 .nu_word {
-	background-color: #68c994 !important
+	background-color: #7fcad1 !important;
 }
 
 .nu_lookup {
-	background-color: #EDDA74 !important
+	background-color: #e0d4a5 !important;
 }
 
 .nu_subform {
-	background-color: #f3b6b1 !important
+	background-color: #9eceaa !important;
 }
 
 .nu_run {
-	background-color: #cbc287 !important
+	background-color: #b8d58a !important;
 }
 
 .nu_textarea {
-	background-color: #babedb !important
+	background-color: #a9c7e6 !important;
 }
 
 .nu_select {
-	background-color: #caa5f6 !important
+	background-color: #d0a8ba !important;
 }
 
 .nu_calc {
-	background-color: #B6B6B4 !important
-}
-
-.nu_browseedit {
-	background-color: #a0a7d6 !important
-}
-
-.nu_edit {
-	background-color: #68c994 !important
-}
-
-.nu_launch {
-	background-color: #dd6eb3 !important
-}
-
-.nu_Form {
-	background-color: #FABA74 !important
+	background-color: #cfc7c7 !important;
 }
 
 .nu_Report {
-	background-color: #62D3FF !important
+	background-color: #8fd1d7 !important;
 }
 
 .nu_Procedure {
-	background-color: #9FD275 !important
+	background-color: #a7e0c6 !important;
 }
 
+.nu_browseedit {
+	background-color: #d3d5f7 !important;
+}
+
+.nu_edit {
+	background-color: #cfeee0 !important;
+}
+
+.nu_launch {
+	background-color: #f3cfe3 !important;
+}
+
+.nu_Form {
+	background-color: #ffd59a !important;
+}
 
 /* noto-sans-regular - latin */
 @font-face {
@@ -255,6 +259,18 @@ input[type=radio] {
 	margin: 0 0 0 4px;
 }
 
+input[type="search"] {
+	box-sizing: unset
+}
+
+#nuhtml {
+	height: 100%
+}
+
+#nubody {
+	height: 100%
+}
+
 .nuCell {
 	border-bottom: 1px solid var(--nu-border);
 	font-family: Arial, sans-serif;
@@ -312,7 +328,7 @@ input[type=radio] {
 }
 
 .nuActionHolder {
-	padding: 10px 0;
+	padding: 5px 0px 10px 0px;
 	background-color: white;
 	height: 35px;
 	text-align: left;
@@ -327,6 +343,7 @@ input[type=radio] {
 	color: white;
 	font-size: 12px;
 	padding: 5px 0;
+	margin-bottom: 4px;
 	position: sticky;
 	top: 0;
 	min-height: 22.5px;
@@ -350,14 +367,15 @@ input[type=radio] {
 	color: white;
 	display: inline-block;
 	font-size: 12px;
-	user-select: none
+	user-select: none;
+	margin-right: 1px;
 }
 
 .nuBreadcrumb:hover {
 	cursor: pointer
 }
 
-.nuBreadcrumbIcon {
+.nuBreadcrumbIcon2 {
 	font-size: 17px;
 	display: inline-block;
 	cursor: pointer;
@@ -411,22 +429,26 @@ input[type=radio] {
 	font-size: 17px !important;
 	height: 15px;
 	padding-left: 5px;
-	padding-right: 10px;
+	padding-right: 15px;
 	right: 5px;
 	text-align: right;
 	top: 5px;
-	width: 15px
+	width: 15px;
+	margin-right: 5px;
 }
 
 .nuOptions:hover {
-	color: red
+	color: #cee8ff
 }
 
 .nuOptions::before {
 	content: "\f0c9";
-	font-family: "Font Awesome 5 Free";
+	font-family: "Font Awesome 7 Free";
 	font-weight: 900;
-	margin-left: 5px
+	display: inline-block;
+	text-align: center;
+	width: 1.25em;
+	margin-left: 5px;
 }
 
 .nuSubformFilter {
@@ -437,8 +459,7 @@ input[type=radio] {
 }
 
 .nuSubformCheckbox {
-	margin: 0 !important;
-	margin-top: 3px !important;
+	margin: 1px 0 0 2px !important
 }
 
 .nuOptionsSubform {
@@ -458,7 +479,7 @@ input[type=radio] {
 
 .nuOptionsSubform::before {
 	content: "\f0c9";
-	font-family: "Font Awesome 5 Free";
+	font-family: "Font Awesome 7 Free";
 	font-weight: 600;
 	margin-left: 0px
 }
@@ -687,7 +708,7 @@ input[type=radio] {
 }
 
 .nuNoSearch {
-	color: #959595
+	color: #959595 !important;
 }
 
 .nuBlank::after,
@@ -710,7 +731,7 @@ input[type=radio] {
 	left: auto;
 	width: auto;
 	background-color: transparent;
-	padding-right: 20px;
+	padding-right: 10px;
 	border-top: 1px solid var(--nu-border);
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	border: none;
@@ -734,7 +755,6 @@ input[type=radio] {
 	min-height: 50px;
 	white-space: normal;
 	cursor: default;
-	/*	padding: 1px 20px 5px 0px; */
 }
 
 .nuBrowseTitle .nuSort {
@@ -746,7 +766,7 @@ input[type=radio] {
 
 .nuBrowseTable {
 	height: 70px;
-	padding: 1px 0px 5px 10px;
+	padding: 0px 0px 0px 10px;
 	position: absolute;
 	top: 75px;
 	font: 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -754,12 +774,20 @@ input[type=radio] {
 	white-space: nowrap
 }
 
-.nuBrowseBorderTop {
-	/*	border-top: solid #d0d0d0 1px !important */
-}
-
 .nuBrowseBorderBottom {
 	border-bottom: solid #d0d0d0 1px !important
+}
+
+.nuBrowseBorderTop {
+	border-top-style: solid;
+	border-top-color: #ebebeb70;
+	border-top-width: 1px;
+}
+
+.nuBrowseBorderLeft {
+	border-left-style: solid;
+	border-left-color: #ebebeb70;
+	border-left-width: 1px;
 }
 
 .nuBrowseFooter {
@@ -796,7 +824,7 @@ input[type=radio] {
 	align-items: center;
 	justify-content: center;
 	min-height: 24px;
-	transition: color 0.15s ease;
+	transition: color 0.15s ease
 }
 
 .nuBrowseFooter .nuBrowsePage:hover {
@@ -825,15 +853,11 @@ input[type=radio] {
 	text-align: center;
 	outline: none;
 	transition: border-color 0.15s ease;
-}
-
-.nuBrowseFooter .browsePage:focus {
-	border-color: #0073aa;
-	box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.2);
+	margin: 3px 0px 0px 0px
 }
 
 .nuBrowseFooter input.browsePage {
-	width: 40px;
+	width: 35px;
 	text-align: center;
 	margin: 0 8px !important;
 	font-size: 13px;
@@ -843,15 +867,32 @@ input[type=radio] {
 	color: black;
 }
 
+.nuBrowseFooter .browsePage:focus {
+	border-color: #0073aa;
+	box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.2);
+}
+
 .nuBrowseFooter input.browsePage:focus {
 	outline: none;
+}
+
+.nuBrowseFilterIcon {
+	color: #0274aba8;
+	margin-left: 10px;
+	display: inline-block;
+	font-size: 13px;
+}
+
+.nuBrowseFilterIcon:hover {
+	color: #0274ab;
+	cursor: pointer;
 }
 
 .nuSelectBrowse {
 	height: 70px;
 	border-style: solid;
 	border-width: 1px;
-	padding: 1px 0px 5px 10px;
+	padding: 0px 0px 0px 10px;
 	position: absolute;
 	top: 75px;
 	font: 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -930,12 +971,12 @@ input[type=radio] {
 	font-family: 'Segoe UI', sans-serif;
 	cursor: pointer;
 	transition: background-color 0.2s ease-in-out;
-	border-radius: 3px;
+	border-radius: 5px 5px 0 0
 }
 
 .nuTab:hover {
 	cursor: pointer;
-	background-color: var(--nu-edit-body);
+	background-color: #f5f5f5;
 }
 
 .nuTabSelected {
@@ -1005,6 +1046,12 @@ input[type=radio] {
 	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25)
 }
 
+.nuButton:focus,
+.input_button:focus {
+	outline: none;
+	box-shadow: 0 0 0 1px #1f4c75;
+}
+
 .nuButton:not(.nuReadonly):not(.nuUserHomeButton):not(.nuSaveButtonEdited):hover {
 	background-color: #2e73b1;
 	color: #e2eaff;
@@ -1021,6 +1068,11 @@ input[type=radio] {
 	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 	border-color: #326e00;
 	border-width: 0 0 1px
+}
+
+.nuUserHomeButton:focus {
+	outline: none;
+	box-shadow: 0 0 0 1px #7ee12c
 }
 
 .nuUserHomeButton:hover {
@@ -1051,45 +1103,139 @@ input[type=radio] {
 }
 
 .nuActionButton {
-	background: white;
-	color: #495057;
-	border: 1.5px solid #e5e7eb;
-	border-radius: 6px;
-	padding: 0 6px;
-	height: 32px;
-	margin-left: 8px;
-	min-width: 48px;
-	font-size: 14px;
-	font-weight: 500;
-	cursor: pointer;
 	display: inline-flex;
 	align-items: center;
-	justify-content: center;
-	transition: all 0.2s ease;
+	gap: 0.25rem;
+	font-size: 14px;
+	font-weight: 500;
 	font-family: inherit;
+	color: #1f2937;
+	background-color: #f9fafbbf;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+	cursor: pointer;
+	transition: background-color 0.2s, box-shadow 0.2s;
+	height: 31px;
+	padding: 0 6px;
+	margin-left: 8px;
+	vertical-align: top;
 }
 
 .nuActionButton:hover {
-	background-color: var(--btn-bg-hover);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08)
+	background-color: #f3f4f6;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.nuActionButton:active {
+.nuActionButton:active:not([disabled]) {
 	background: var(--btn-bg-active);
-	box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2);
+	box-shadow: inset 0px 0px 1px rgba(0, 0, 0, 0.2);
 	transform: translateY(0);
 }
 
 .nuActionButton:focus {
 	outline: none;
-	box-shadow:
-		0 2px 6px rgba(0, 0, 0, 0.12),
-		0 0 0 3px rgba(30, 120, 215, 0.4);
+	box-shadow: 0 0 0 1px #a3a4a5;
 }
 
 .nuActionButtonIcon {
 	height: 28px;
 	width: 28px
+}
+
+.nuActionCheckbox {
+	display: inline-flex;
+	align-items: center;
+	padding: 5px 10px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background-color: #f9fafbbf;
+	color: #333;
+	font-size: 14px;
+	cursor: pointer;
+	width: auto;
+	max-width: 100%;
+	white-space: nowrap;
+	box-sizing: border-box;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.nuActionCheckbox:hover {
+	background-color: #f3f4f6;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.nuActionCheckbox input[type="checkbox"] {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.nuActionCheckbox i {
+	margin-right: 8px;
+	font-size: 16px;
+}
+
+.nuActionCheckbox .checked-icon {
+	display: none;
+}
+
+.nuActionCheckbox input[type="checkbox"]:checked~.checked-icon {
+	display: inline-block;
+}
+
+.nuActionCheckbox input[type="checkbox"]:checked~.unchecked-icon {
+	display: none;
+}
+
+.nuActionCheckbox input[type="checkbox"]:checked~span,
+.nuActionCheckbox input[type="checkbox"]:checked~i {
+	background-color: transparent;
+}
+
+.nuActionCheckbox:focus-within {
+	box-shadow: 0 0 0 1px #a3a4a5;
+	outline-offset: 1px;
+}
+
+.nuToolButton {
+	box-shadow: inset 0px 1px 0px 0px #ffffff;
+	background: linear-gradient(to bottom, #ffffff 5%, #f6f6f6 100%);
+	background-color: #ffffff;
+	border-radius: 6px;
+	border: 1px solid #dcdcdc;
+	display: inline-block;
+	cursor: pointer;
+	color: #666666;
+	font-family: Arial;
+	font-size: 15px;
+	font-weight: bold;
+	text-decoration: none;
+	text-shadow: 0px 1px 0px #ffffff;
+	outline: none;
+}
+
+.nuToolButton:hover {
+	background: linear-gradient(to bottom, #f6f6f6 5%, #ffffff 100%) !important;
+	background-color: #f6f6f6 !important;
+}
+
+.nuToolButton:active {
+	box-shadow: inset 0px 2px 5px rgba(0, 0, 0, 0.2);
+	background: linear-gradient(to bottom, #e6e6e6 5%, #ffffff 100%);
+	transform: translateY(1px);
+	outline: none;
+}
+
+.nuBreadcrumbIcon {
+	font-size: 16px;
+	display: inline-block;
+	cursor: pointer;
+	padding-left: 8px
+}
+
+.nuBreadcrumbIcon:hover {
+	color: #cee8ff
 }
 
 .nuQuickButton {
@@ -1109,28 +1255,31 @@ input[type=radio] {
 }
 
 .nuAdminButton {
-	margin-bottom: 15px !important;
-	background-color: #fafafa;
-	background-image: none;
-	color: var(--nu-label);
-	border-color: #d3d3d3;
-	border-width: 0 0 1px;
-	margin: 0 0 8px 10px;
-	font-size: 12px;
+	margin: 0 0px 8px 7px;
+	padding: 0 6px;
 	height: 20px;
-	text-shadow: none;
+	font-size: 12px;
+	color: var(--nu-label);
+	background: #fafafa;
+	border: none;
+	border-bottom: 1px solid #dbdbdb;
 	border-radius: 3px;
-	padding: 0 6px
-}
-
-.nuAdminButton:not(.nuReadonly):active {
-	background-color: #096341 ! important;
-	transform: scale(0.90);
+	text-shadow: none;
+	background-image: none;
+	outline: none
 }
 
 .nuAdminButton:not(.nuReadonly):hover {
-	background-color: #00ADEF;
-	color: white
+	background-color: #f5f5f5;
+}
+
+.nuAdminButton:not(.nuReadonly):active {
+	background-color: #e7f3ea;
+	transform: scale(0.90);
+}
+
+.nuAdminButton:focus-visible {
+	outline: none
 }
 
 .nuAdminButtonUsed {
@@ -1149,7 +1298,7 @@ input[type=radio] {
 .nuSaveButtonEdited {
 	background-color: #fff9f8 !important;
 	background: unset;
-	color: #dc3545;
+	color: #d2182a;
 	border-color: #efcfd2;
 }
 
@@ -1260,8 +1409,7 @@ input[type=radio] {
 	transition: border-color 0.2s ease;
 	margin-left: 10px;
 	margin-right: 5px;
-	vertical-align: middle;
-	margin-top: -5px;
+	vertical-align: top;
 }
 
 .nuSearchWrapper:hover {
@@ -1269,8 +1417,7 @@ input[type=radio] {
 }
 
 .nuSearchWrapper:focus-within {
-	border-color: #66afe9;
-	box-shadow: 0 0 0 1px rgba(102, 175, 233, 0.4);
+	border-color: #9cc6e9;
 }
 
 .nuSearchBtn {
@@ -1286,7 +1433,7 @@ input[type=radio] {
 }
 
 .nuSearchBtn:hover {
-	background-color: #e0e0e0;
+	background-color: #f3f4f6;
 }
 
 .nuSearchBtn:focus {
@@ -1364,7 +1511,6 @@ input[type=radio] {
 }
 
 #dialogTitleWords {
-	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 60%, rgba(237, 237, 237, 1) 100%);
 	background: rgb(255, 255, 255);
 	height: 30px;
 	padding-top: 9px
@@ -1534,7 +1680,8 @@ input[type=radio] {
 }
 
 .nuDragOptionsButtonDisabled {
-	color: gray !important;
+	background-color: #d3d3d3 !important;
+	color: #9b9b9b;
 	text-shadow: none
 }
 
@@ -1748,7 +1895,7 @@ input[type=radio] {
 
 .nuTabMarker:after {
 	content: "\f00c";
-	font-family: "Font Awesome 6 Free";
+	font-family: "Font Awesome 7 Free";
 	font-weight: 900;
 	color: green;
 	margin-left: 5px;
@@ -1790,7 +1937,7 @@ span.nuActionButton {
 	top: 20px;
 	height: 36px;
 	left: 10px;
-	width: 230px;
+	width: 180px;
 	font-size: larger;
 	font-weight: bolder
 }

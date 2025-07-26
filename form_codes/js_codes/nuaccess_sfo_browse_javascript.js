@@ -1,0 +1,1 @@
+nuBrowseStyleBadge(2); // Group

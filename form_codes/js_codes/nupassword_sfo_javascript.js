@@ -1,7 +1,7 @@
 $('#nuTab0').hide();
 
 
-nuAddActionButton('nuRunPHPHidden', nuTranslate('Save'), 'nuRunPHPHidden("NUCHANGEPASSWORD")');
+nuAddActionButton('nuRunPHPHidden', nuTranslate('Save'), 'nuRunPHPHidden("nu_change_password")');
 
 
 var changePW = nuGetValue('display_change_required');

@@ -1,4 +1,4 @@
-function nuAjax(w, successCallback, errorCallback) {
+function nuAjax(w, successCallback, errorCallback, completeCallback) {
 
 	try {
 		const data = JSON.stringify(nuAddEditFieldsToHash(w));
@@ -18,6 +18,11 @@ function nuAjax(w, successCallback, errorCallback) {
 				}
 				if (showError) {
 					nuAjaxShowError(jqXHR, errorThrown);
+				}
+			})
+			.always((jqXHR, textStatus, errorThrown) => {
+				if (typeof completeCallback === "function") {
+					completeCallback(jqXHR, textStatus, errorThrown);
 				}
 			});
 
@@ -349,7 +354,11 @@ function nuRunPHP(code, iFrame = '', runBeforeSave = false) {
 
 	};
 
-	nuAjax(last, successCallback);
+	const completeCallback = function () {
+		nuUpdateDebugButtonTitle();
+	};
+
+	nuAjax(last, successCallback, null, completeCallback);
 
 }
 
@@ -387,18 +396,20 @@ function nuRunPHPHidden(code, options = null) {
 	last.nuFORMdata = nuFORM.data();
 	last.hash = nuHashFromEditForm();
 
-	var successCallback = function (data, _textStatus, _jqXHR) {
+	const successCallback = function (data, _textStatus) {
 
 		var fm = data;
-
 		if (nuDisplayError(fm)) { return; };
-
 		window.nuSERVERRESPONSE_HIDDEN = fm;
 		eval(fm.callback + ';');
 
 	};
 
-	nuAjax(last, successCallback);
+	const completeCallback = function () {
+		nuUpdateDebugButtonTitle();
+	};
+
+	nuAjax(last, successCallback, null, completeCallback);
 
 }
 
@@ -630,9 +641,8 @@ function nuGetLookupCode(event) {
 
 	if (event.currentTarget && event.currentTarget.value.length == 0) {
 		window.nuLOOKUPCLEARING = true;
-		$('#' + nuTarget).addClass('nuEdited');
-		nuSetValue(nuTarget, '');
-		nuSetValue(nuTarget + 'description', '');
+		$('#' + nuTarget).val('').addClass('nuEdited');
+		$('#' + nuTarget + 'description').val('');
 		window.nuLOOKUPCLEARING = false;
 		return;
 	}
@@ -661,7 +671,6 @@ function nuGetLookupCode(event) {
 	nuAjax(last, successCallback);
 
 }
-
 
 function nuPrintAction() {
 

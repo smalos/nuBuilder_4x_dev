@@ -1,1 +1,1 @@
-$('#sob_all_width').val(400).change();
+nuSetValue('sob_all_width', nuGetValue(this.id))

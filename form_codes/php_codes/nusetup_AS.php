@@ -18,7 +18,7 @@ if ($DEV_MODE) {
 
     nuSetupSetConfigOrder();
 
-    $nuDumpCodes = nuProcedure('NUDUMPFORMCODES');
+    $nuDumpCodes = nuProcedure('nu_dump_form_codes');
     eval($nuDumpCodes);
 
     $nuNewDBV = '#set_db_version_inc#';
@@ -45,7 +45,13 @@ if ($DEV_MODE) {
 
     if ('#set_dev_reset_tables#' == true) {
 
-        $lang = array('["Afrikaans","Arabic","Armenian","Catalan","Chinese","Czech","Danish","Dutch","French","German","Greek","Hindi","Italian","Japanese","Malay","Polish","Portuguese","Romanian","Russian","Spanish","Tamil","Vietnamese"]');
+        $lang = [
+            "Afrikaans", "Arabic", "Armenian", "Catalan", "Chinese", "Czech", "Danish", "Dutch",
+            "French", "German", "Greek", "Hindi", "Hungarian", "Italian", "Japanese", "Malay",
+            "Norwegian", "Polish", "Portuguese (Brazil)", "Portuguese", "Romanian", "Russian",
+            "Slovak", "Spanish", "Tamil", "Turkish", "Vietnamese"
+        ];
+
         nuRunQuery('UPDATE zzzzsys_setup SET set_languages_included = ?, set_language = NULL WHERE zzzzsys_setup_id = 1', $lang);
 
         nuResetEmailSettings();
@@ -79,6 +85,8 @@ if ($DEV_MODE) {
                 UPDATE `zzzzsys_form` SET `sfo_javascript` = NULL WHERE TRIM(`sfo_javascript`) = '';
                 UPDATE `zzzzsys_tab` SET `syt_access` = NULL WHERE TRIM(`syt_access`) = '';
                 UPDATE `zzzzsys_tab` SET `syt_order` = '-1' WHERE `zzzzsys_tab_id` = 'nufastforms';
+                UPDATE `zzzzsys_item` SET `itm_created_on` = NULL, `itm_updated_on` = NULL WHERE `zzzzsys_item_id` LIKE 'nu%';
+                DELETE FROM `zzzzsys_prompt_generator` WHERE zzzzsys_prompt_generator_id LIKE 'nu%';
                 DELETE FROM `zzzzsys_debug`;
                 DELETE FROM `zzzzsys_session`;
         ";
@@ -213,7 +221,7 @@ function nuSetupDeleteSubfoldersRecursively($folderPath) {
 }
 
 function removePMALanguages() {
-    nuSetupDeletePMASubfolders(__DIR__ . '/libs/nudb/locale');
+    nuSetupDeletePMASubfolders('../third_partynudb/locale');
 }
 
 removePMALanguages();
@@ -231,10 +239,11 @@ if ($t != '-1') {
 
 if ('#set_language_current#' != '#set_language#') {
     $_SESSION['nubuilder_session_data']['translation'] = nuGetTranslation('#set_language#');
+    $_SESSION['nubuilder_session_data']['language'] = '#set_language#';
 }
 
 // Check if header textarea changed
 
-if ('#set_header_current#' != '#set_header#') {
+if ('#set_header_current#' != '#set_header#' || '#set_include_current#' != '#set_include#' || '#set_style_current#' != '#set_style#') {
     nuDisplayMessage(nuTranslate('<h2>'.nuTranslate('Information').'</h2><br>You will need to log in again for the changes to take effect.'));
 }

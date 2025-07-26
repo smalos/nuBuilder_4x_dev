@@ -1,5 +1,5 @@
 
-if (window.configImport == '1') {
+  if (window.configImport == '1') {
     nuSetupConfigEffectiveMsg();
   }
   
@@ -11,6 +11,7 @@ if (window.configImport == '1') {
       $('#set_header').scrollTop(window.scrollTop);
   });
   
+  $('#set_include').addClass('js');
   $('#set_header').addClass('js');
   $('#set_style').addClass('css');
   
@@ -24,9 +25,12 @@ if (window.configImport == '1') {
   
   nuHide('set_code_snippet_lookupcode');
   nuAttachButtonImage('icon_js', 'JS');
+  nuAttachButtonImage('icon_include_js', 'JS');
   nuAttachButtonImage('icon_css', 'CSS');
   
   nuSetProperty('set_header_current', $('#set_header').val());
+  nuSetProperty('set_style_current', $('#set_style').val());
+  nuSetProperty('set_include_current', $('#set_include').val());
   nuSetProperty('set_language_current', $('#set_language').val());
   
   // Code Snippets form
@@ -34,15 +38,24 @@ if (window.configImport == '1') {
   
   nuSetupSetConfigDatalist('$nuConfigGlobeadminHome', ['nuhome']);
   nuSetupSetConfigDatalist('nuShowJSErrors', ['none','globeadmin',"everyone"]);
+  nuSetupSetConfigDatalist('nuHideTabTitleIfOnlyOne', ['none','globeadmin',"user", "everyone"]);
   nuSetupSetConfigDatalist('nuEditCloseAfterSave', ['None','AllForms',"UserForms","SystemForms"]);
   nuSetupSetConfigDatalist('nuCalendarWeekNumbers', ['None','ISO 8601',"Western traditional","Middle Eastern"]);
  // nuSetupSetConfigDatalist('nuTheme', ['Light','Dark',"System default"]);
 
   nuSelectAddEnglishOption('set_language');
-  
-  var d = nuDevMode();
-  if (!d) {
-      nuHideTabById('nu5fe19e93306dd6e'); // dev
+
+  var devMode = nuDevMode(); 
+  if (devMode) {
+        nuAddActionButton(
+          'create_test_user', 
+          'Create Test User', 
+          'nuRunPHPHidden("nu_create_test_user")', 
+          '', 
+          'fa fa-play'
+        ).css('color','green');
+  } else {
+      nuHideTabById('nu5fe19e93306dd6e');
   }
   
   $('#set_files_version_user').val(nuGetFilesVersion());
@@ -95,7 +108,7 @@ if (window.configImport == '1') {
   
       if ($('#set_language').hasClass('nuEdited')) {
           $("#set_languages_included option[value='" + $('#set_language').val() + "']").prop("selected", true);
-          $('#set_languages_included').change();
+          $('#set_languages_included').trigger('change');
       }
   
       var v = '';

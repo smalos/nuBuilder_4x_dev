@@ -1,71 +1,85 @@
-function nuAddDBColumnGetDataType(t, i, selectMultiple) {
+function nuAddDBColumnGetDataType(type, inputType, selectMultiple) {
+    
+    const BASE_TYPE_MAP = {
+        lookup: 'VARCHAR(25)',
+        calc: 'DECIMAL(12,4)',
+        textarea: 'TEXT',
+    };
 
-    let dt = 'VARCHAR(100)';
+    const SELECT_TYPE_MAP = {
+        single: 'VARCHAR(100)',
+        multiple: 'VARCHAR(1000)',
+    };
 
-    if (t == 'lookup') {
-        dt = 'VARCHAR(25)';
-    }
-    if (t == 'select' && ! selectMultiple) {
-        dt = 'VARCHAR(100)';
-    }
-    if (t == 'select' && selectMultiple) {
-        dt = 'VARCHAR(1000)';
-    }
-    if (t == 'calc') {
-        dt = 'DECIMAL(12,4)';
-    }
-    if (t == 'textarea') {
-        dt = 'TEXT';
-    }
+    const INPUT_TYPE_MAP = {
+        date: 'DATE',
+        nuDate: 'DATE',
+        number: 'INT',
+        nuAutoNumber: 'BIGINT UNSIGNED',
+        nuNumber: 'DECIMAL(12,4)',
+        file: 'LONGTEXT',
+    };
 
-    if (t == 'input') {
-        let dtInput = '';
-        if (i == 'date' || i == 'nuDate') {
-            dtInput = 'DATE';
-        }
-        if (i == 'number') {
-            dtInput = 'INT';
-        }
-        if (i == 'nuAutoNumber') {
-            dtInput = 'BIGINT UNSIGNED';
-        }
-        if (i == 'nuNumber') {
-            dtInput = 'DECIMAL(12,4)';
-        }
-        if (i == 'file') {
-            dtInput = 'LONGTEXT';
-        }
-        dt = dtInput != '' ? dtInput: 'VARCHAR(100)';
-
+    if (type === 'select') {
+        return SELECT_TYPE_MAP[selectMultiple ? 'multiple' : 'single'];
     }
 
-    return dt;
+    if (type === 'input') {
+        return INPUT_TYPE_MAP[inputType] || 'VARCHAR(100)';
+    }
+
+    return BASE_TYPE_MAP[type] || 'VARCHAR(100)';
+    
 }
 
 
-var table = parent.$('#sob_all_table').val();
-var id = parent.$('#sob_all_id').val();
-var type = parent.$('#sob_all_type').val();
-var input = parent.$('#sob_input_type').val();
-var selectMultiple = parent.nuGetValue('sob_select_multiple')
-var dataType = nuAddDBColumnGetDataType(type, input);
+function nuAddDBColumnSetDefault() {
 
-var qry = '`$column` $type NULL DEFAULT NULL';
-qry = qry.replace('$column', id);
-qry = qry.replace('$type', dataType);
+    const table = parent.$('#sob_all_table').val();
+    const id = parent.$('#sob_all_id').val();
+    const type = parent.$('#sob_all_type').val();
+    const input = parent.$('#sob_input_type').val();
+    const selectMultiple = parent.nuGetValue('sob_select_multiple'); // Currently unused
+    const dataType = nuAddDBColumnGetDataType(type, input);
 
-var start = 'ALTER TABLE `$table` ADD'
-start = start.replace('$table', table);
+    const query = `\`${id}\` ${dataType} NULL DEFAULT NULL`;
+    const alterStart = `ALTER TABLE \`${table}\` ADD`;
 
-$('#sql_query_word').html(start);
-$('#sql_query').val(qry);
+    $('#sql_query_word').html(alterStart);
+    $('#sql_query').val(query);
 
-nuAddActionButton('Run', 'Run', 'nuHasNotBeenEdited(); nuRunPHPHidden("NURUNADDDBCOLUMN")');
+    nuSetProperty('sob_all_table', table);
+    nuRefreshSelectObject('sql_after_column');
+
+    return `${alterStart} ${query};`;
+
+}
+
+nuAddActionButton('Run', 'Run', 'nuHasNotBeenEdited(); nuRunPHPHidden("nu_run_add_db_column")');
+nuAddActionButton('Preview', 'Preview', 'nuAddDBColumnPreview()');
+nuAddDBColumnSetDefault();
+
+
+function nuAddDBColumnPreview() {
+
+    const table = parent.$('#sob_all_table').val();
+    const query = nuGetValue('sql_query');
+    const after = nuGetValue('sql_after_column');
+    let sql = 'ALTER TABLE `' + table + '`  ADD ' + query;
+
+    if (after != '') {
+        sql = sql + " AFTER `" + after + '`';
+    }
+
+    const escapeForHTMLAttribute = str => str.replace(/\n/g, '\\n').replace(/'/g, "\\'");
+    const copyButtonHTML = (value, label) => `<button type="button" class="nuActionButton nuAdminButton" onclick="navigator.clipboard.writeText(nuTranslate('${escapeForHTMLAttribute(value)}'))">${nuTranslate(label)}</button>`;
+    const formIdCopyButton = copyButtonHTML(sql, 'Copy');
+
+    nuMessage('Preview SQL', sql + ';' + '<br></br>' + formIdCopyButton);
+
+}
 
 $('#sql_query').addClass('sql');
 $('.sql').on('dblclick', function() {
     nuOpenAce('SQL', this.id);
 });
-
-nuSetProperty('sob_all_table', table);
-nuRefreshSelectObject('sql_after_column');

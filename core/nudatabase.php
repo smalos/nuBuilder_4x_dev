@@ -28,6 +28,7 @@ try {
 	echo 'Connection to the nuBuilder database failed: ' . $e->getMessage();
 	echo '<br><br>Verify and update the settings in nuconfig.php';
 	echo '<br><br>Restart your browser after modifying nuconfig.php in order for changes to be reflected';
+	header('HTTP/1.0 403 Forbidden');
 	die();
 }
 
@@ -145,27 +146,42 @@ function nuQueryExtractQueryComponents($query) {
 	];
 }
 
+
+function nuGetDBParams() {
+	global $nuDB,
+	$nuConfigDBHost,
+	$nuConfigDBName,
+	$nuConfigDBUser,
+	$nuConfigDBPassword,
+	$nuConfigDBCharacterSet;
+
+	return [
+		'DBHost' => $nuConfigDBHost,
+		'DBName' => $nuConfigDBName,
+		'DBUser' => $nuConfigDBUser,
+		'DBPassword' => $nuConfigDBPassword,
+		'DBCharset' => $nuConfigDBCharacterSet,
+		'DB' => $nuDB
+	];
+}
+
+
 function nuRunQuery($sql, $params = [], $isInsert = false) {
 
-	global $nuDB;
-	global $DBHost;
-	global $DBName;
-	global $DBUser;
-	global $DBPassword;
-
-	global $DBCharset;
-
-	if ($sql == '') {
+	$dbParams = nuGetDBParams();
+	if ($sql === '') {
 		$params = [];
-		$params[0] = $DBHost;
-		$params[1] = $DBName;
-		$params[2] = $DBUser;
-		$params[3] = $DBPassword;
-		$params[4] = $nuDB;
-		$params[5] = $DBCharset;
+		$params[0] = $dbParams['DBHost'];
+		$params[1] = $dbParams['DBName'];
+		$params[2] = $dbParams['DBUser'];
+		$params[3] = $dbParams['DBPassword'];
+		$params[4] = $dbParams['DB'];
+		$params[5] = $dbParams['DBCharset'];
+
 		return $params;
 	}
 
+	$nuDB = $dbParams['DB'];
 	$sqlParts = nuQueryExtractQueryComponents($sql);
 	$commands = $sqlParts['commands'];
 	if (!empty($commands)) {
@@ -470,6 +486,10 @@ function db_quote($s) {
 
 }
 
+function nuEncode($value) {
+	return base64_encode(json_encode($value));
+}
+
 function nuEncodeQueryRowResults($sql, $args = [], $prefixedData = []) {
 
 	$stmt = nuRunQuery($sql, $args);
@@ -477,10 +497,9 @@ function nuEncodeQueryRowResults($sql, $args = [], $prefixedData = []) {
 	while ($row = db_fetch_row($stmt)) {
 		$results[] = $row;
 	}
-	return base64_encode(json_encode($results));
+	return nuEncode($results);
 
 }
-;
 
 function nuViewExists($view) {
 
@@ -572,7 +591,7 @@ function nuDebugResult($nuDebugMsg, $flag = null) {
 	$nuDebugFlag = $flag ?? '';
 
 	if (function_exists('nuProcedure')) {
-		$proc = nuProcedure('NUDEBUGRESULTADDED');
+		$proc = nuProcedure('nu_debug_result_added');
 		if ($proc != '') {
 			eval ($proc);
 		}

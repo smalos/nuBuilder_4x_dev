@@ -90,10 +90,11 @@ if ($o == 'select') {
     if ('#sob_select_multiple#' == '') {
         nuDisplayErrorNotBlank('Multiple');
     }
-    if ('#sob_select_sql#' == '') {
-        nuDisplayErrorNotBlank('SQL/List');
+    if ('#sob_select_sql#' == '' && '#sob_select_procedure#' == '') {
+        nuDisplayErrorNotBlank('SQL/List or Procedure');
     }
 }
+
 
 if ($o == 'subform') {
     if ('#sob_subform_zzzzsys_form_id#' == '') {

@@ -2,6 +2,9 @@ if (! nuDevMode()) {
     nuHideTabById('nu61e9964c9bf5e13'); // JSON
 }
 
+nuShow('se_items_run', !nuIsNewRecord());
+nuShow('sob_items_run', !nuIsNewRecord());
+
 // Code Snippets form
 nuSetSnippetFormFilter(0, 0, 1, 0); // SQL
 
@@ -11,9 +14,13 @@ nuHide('label_zzzzsys_event_sf');
 nuHide('label_sob_html_code');
 nuShow('sob_run_zzzzsys_form_open_button', sob_run_zzzzsys_form_id.value !== '');
 nuShow('sob_lookup_zzzzsys_form_open_button', sob_lookup_zzzzsys_form_id.value !== '');
+nuShow('sob_display_procedure_open_button', sob_display_procedure.value !== '');
+nuShow('sob_select_procedure_open_button', sob_select_procedure.value !== '');
+
 nuObjectDisplayInputIcon();
 nuObjectDisplayAccessCondition();
-nuObjectProcedureChanged();
+nuObjectDisplayProcedureChanged();
+nuObjectSelectProcedureChanged();
 
 nuDisable('sob_calc_formula');
 nuSetToolTip('sob_all_id_create_button', nuTranslate('Add database column'));
@@ -43,36 +50,48 @@ $("#title_zzzzsys_event_sfsev_javascript").removeClass('js');
 $('#sob_run_zzzzsys_form_open_button').toggleClass('input_button nuButton nuLookupButton');
 $('#sob_lookup_zzzzsys_form_open_button').toggleClass('input_button nuButton nuLookupButton');
 $('#sob_subform_zzzzsys_form_open_button').toggleClass('input_button nuButton nuLookupButton');
+$('#sob_select_procedure_open_button').toggleClass('input_button nuButton nuLookupButton');
+$('#sob_display_procedure_open_button').toggleClass('input_button nuButton nuLookupButton');
+
+
 $('#sob_all_type_open_button').toggleClass('input_button nuButton nuLookupButton');
 
 nuObjectPreviewIcon('sob_input_icon_preview_html', nuGetValue('sob_input_icon'));
 
 
-var placeholderText = `1. SQL: A valid SQL query that returns 2 columns:
-SELECT table_id, description FROM table
+var placeholderText = 'Enter * to display the examples.\n\n' + 
+`1. SQL:
+   A valid SQL query that returns 2 columns (value, display).
+   Example:
+     SELECT table_id, description FROM table
 
-Or:
+   Or using the Items table:
+     SELECT itm_value, itm_description 
+     FROM zzzzsys_item 
+     WHERE itm_object_id = '#OBJECT_ID#' AND itm_active = '1'
+     ORDER BY itm_description
 
-2. List: A list delimited by a |:
-1|First|
-2|Second|
-3|Third
+2. List:
+   A pipe-delimited list.
+   - First value: bound value (e.g., 1)
+   - Second value: display value (e.g., First)
+   Example:
+     1|First|
+     2|Second|
+     3|Third
 
-Or:
-
-3. JSON/Array: if both the display and the bound value are identical:
-
-["value1", "value1", "value1"]
+3. JSON / Array:
+   When value and display are the same.
+   Example:
+     ["value1", "value2", "value3"]
 `;
 
-$('#sob_select_sql').on('focus', function() {
-    $(this).prop('placeholder', placeholderText);
-}).on('blur', function() {
-    $(this).prop('placeholder', '');
-});
+$('#sob_select_sql').prop('placeholder', placeholderText);
 
 
-var placeholderText = `Array of items:
+
+
+placeholderText = `Array of items:
 ["item 1","item 2","item 3"]
 
 Or:
@@ -89,7 +108,7 @@ $('#sob_input_datalist').on('focus', function() {
 });
 
 
-$('#nuTab8').on('click', function() {
+$('#nuTab9').on('click', function() {
     nuObjectTestChart();
 });
 
@@ -106,7 +125,7 @@ $('#viewflowchart')
 
 
 if ($('#zzzzsys_event_sf000sev_event').val() !== '') {
-    $('#nuTab10').css('font-weight', 'bold');
+    $('#nuTab11').css('font-weight', 'bold');
 }
 
 nuObjectInputTypeChanged(nuGetValue('sob_input_type'));
@@ -230,12 +249,14 @@ function nuObjectShowDataType() {
 
     iDataType.val(dataType);
     nuObjectDisplayCreateButton();
+    nuObjectDisplayAlterButton();
 
 }
 
 function nuObjectObjectNoId() {
     return ['word',
         'html',
+        'chart',
         'button',
         'run',
         'subform',
@@ -249,9 +270,13 @@ function nuObjectDisplayCreateButton() {
 
 }
 
+function nuObjectDisplayAlterButton() {
+   nuShow('sob_all_id_alter_column_button', !nuIsNewRecord() && nuGetValue('sob_all_id_datatype') !== '')
+}
+
 function nuObjectDisplayIncHeightButtons() {
 
-    var showButtons = ['html',
+    var showButtons = ['html', 'chart',
         'textarea',
         'subform',
         'image',
@@ -265,7 +290,7 @@ function nuObjectTestChart() {
 
     let g = nuGetValue('sob_html_chart_type');
 
-    if (g === '' || nuGetValue('sob_all_type') !== 'html') {
+    if (g === '' || nuGetValue('sob_all_type') !== 'chart') {
         $('#google_chart').html('');
         return;
     }
@@ -284,19 +309,19 @@ function nuObjectTestChart() {
             'Adam',
             'Paul',
             'Chris'],
-        ['2019',
+        ['2025',
             100,
             200,
             300,
             400,
             500],
-        ['2020',
+        ['2024',
             165,
             238,
             322,
             498,
             550],
-        ['2021',
+        ['2024',
             165,
             938,
             522,
@@ -371,7 +396,8 @@ function nuObjectColor() {
     o.image = 6;
     o.input = 7;
     o.html = 8;
-    o.calc = 9;
+    o.chart = 9;
+    o.calc = 10;
 
     $('#sob_all_type').removeClass();
 
@@ -386,7 +412,15 @@ function nuObjectColor() {
         $(this).addClass('nu_'+this.value);
     });
 
-    let t = o[$('#sob_all_type').val()];
+    upObjectSetRelatedTabs(o);
+
+}
+
+
+function upObjectSetRelatedTabs(o) {
+
+    const selectedVal = $('#sob_all_type').val();
+    let t = o[selectedVal];
 
     $("[id^='nuTab']").removeClass('nuRelatedTab');
 
@@ -396,9 +430,12 @@ function nuObjectColor() {
 
     $('#nuTab0').addClass('nuRelatedTab');
     $('#nuTab' + t).addClass('nuRelatedTab');
-
+    
+    const inputTargetFile = nuGetValue('sob_input_file_target');
+    const idHTMLTab = 'nu5bad6cb36a71012';
+    $('div[data-nu-tab-id=' + idHTMLTab + ']').toggleClass('nuRelatedTab', (selectedVal === 'input' && inputTargetFile == '1') || selectedVal === 'html');
+    
 }
-
 
 function nuObjectDisplayAllTypeInput() {
 
@@ -415,12 +452,12 @@ function nuObjectTypeChanged() {
 
     nuObjectColor();
     nuObjectDisplayCreateButton();
+    nuObjectDisplayAlterButton();
     nuObjectDisplayIncHeightButtons();
     nuObjectDisplayAllTypeInput();
     nuObjectDisplayInputIcon();
 
 }
-
 
 function nuObjectDisplayEditNuFormat() {
   const format = sob_input_type.value;
@@ -484,10 +521,8 @@ function nuObjectInputTypeChanged(t) {
 
         });
 
-       nuSetProperty('NUFORMATGETDEFAULT_INPUTTYPE', nuGetValue('sob_input_type').slice(2));
-       nuRunPHPHidden('NUFORMATGETDEFAULT');
-    
-
+       nuSetProperty('nu_format_get_default_input_type', nuGetValue('sob_input_type').slice(2));
+       nuRunPHPHidden('nu_format_get_default');
 
     }
 
@@ -498,10 +533,9 @@ function nuObjectInputTypeChanged(t) {
 
 function nuSetDefaultFormat(format) {
    if (format !== '' && nuGetValue('sob_input_format') === '') {
-       nuSetText('sob_input_format', format);
+       nuSetValue('sob_input_format', format);
    }
 }
-
 
 function nuObjectDisplayInputIcon() {
     nuShow('sob_input_icon',
@@ -586,8 +620,6 @@ function nuObjectAddToFormula(e) {
 
 }
 
-
-
 function nuObjectPopulateHTML() {
 
     var o = nuCalcObjects();
@@ -627,7 +659,6 @@ function nuObjectSetLookupWidth() {
     var cw = $('#sob_lookup_description_width').val();
     if (cw == 0 || cw == 150 || w == 0) $('#sob_lookup_description_width').val(w).change();
 }
-
 
 function nuObjectSubFormRowsCount(subform, fieldname) {
 
@@ -681,7 +712,7 @@ function nuObjectAdjustProperties() {
         if (inputFormat !== '') nuSetValue('sob_input_format', '');
     }
 
-    if (type.containsAny(['word', 'html', 'image', 'contentbox', 'contentbox'])) {
+    if (type.containsAny(['word', 'html', 'chart', 'image', 'contentbox', 'contentbox'])) {
         if (validation !== '0') nuSetValue('sob_all_validate', '0'); // validation --> none
         if (access == '1') nuSetValue('sob_all_access', '0'); // readonly --> editable
     }
@@ -760,6 +791,20 @@ function nuObjectSetJSON() {
 }
 
 
+function nuObjectExtractClassNames(htmlString) {
+  // Create a temporary DOM element
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = htmlString;
+
+  const element = tempDiv.firstElementChild;
+  if (element && element.className) {
+    return element.className.trim();
+  }
+
+  return '';
+
+}
+
 function nuObjectPreviewIcon(i, s) {
 
     s = nuEscapeHTML(s);
@@ -783,73 +828,16 @@ function nuObjectPreviewIcon(i, s) {
 
 function nuObjectFileUploadScript() {
 
+    nuObjectColor();
+
     let htmlCode = $('#sob_html_code');
 
-    if (nuGetValue('sob_input_file_target') == '0' && ! htmlCode.val().includes('Uppy')) {
+    if (nuGetValue('sob_input_file_target') == '1' && ! htmlCode.val().includes('Uppy')) {
 
-        const uppyScript = `
-<div id="#uppy_div#"></div>
-
-<script>
-
-nuInitUppy();
-
-function nuInitUppy() {
-
-	const $objId = $('#' + '#this_object_id#');
-	const target = '#' + '#uppy_div#';
-
-	let uppy = nuUppyCreate();
-
-	uppy.use(Uppy.Dashboard, {
-			inline: true,
-			bundle: true,
-			height: $objId.nuCSSNumber('height'),
-			width: $objId.nuCSSNumber('width'),
-			target: target,
-			showProgressDetails: true,
-			replaceTargetContent: true,
-			method: 'post'
-		})
-		.use(Uppy.XHRUpload, {
-			endpoint: 'core/nuapi.php',
-			shouldRetry: (xhr) => { return false;},
-			async onAfterResponse(xhr) {
-			   if (xhr.status === 401) {
-						const jsonData = JSON.parse(xhr.responseText);
-						uppyResponseMessage = jsonData.message;
-						throw new Error(uppyResponseMessage);   
-			   }
-            }
-				   
-		})
-
-	uppy.on('upload', (file) => {
-		uppy.setMeta({
-			procedure: 'NUUPLOADFILE_TEMPLATE',
-			session_id: window.nuSESSION
-		})
-	});
-
-	uppy.on('complete', (result) => {
-
-		if (window.nuOnFileUploadComplete) {
-			nuOnFileUploadComplete('FS', $objId.attr('id'), result, uppyResponseMessage);
-		}
-
-	})
-
-}
-
-</script>`;
-
-        nuSetValue('sob_html_code', htmlCode.val() + uppyScript.trim());
-
+        nuRunPHPHidden('nu_upload_file_load_uppy_code');
         if (sob_all_height.value < 30) nuSetValue('sob_all_height', '250');
 
     }
-
-
 
 }
 
@@ -903,14 +891,32 @@ function nuObjectMenuPickTabsClick(element, event) {
 
 }
 
-function nuObjectProcedureChanged() {
-    const hasDisplayProcedure = sob_display_procedure.value === '';
+function nuObjectDisplayProcedureChanged() {
+    const hasDisplayProcedure = sob_display_procedurecode.value === '';
     nuEnable('sob_display_sql', hasDisplayProcedure);
-    $('#sob_display_sql').toggleClass('display-sql-strikethrough', !hasDisplayProcedure);
+    $('#sob_display_sql').toggleClass('nu-sql-strikethrough', !hasDisplayProcedure);
+
+    nuShow('sob_display_procedure_open_button', sob_display_procedure.value !== '');
 }
 
 $("#sob_display_procedurecode").on("change", function(event) {
-    nuObjectProcedureChanged();
+    nuObjectDisplayProcedureChanged();
+});
+
+function nuObjectSelectProcedureChanged() { 
+    const hasProcedure = sob_select_procedurecode.value !== '';
+    const sqlValue = $('#sob_select_sql').val();
+
+    nuEnable('sob_select_sql', !hasProcedure);
+    const shouldStrikeThrough = hasProcedure && sqlValue !== '';
+    $('#sob_select_sql').toggleClass('nu-sql-strikethrough', shouldStrikeThrough);
+
+    nuShow('sob_select_procedure_open_button', sob_select_procedure.value !== '');
+
+}
+
+$("#sob_select_procedurecode").on("change", function(event) {
+    nuObjectSelectProcedureChanged();
 });
 
 
@@ -938,4 +944,26 @@ function nuOnMobileViewComplete() {
 
     });
     
+}
+
+var url = nuComposeURL(
+    'https://fontawesome.com/search?ic=free',
+    nuGetValue('label_sob_input_icon'),
+    '_blank',
+    '',
+    'View icon list on Font Awesome'
+);
+nuSetValue('label_sob_input_icon', url);
+
+
+function nuTabsCustomCodeSetMarker() {
+   nuTabSetMarker('nu5bad6cb370b409e', 'zzzzsys_event_sf000sev_event');
+}
+
+nuTabsCustomCodeSetMarker();
+
+function nuAfterSave(){
+ if (nuIsPopup()) {
+	parent.nuUpdateMessage('refresh_required');
+ }
 }

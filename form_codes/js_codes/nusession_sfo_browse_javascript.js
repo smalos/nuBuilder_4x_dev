@@ -1,10 +1,10 @@
 function nuSessionDeleteRow(pk) {
 
     if (confirm(nuTranslate("Terminate Session?"))) {
-        nuSetProperty('NUBROWSEDELETEROW_FORM_ID', nuFormId());
-        nuSetProperty('NUBROWSEDELETEROW_RECORD_ID', pk);
+        nuSetProperty('nu_browse_delete_row_form_id', nuFormId());
+        nuSetProperty('nu_browse_delete_row_record_id', pk);
 
-        nuRunPHPHidden("NUBROWSEDELETEROW");
+        nuRunPHPHidden("nu_browse_delete_row");
     }
 
 }
@@ -14,7 +14,7 @@ function nuAfterDeleteRow() {
 }
 
 function nuSessionCreateDeleteButton(target, pk) {
-    const btn = $('<button type="button" class="nuSaveButtonEdited delete-session-button" value="✖">✖</button>');
+    const btn = $('<button type="button" class="delete-session-button" value="✖">✖</button>');
     $(target).html(btn).attr('title', nuTranslate('Terminate Session'))
 
     btn.css('margin-left', '10px');

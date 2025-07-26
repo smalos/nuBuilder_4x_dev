@@ -6,7 +6,7 @@ $('#nufr').css({'text-align' : 'left', 'height' : 410, 'background-color': '#ebe
 $('#list').addClass('nuScroll').removeClass('nuReadonly');
 
 $('.nuActionButton').hide();
-nuAddActionButton('nuRunPHPHidden', 'Build Fast Report', 'nuRunPHPHidden("RUNFR", true)');
+nuAddActionButton('BuildFastReport');
 
 
 function nuAddReportField(t){

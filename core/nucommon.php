@@ -274,6 +274,10 @@ function nuTrim($s) {
 	return trim($s ?? '');
 }
 
+function nuAddSlashes($s) {
+	return addslashes($s ?? '');
+}
+
 function nuJsonDecode($json, $associative = null) {
 	return json_decode($json ?? '', $associative);
 }
@@ -286,9 +290,9 @@ function nuSetHashList($p) {
 
 	if (!is_null($p)) {
 
-		$fid = addslashes(nuObjKey($p, 'form_id', ''));
-		$rid = addslashes(nuObjKey($p, 'record_id', ''));
-		$formGroup = addslashes(nuObjKey($p, 'form_group', ''));
+		$fid = nuAddSlashes(nuObjKey($p, 'form_id', ''));
+		$rid = nuAddSlashes(nuObjKey($p, 'record_id', ''));
+		$formGroup = nuAddSlashes(nuObjKey($p, 'form_group', ''));
 
 		$A = nuGetUserAccess();
 
@@ -315,7 +319,7 @@ function nuSetHashList($p) {
 								if ($value == null) {
 									$value = '';
 								}
-								$r[$fld] = addslashes($value ?? '');
+								$r[$fld] = nuAddSlashes($value ?? '');
 							}
 
 						}
@@ -329,7 +333,7 @@ function nuSetHashList($p) {
 		foreach ($p as $key => $value) {														//-- The 'opener' Form's properties
 
 			if (gettype($value) == 'string' or is_numeric($value)) {
-				$h[$key] = addslashes($value ?? '');
+				$h[$key] = nuAddSlashes($value ?? '');
 			} else {
 				$h[$key] = '';
 			}
@@ -341,7 +345,7 @@ function nuSetHashList($p) {
 			foreach ($p['hash'] as $key => $value) {											//-- The 'opener' Form's hash variables
 
 				if (gettype($value) == 'string' or is_numeric($value)) {
-					$h[$key] = addslashes($value ?? '');
+					$h[$key] = nuAddSlashes($value ?? '');
 				} else {
 					$h[$key] = '';
 				}
@@ -350,14 +354,14 @@ function nuSetHashList($p) {
 
 		}
 
-		$h['PREVIOUS_RECORD_ID'] = addslashes($rid ?? '');
-		$h['RECORD_ID'] = addslashes($rid ?? '');
-		$h['NEW_RECORD'] = addslashes($rid == -1 ? '1' : '0');
-		$h['FORM_ID'] = addslashes($fid ?? '');
-		$h['FORM_GROUP'] = addslashes($formGroup ?? '');
-		$h['SUBFORM_ID'] = addslashes(nuObjKey($_POST['nuSTATE'], 'object_id', ''));
-		$h['ID'] = addslashes(nuObjKey($_POST['nuSTATE'], 'primary_key', ''));
-		$h['CODE'] = addslashes(nuObjKey($_POST['nuSTATE'], 'code', ''));
+		$h['PREVIOUS_RECORD_ID'] = nuAddSlashes($rid ?? '');
+		$h['RECORD_ID'] = nuAddSlashes($rid ?? '');
+		$h['NEW_RECORD'] = nuAddSlashes($rid == -1 ? '1' : '0');
+		$h['FORM_ID'] = nuAddSlashes($fid ?? '');
+		$h['FORM_GROUP'] = nuAddSlashes($formGroup ?? '');
+		$h['SUBFORM_ID'] = nuAddSlashes(nuObjKey($_POST['nuSTATE'], 'object_id', ''));
+		$h['ID'] = nuAddSlashes(nuObjKey($_POST['nuSTATE'], 'primary_key', ''));
+		$h['CODE'] = nuAddSlashes(nuObjKey($_POST['nuSTATE'], 'code', ''));
 
 	}
 
@@ -1168,9 +1172,9 @@ function nuGetDefaultFormats() {
 	$stmt = nuRunQuery($query);
 	while ($row = db_fetch_array($stmt)) {
 		if ($row['srm_type'] === 'Date' && empty($formats['Date'])) {
-			$formats['Date'] = $row['srm_format'];
+			$formats['Date'] = 'D|' . $row['srm_format'];
 		} elseif ($row['srm_type'] === 'Number' && empty($formats['Number'])) {
-			$formats['Number'] = $row['srm_format'];
+			$formats['Number'] = 'N|' . $row['srm_format'];
 		}
 
 		if (!empty($formats['Date']) && !empty($formats['Number'])) {
@@ -1241,7 +1245,7 @@ function nuBuildTempTable($name_id, $tt, $rd = 0) {
 		}
 
 		$p = nuReplaceHashVariables($c);
-		$tt = addslashes($tt ?? '');
+		$tt = nuAddSlashes($tt ?? '');
 
 		$P = '$sql = "CREATE TABLE ' . $tt . ' ' . $p . '";';
 		$P .= 'nuRunQuery($sql);';
@@ -1893,8 +1897,6 @@ function nuSendEmailEx($args, $emailLogOptions) {
 		"json" => $json
 	];
 
-	nuDebug($params);
-
 	nuRunQuery($insert, $params, true);
 
 	return $sendResult;
@@ -1904,10 +1906,10 @@ function nuSendEmailEx($args, $emailLogOptions) {
 function nuUser($userId = null) {
 
 	$query = "
-        SELECT *
-        FROM zzzzsys_user
-        WHERE zzzzsys_user_id = ?
-    ";
+		SELECT *
+		FROM zzzzsys_user
+		WHERE zzzzsys_user_id = ?
+	";
 
 	$idToFetch = ($userId === null) ? nuHash()['USER_ID'] : $userId;
 
@@ -2164,7 +2166,7 @@ function nuGetCSVDelimiterFromValue($value) {
 
 function nuImportUsersFromCSV($csvfile, $fieldseparator, $lineseparator) {
 
-	global $DBCharset, $DBPort;
+	global $nuConfigDBCharacterSet, $nuConfigDBPort;
 
 	$fieldseparator = nuGetCSVDelimiterFromValue($fieldseparator);
 
@@ -2174,8 +2176,8 @@ function nuImportUsersFromCSV($csvfile, $fieldseparator, $lineseparator) {
 	}
 
 	$db = nuRunQuery('');
-	$pdo = new PDO("mysql:host=$db[0];dbname=$db[1];charset=$DBCharset;port=$DBPort", $db[2], $db[3], [
-		PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $DBCharset",
+	$pdo = new PDO("mysql:host=$db[0];dbname=$db[1];charset=$nuConfigDBCharacterSet;port=$nuConfigDBPort", $db[2], $db[3], [
+		PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $nuConfigDBCharacterSet",
 		PDO::MYSQL_ATTR_LOCAL_INFILE => true
 	]);
 
@@ -2599,7 +2601,7 @@ function nuSetGlobalPropertiesJS() {
 	$js = '';
 
 	foreach ($gp as $property => $value) {
-		$js .= "nuSetProperty('$property', '" . addslashes($value ?? '') . "');\n";
+		$js .= "nuSetProperty('$property', '" . nuAddSlashes($value ?? '') . "');\n";
 	}
 	if ($js !== '') {
 		nuAddJavaScript($js, false, true);
@@ -2810,5 +2812,48 @@ function nuGetSelectType($processedSql) {
 	} else {
 		return 'delimited';
 	}
+
+}
+function nuGetLastDebugMessages() {
+
+	$sql = "
+		SELECT
+			d.deb_message,
+			IFNULL(u.sus_name,'globeadmin') as sus_name
+		FROM
+			zzzzsys_debug d
+		LEFT JOIN
+			zzzzsys_user u ON d.deb_user_id = u.zzzzsys_user_id
+		ORDER BY
+			d.deb_added DESC
+		LIMIT 4
+	";
+	$result = nuRunQuery($sql);
+	$messages = [];
+	while ($row = db_fetch_array($result)) {
+		$fullMessage = $row['deb_message'];
+		$firstLine = strtok($fullMessage, "\n");
+		$timestampStr = substr($firstLine, 0, 19);
+		$messageText = substr($firstLine, 22);
+		$snippet = '';
+		$lines = explode("\n", $fullMessage);
+		if (count($lines) >= 5 && strlen($lines[4]) >= 5) {
+			$textFromFifthLine = substr($lines[4], 4);
+			$remainingLines = array_slice($lines, 5);
+			$fullText = $textFromFifthLine . (empty($remainingLines) ? '' : "\n" . implode("\n", $remainingLines));
+			$fullTextNoBreaks = preg_replace('/\s+/', ' ', $fullText);
+			$snippet = substr(trim($fullTextNoBreaks), 0, 180) . '...';
+		}
+		$messages[] = [
+			'timestamp_from_message' => $timestampStr,
+			'where' => strip_tags($messageText),
+			'user' => $row['sus_name'],
+			'message' => strip_tags($snippet)
+		];
+	}
+	return json_encode(
+		$messages,
+		JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+	);
 
 }

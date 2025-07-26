@@ -2,9 +2,10 @@ function nuEditPHP(type) {
 	nuForm('nuphp', nuFormId() + '_' + type, 'justphp', '', 2);
 }
 
-function nuOpenCurrentFormProperties(event) {
+function nuOpenCurrentFormProperties(e) {
 
-	if (event.ctrlKey || event.metaKey) {
+	const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(e);
+	if (isCtrlOrCmdPressed) {
 		nuPopup('nuform', nuFormId(), '');
 	} else {
 		nuForm('nuform', nuFormId(), '', '', 2);
@@ -37,7 +38,7 @@ function nuFormInfoCurrentProperties() {
 }
 
 function nuShowVersionInfo() {
-	nuRunPHPHidden('NUVERSIONINFO');
+	nuRunPHPHidden('nu_version_info');
 }
 
 function nuShowFormInfo() {
@@ -93,10 +94,25 @@ function nuAddAdminButton(id, obj) {
 	const inputId = `nu${id}Button`;
 
 	const button = `
-	<input id="${inputId}" type="button" title="${nuTranslate(title)}" class="nuAdminButton" value="${nuTranslate(obj.value)}" onclick="${obj.func}">
-  `;
+        <input id="${inputId}" type="button" title="${nuTranslate(title)}" class="nuAdminButton" value="${nuTranslate(obj.value)}">
+    `;
 
 	$('#nuActionHolder').prepend(button);
+
+	if (id === 'Properties') {
+		$('#' + inputId).on('click', function (e) {
+			nuOpenCurrentFormProperties(e);
+		});
+	} else {
+		if (typeof obj.func === "function") {
+			$('#' + inputId).on('click', obj.func);
+		} else if (typeof obj.func === "string") {
+			let funcStr = obj.func.replace(/\(event\);?/, "();");
+			$('#' + inputId).on('click', function () {
+				eval(funcStr);
+			});
+		}
+	}
 
 	const events = nuSERVERRESPONSE.events;
 	if (events) {
@@ -107,7 +123,6 @@ function nuAddAdminButton(id, obj) {
 	}
 
 	return 1;
-
 }
 
 function nuAddAdminButtons() {
@@ -157,8 +172,13 @@ function nuAddAdminButtons() {
 	const isEdit = form_type.includes("edit");
 	const isLaunch = form_type.includes("launch");
 
-	if ((window.nuUXOptions.nuDebugIcon || devMode) && (nuMainForm(true) || nuIsPopup())) {
-		nuAddIconToBreadcrumbHolder('nuDebugButton', 'nuDebug Results', 'nuOpenNuDebug(2)', 'fa fa-bug', '3px');
+	if (nuMainForm(true) || nuIsPopup()) {
+		if (window.nuUXOptions.nuDebugIcon || devMode) {
+			nuAddIconToBreadcrumbHolder('nuDebugButton', 'nuDebug Results', 'nuOpenNuDebug(2)', 'fa fa-bug');
+		}
+		if (window.nuUXOptions.nuDatabaseIcon || devMode) {
+			nuAddIconToBreadcrumbHolder('nuDatabaseIcon', 'Database', "nuVendorLogin('PMA')", 'fa fa-database');
+		}
 	}
 
 	if ((window.nuUXOptions.nuToolsIcon || devMode) && (nuMainForm(true) || nuIsPopup())) {
@@ -166,13 +186,12 @@ function nuAddAdminButtons() {
 			'nuToolsButton',
 			'Tools',
 			'nuAdminToolsClick(this, event, \'Tools\')',
-			'fa fa-gear',
-			'3px'
+			'fa fa-gear'
 		);
 	}
 
 	if (window.nuUXOptions.nuRefreshIcon) {
-		nuAddIconToBreadcrumbHolder('nuRefreshButton', 'Refresh', 'nuGetBreadcrumb()', 'fas fa-sync-alt', '3px');
+		nuAddIconToBreadcrumbHolder('nuRefreshButton', 'Refresh', 'nuGetBreadcrumb()', 'fa-solid fa-sync-alt');
 	}
 
 	let buttonCount = 0;
@@ -209,7 +228,7 @@ function nuAddAdminButtons() {
 		if (isLaunch) heightToAdd = 5;
 		$('#nuActionHolder').css('height', `+=${heightToAdd}px`);
 		const lastAdminButton = $('.nuAdminButton').last();
-		$('<p style="display:block; margin:0px; user-select:none;"></p>').insertAfter(lastAdminButton);
+		$('<p style="display:block; margin-bottom: 4px; user-select:none;"></p>').insertAfter(lastAdminButton);
 
 	}
 
@@ -233,14 +252,14 @@ function nuAdminToolsCreateMenuConfig(menuType, event) {
 	const baseMenus = {
 		Tools: [
 			{
-				text: nuContextMenuItemText("Prompt Generator", "fa-fw fa-solid fa-magic"),
+				text: nuContextMenuItemText("Prompt Generator", "fa-width-auto fa-solid fa-magic"),
 				action: () => nuAdminToolsRun('nupromptgenerator', '-1', event, 'popup')
 			},
 			...(nuSERVERRESPONSE.table !== '' && nuFormType() !== 'browse' ? [{
-				text: nuContextMenuItemText("Inspect Record", "fa-fw fa-solid fa-binoculars"),
+				text: nuContextMenuItemText("Inspect Record", "fa-width-auto fa-solid fa-binoculars"),
 				action: () => {
 					nuAdminPreInspectRecordJS();
-					nuAdminToolsRun('NUINSPECTRECORD', null, event, 'procedure');
+					nuAdminToolsRun('nu_inspect_record', null, event, 'procedure');
 				}
 			}] : [])
 		]
@@ -253,8 +272,8 @@ function nuAdminToolsCreateMenuConfig(menuType, event) {
 
 function nuAdminPreInspectRecordJS() {
 
-	nuSetProperty('NUINSPECTRECORD_table', nuSERVERRESPONSE.table);
-	nuSetProperty('NUINSPECTRECORD_record_id', nuRecordId())
+	nuSetProperty('nu_inspect_record_table', nuSERVERRESPONSE.table);
+	nuSetProperty('nu_inspect_record_record_id', nuRecordId())
 
 }
 
@@ -360,11 +379,34 @@ function nuOpenNuDebug(w) {
 	nuForm('nudebug', '', '', '', w);
 }
 
-function nuAddIconToBreadcrumbHolder(i, title, oClick, iClass, paddingLeft) {
+function nuAddIconToBreadcrumbHolder(id, title, oClick, iClass, paddingLeft) {
+
+	const paddingStyle = paddingLeft != null
+		? ` style="padding-left: ${paddingLeft};"`
+		: '';
+
+	const html = `
+    <div
+      id="${id}"
+      title="${title}"
+      class="nuBreadcrumbIcon"${paddingStyle}
+      onclick="${oClick}"
+    >
+      <i class="${iClass} fa-width-auto"></i>
+    </div>
+    `;
+
+	const fragment = nuCreateAppendHTML(html);
+	const options = $('#nuBreadcrumbHolder').find("[id$=nuOptions]");
+	$(fragment).insertAfter(options);
+
+}
+
+function nuAddIconToBreadcrumbHolderX(i, title, oClick, iClass, paddingLeft) {
 
 	const h = `
-	<div id="${i}" title="${title}" style="font-size: 17px; display: inline-block; cursor: pointer; padding-left: ${paddingLeft}" onclick="${oClick}">
-		<i class="${iClass} fa-fw"></i>
+	<div id="${i}" title="${title}" style="font-size: 16px; display: inline-block; cursor: pointer; padding-left: ${paddingLeft}" onclick="${oClick}">
+		<i class="${iClass} fa-width-auto"></i>
 	</div>
   `;
 	const fragment = nuCreateAppendHTML(h);
@@ -772,7 +814,7 @@ function nuContextMenuBeforeRender(menu, event) {
 }
 
 function nuContextMenuItemText(label, iconClass) {
-	return '<i class="' + iconClass + ' fa-fw" aria-hidden="true"></i> <span style="padding-left:8px; white-space:nowrap; display: inline;">' + nuTranslate(label) + '</span>';
+	return '<i class="' + iconClass + ' fa-width-auto" aria-hidden="true"></i> <span style="padding-left:8px; white-space:nowrap; display: inline;">' + nuTranslate(label) + '</span>';
 }
 
 function nuContextMenuGetWordWidth(w) {
@@ -949,7 +991,6 @@ function nuContextMenuShowTabSelector(callback) {
 
 }
 
-
 function nuContextMenuUpdateAction(action) {
 
 	if (action === 'delete') {
@@ -962,7 +1003,6 @@ function nuContextMenuUpdateAction(action) {
 		nuContextMenuShowTabSelector(function (selectedTab) {
 			if (selectedTab) {
 				nuContextMenuUpdateObject(null, selectedTab, action);
-				return;
 			}
 		});
 
@@ -1058,7 +1098,13 @@ function nuContextMenuLabelPromptCallback(value, ok) {
 			nuSetLabelText(contextMenuCurrentTarget.id.substring(6), value, true);
 		} else {
 			objLabel.html(nuTranslate(value));
-			objLabel.attr('data-nu-org-label', value);
+
+			if (objLabel.hasClass('nuSort')) {
+				objLabel.parent().attr('data-nu-org-title', value);
+			} else {
+				objLabel.attr('data-nu-org-label', value);
+			}
+
 			const icon = objLabel.attr('nu-data-icon');
 			if (icon) {
 				nuAddInputIcon(contextMenuCurrentTarget.id, icon);
@@ -1074,14 +1120,13 @@ function nuContextMenuLabelPromptCallback(value, ok) {
 
 }
 
-
 function nuContextMenuAddTabPromptCallback(tabNr, tabName) {
 
 	const formId = nuFormId();
 	const title = tabName.trim() || nuTranslate("New Tab");
 	const order = (parseInt(tabNr) + 1) * 10 + 1;
 
-	nuRunPHPHiddenWithParams('NUBROWSEADDTAB', 'NUBROWSEADDTAB_params', {
+	nuRunPHPHiddenWithParams('nu_browse_add_tab', 'nu_browse_add_tab_params', {
 		form_id: formId,
 		title: title,
 		order: order
@@ -1092,20 +1137,30 @@ function nuContextMenuAddTabPromptCallback(tabNr, tabName) {
 
 function nuContextMenuLabelPrompt() {
 
-	const label = contextMenuCurrentTarget.id;
 	const id = nuContextMenuCurrentTargetId();
 	const obj = $('#' + contextMenuCurrentTarget.id);
-	let caption = obj.attr('data-nu-org-label');
 
-	if (caption) {
-		caption = nuTranslate("Tab") + ': ' + caption
+	let caption = '';
+	if (obj.hasClass('nuSort')) {
+		caption = obj.parent().attr('data-nu-org-title');
 	} else {
-		caption = nuTranslate("Object") + ': ' + id
+		caption = obj.attr('data-nu-org-label');
 	}
 
-	let defaultValue = obj.attr('data-nu-org-label');
-	if (typeof defaultValue === 'undefined') {
-		defaultValue = obj.is(":button") ? defaultValue : $('#' + label).html();
+	let defaultValue = '';
+
+	const objType = nuTranslate(
+		obj.hasClass('nuTab') ? 'Tab' :
+			obj.hasClass('nuSort') ? 'Title' :
+				'Object'
+	);
+
+	if (caption) {
+		defaultValue = caption;
+		caption = objType + ': ' + caption
+	} else {
+		defaultValue = id;
+		caption = objType + ': ' + id;
 	}
 
 	defaultValue = obj.is(":button") && obj.attr('data-nu-label') ? obj.html() : defaultValue;
@@ -1177,7 +1232,7 @@ function nuContextMenuCurrentTargetBrowseId() {
 function nuContextMenuCurrentTargetBrowseIdText() {
 
 	let id = contextMenuCurrentTarget.id;
-	return $('#' + id).parent().attr('id') + ' (' + $('#' + id).parent().attr('data-nu-title-id') + ')';
+	return $('#' + id).parent().attr('id');
 
 }
 
@@ -1217,7 +1272,8 @@ function nuContextMenuObjectPopup(e) {
 
 	let objId = nuGetObjectId(nuContextMenuCurrentTargetUpdateId());
 
-	if ((nuIsMacintosh() ? e.metaKey : e.ctrlKey) === true) {
+	const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(e);
+	if (isCtrlOrCmdPressed) {
 		nuForm('nuobject', objId, '', '', '2');
 	} else {
 		nuPopup("nuobject", objId, '');
@@ -1238,7 +1294,7 @@ function nuContextMenuUpdateObject(value, column, action = 'update') {
 	}
 
 	let formId = isSfTitle ? nuContextMenuGetFormId('title_' + nuContextMenuCurrentTargetId()) : nuContextMenuGetFormId(id);
-	let p = 'NUUPDATEOBJECT';
+	let p = 'nu_update_object';
 
 	nuSetProperty(p + '_id', isTab ? $('#' + nuContextMenuCurrentTargetId()).attr('data-nu-tab-id') : id);
 	nuSetProperty(p + '_value', value);
@@ -2149,7 +2205,8 @@ function nuPrettyPrintMessage(event, properties) {
 
 	const title = nuTranslate('Current Properties') + ' : ' + nuGetProperty('form_code');
 
-	if (event !== undefined && (nuIsMacintosh() ? event.metaKey : event.ctrlKey)) {
+	const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(event);
+	if (event !== undefined && isCtrlOrCmdPressed) {
 		const newWindow = window.open();
 		newWindow.document.title = title;
 		$(newWindow.document.body).html(prettyPrintedTable);

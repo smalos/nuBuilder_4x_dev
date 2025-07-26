@@ -1,1 +1,1 @@
-nuDisable('nuProcRunProcedureButton');
+nuDisable('nuRunHiddenButton');

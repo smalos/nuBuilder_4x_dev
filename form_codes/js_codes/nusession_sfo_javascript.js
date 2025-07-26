@@ -6,8 +6,8 @@ function nuSessionAddActionButton() {
 }
 
 function nuSessionRunTerminateSessions(option = '') {
-    nuSetProperty('NUSESSIONTERMINATE_OPTION', option)
-    nuRunPHPHidden("NUSESSIONTERMINATE");
+    nuSetProperty('nu_session_terminate_option', option)
+    nuRunPHPHidden("nu_session_terminate");
 }
 
 function nuSessionGetScreenWidth() {

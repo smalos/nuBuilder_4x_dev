@@ -10,12 +10,12 @@ $sqlState = function() use ($getDistinctUserColumnQuery) {
 $state = nuEncodeQueryRowResults($sqlState(), [], ['']);
 
 $filterJS = "
-    function getData(data) {
+    function nuEmailLogFilterGetData(data) {
         return JSON.parse(atob(data));
     }
 
-    function getState() {
-        return getData('$state');
+    function nuEmailLogFilterGetGroup() {
+        return nuEmailLogFilterGetData('$state');
     }
 ";
 

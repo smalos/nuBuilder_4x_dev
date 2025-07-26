@@ -1,8 +1,14 @@
-if (!nuIsNewRecord() && nuHasBeenSaved() > 0) {
-   parent.nuRefreshSelectObject('sob_input_format','nuobject');
+var newRecord = nuIsNewRecord();
+
+if (!newRecord && nuHasBeenSaved() > 0) {
+    parent.nuRefreshSelectObject('sob_input_format', 'nuobject');
 }
 
-nuSetTitle(nuGetValue('srm_format'));
+if (!newRecord) {
+    nuSetTitle(nuGetValue('srm_format'));
+} else {
+    nuSetTitle(nuTranslate('New'));
+}
 
 var $sign = $('#sign');
 var $separator = $('#separator');
@@ -41,14 +47,14 @@ function nuAddToFormat(e) {
         $srmCurrency.nuSetValue(cu);
     }
 
-   nuFormatPreview();
+    nuFormatPreview();
 }
 
 function nuSetFormatType(a) {
-    
+
     const argLength = arguments.length;
     nuHide('nucalculator');
-     $("[data-nu-nunumber-format]").nuHide();
+    $("[data-nu-nunumber-format]").nuHide();
 
     if (argLength === 1) {
         $srmFormat.val('');
@@ -73,6 +79,7 @@ function nuSetFormatType(a) {
     $("[data-nu-nunumber-format]").nuShow(srmTypeVal === 'Number');
 
     nuFormatPreview();
+    nuHasNotBeenEdited();
 
 }
 
@@ -86,7 +93,7 @@ function nuFormatPreview() {
         nuSetDateValue('srm_preview');
     }
 
-    if (nuGetValue('srm_preview') === '' &&  nuGetValue('srm_format') !== '') {
+    if (nuGetValue('srm_preview') === '' && nuGetValue('srm_format') !== '') {
         $("#srm_preview").removeAttr("data-nu-format");
         nuSetValue('srm_preview', 'Format Error');
     }

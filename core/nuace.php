@@ -22,9 +22,12 @@ $jquery = "../third_party/jquery/jquery-3.7.1.min.js";
 		'../third_party/formatter/beautify-css.js',
 		'../third_party/formatter/sql-formatter.min.js'];
 	nuJSIndexInclude($includeFormatters);
+
+	$includeCSS = [
+		'../third_party/fontawesome/css/all.min.css',
+		'css/nubuilder4.css'];
+	nuCSSIndexInclude($includeCSS);
 	?>
-	<link rel="stylesheet" href="css/nubuilder4.css">
-	<link rel="stylesheet" href="../third_party/fontawesome/css/all.min.css">
 
 	<style>
 		.toolbar {
@@ -54,6 +57,8 @@ $jquery = "../third_party/jquery/jquery-3.7.1.min.js";
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			min-width: 48px;
+			min-height: 32px;
 		}
 
 		.toolbar img {
@@ -108,42 +113,42 @@ $jquery = "../third_party/jquery/jquery-3.7.1.min.js";
 
 		button.btn.beautify::before {
 			content: "\f0d0";
-			font-family: "Font Awesome 5 Free";
+			font-family: "Font Awesome 7 Free";
 			font-weight: 900;
 			margin-left: 1px;
 		}
 
 		button.btn.commentout::before {
 			content: "\f7a5";
-			font-family: "Font Awesome 5 Free";
+			font-family: "Font Awesome 7 Free";
 			font-weight: 900;
 			margin-left: 1px;
 		}
 
 		button.btn.undo::before {
 			content: "\f2ea";
-			font-family: "Font Awesome 5 Free";
+			font-family: "Font Awesome 7 Free";
 			font-weight: 900;
 			margin-left: 1px;
 		}
 
 		button.btn.showinvisibles::before {
 			content: "\f06e";
-			font-family: "Font Awesome 5 Free";
+			font-family: "Font Awesome 7 Free";
 			font-weight: 900;
 			margin-left: 1px;
 		}
 
 		button.btn.find::before {
 			content: "\f002";
-			font-family: "Font Awesome 5 Free";
+			font-family: "Font Awesome 7 Free";
 			font-weight: 900;
 			margin-left: 1px;
 		}
 
 		button.btn.searchreplace::before {
 			content: "\f362";
-			font-family: "Font Awesome 5 Free";
+			font-family: "Font Awesome 7 Free";
 			font-weight: 900;
 			margin-left: 1px;
 		}
@@ -204,12 +209,30 @@ $jquery = "../third_party/jquery/jquery-3.7.1.min.js";
 	</style>
 
 	<script>
-		window.nuACELanguage = opener.window.nuAce[0];
-		window.nuACEObjectId = opener.window.nuAce[1];
-		window.nuACETheme = opener.window.nuAce[2];
-		const $el = $('#' + window.nuACEObjectId, window.opener.document);
-		window.nuACEObjectLabel = $el.attr('data-nu-label') || $el.attr('title') || $el.attr('id');
-		document.title = window.nuACEObjectId + " - Ace Editor";
+
+		let nuAce = (window.opener?.nuAce) ?? [];
+
+		window.nuACELanguage = nuAce[0] ?? nuAceGetURLParam('lang', 'JS');
+		window.nuACEObjectId = nuAce[1] ?? nuAceGetURLParam('object_id', '');
+		window.nuACETheme = nuAce[2] ?? nuAceGetURLParam('theme', 'dawn');
+
+		let doc = window.opener?.document ?? null;
+		let $el = (doc && window.nuACEObjectId) ? $('#' + window.nuACEObjectId, doc) : null;
+
+		const label = $el ? ($el.attr('data-nu-label') ?? nuAceGetURLParam('data-label', '')) : nuAceGetURLParam('data-label', '');
+		const title = $el ? ($el.attr('title') ?? nuAceGetURLParam('title', '')) : nuAceGetURLParam('title', '');
+		const id = $el ? ($el.attr('id') ?? nuAceGetURLParam('id', '')) : nuAceGetURLParam('id', '');
+
+		window.nuACEObjectLabel = label || title || id;
+
+		function nuAceGetURLParam(name, defaultValue = null) {
+			try {
+				const url = new URL(window.location.href);
+				return url.searchParams.get(name) ?? defaultValue;
+			} catch (e) {
+				return defaultValue;
+			}
+		}
 
 		function nuGetAceLanguageMode(language) {
 			const languageModes = {
@@ -222,6 +245,45 @@ $jquery = "../third_party/jquery/jquery-3.7.1.min.js";
 				'CSS': { mode: 'css' },
 			};
 			return languageModes[language];
+		}
+
+		function nuAceGetCallerDocument() {
+			if (window.opener?.document) return window.opener.document;
+			if (window.parent?.document) return window.parent.document;
+		}
+
+		function nuAceGetCallerWindow() {
+			if (window.opener?.window) return window.opener.window;
+			if (window.parent?.window) return window.parent.document;
+		}
+
+		function nuAceGetSourceElement() {
+
+			const objectId = (window.opener && window.opener.document)
+				? window.nuACEObjectId
+				: nuAceGetURLParam('object_id', '');
+
+			if (!objectId) {
+				return null;
+			}
+
+			const doc = nuAceGetCallerDocument();
+			if (doc) {
+				const el = doc.getElementById(objectId);
+				if (el) return el;
+			}
+
+			return null;
+
+		}
+
+		function nuAceSetStartValue() {
+
+			const el = nuAceGetSourceElement();
+			window.sourceElement = el ? el : null;
+			window.sourceElementid = el && el.id ? el.id : null;
+			window.startValue = el ? el.value : '';
+
 		}
 
 		function nuLoad() {
@@ -238,30 +300,52 @@ $jquery = "../third_party/jquery/jquery-3.7.1.min.js";
 				enableLiveAutocompletion: true
 			});
 
-			window.startValue = opener.window.document.getElementById(nuACEObjectId).value;
+			nuAceSetStartValue();
+
 			editor.setFontSize(14);
 
 			var language = window.nuACELanguage.toUpperCase();
 			const languageMode = nuGetAceLanguageMode(language);
 
 			if (languageMode) {
+
 				const { mode } = languageMode;
-				editor.getSession().setMode({ path: `ace/mode/${mode}`, inline: true });
+				editor.getSession().setMode({
+					path: `ace/mode/${mode}`,
+					inline: true
+				});
+
+				if (language === 'CSS') {
+					const DISABLED_RULES = ['important', 'order-alphabetical'];
+
+					function configureCSSLintWorker() {
+						if (editor.session.$worker) {
+							editor.session.$worker.call('setDisabledRules', [DISABLED_RULES.join('|')]);
+						}
+					}
+					editor.session.on('changeMode', configureCSSLintWorker);
+					configureCSSLintWorker();
+				}
+
 			}
 
-			document.getElementById('nu_language').innerHTML =
-				window.nuACELanguage === window.nuACEObjectLabel
-					? window.nuACEObjectLabel
-					: window.nuACEObjectLabel + " (" + window.nuACELanguage + ")";
+			const objInfo = window.nuACELanguage === window.nuACEObjectLabel
+				? window.nuACEObjectLabel
+				: window.nuACEObjectLabel + " (" + window.nuACELanguage + ")";
+
+			document.getElementById('nu_language').innerHTML = objInfo;
+			document.title = objInfo + " - Ace Editor";
 
 			if (language.includes('SQL') && typeof sqlFormatter === 'undefined') {
 				document.getElementById('nuACEBeautifyButton').style.display = 'none';
 			}
 
-			if ($('#' + window.nuACEObjectId, window.opener.document)[0].id == 'deb_message') {
+			if (window.sourceElementid == 'deb_message') {
 				$('#btn_save_close').remove();
 				$('#btn_save').remove();
+				$('.btn-toggle').remove();
 			} else {
+
 				let btnSaveClose = document.getElementById('btn_save_close');
 				btnSaveClose.value = 'Apply & Close';
 				btnSaveClose.title = 'Copy changes back and Close (Ctrl+Shift+C)';
@@ -426,29 +510,36 @@ $jquery = "../third_party/jquery/jquery-3.7.1.min.js";
 		}
 
 		function nuAceSave(close) {
+
 			window.nuWarn = 0;
-			if (!opener.window.document.getElementById(window.nuACEObjectId)) {
+
+			const aceElem = nuAceGetSourceElement();
+
+			if (!aceElem) {
 				alert('The opening Form is no longer available.');
 				return;
 			}
+
 			nuSetEdited(false);
-			opener.window.document.getElementById(window.nuACEObjectId).value = editor.getValue();
-			if ("createEvent" in document) {
-				var evt = document.createEvent("HTMLEvents");
-				evt.initEvent("change", false, true);
-				opener.window.document.getElementById(window.nuACEObjectId).dispatchEvent(evt);
+			aceElem.value = editor.getValue();
+
+			if ('createEvent' in document) {
+				const evt = document.createEvent('HTMLEvents');
+				evt.initEvent('change', false, true);
+				aceElem.dispatchEvent(evt);
 			} else {
-				opener.window.document.getElementById(window.nuACEObjectId).fireEvent("onchange");
+				aceElem.fireEvent('onchange');
 			}
-			if (document.getElementById('btn_save_on_apply_checkbox').checked) {
-				window.opener.nuSaveAction();
+
+			const checkbox = document.getElementById('btn_save_on_apply_checkbox');
+			if (checkbox.checked) {
+				const openerWindow = nuAceGetCallerWindow();
+				openerWindow.nuSaveAction();
 				if (!close) showSavedIndicator();
 			}
-			if (close) {
-				window.close();
-			} else {
-				nuRemoveButtonBgColor();
-			}
+
+			close ? window.close() : nuRemoveButtonBgColor();
+
 		}
 
 		function nuRemoveButtonBgColor() {

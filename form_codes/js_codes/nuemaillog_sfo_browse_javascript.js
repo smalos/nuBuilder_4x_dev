@@ -1,4 +1,1 @@
-$(function() { 
-    nuAddBrowseTitleSelect(2, getState()); 
-    $("select[id^='nuBrowseTitle']").parent().off("touchstart");
-});
+nuAddBrowseFilter('nu65f28ff562c4cea').nuSearchablePopup({ items: nuEmailLogFilterGetGroup()});

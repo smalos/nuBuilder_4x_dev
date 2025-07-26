@@ -450,6 +450,27 @@ function nuDisplayError(errorObj) {
 
 }
 
+function nuFormatAjaxErrorRemoveJSON(responseText) {
+
+	if (typeof responseText !== 'string') {
+		return responseText
+	}
+
+	const normalized = responseText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+	const lines = normalized.split('\n');
+
+	if (lines.length >= 3) {
+		const third = lines[2].trim();
+		const idPayloadRe = /^\{\s*"id"\s*:\s*".*?"\s*\}$/;
+		if (idPayloadRe.test(third)) {
+			return lines.slice(0, 2).join('\n');
+		}
+	}
+
+	return responseText;
+
+}
+
 function nuFormatAjaxErrorMessage(jqXHR, exception) {
 
 	const errorMessages = {
@@ -463,7 +484,7 @@ function nuFormatAjaxErrorMessage(jqXHR, exception) {
 	};
 
 	const errorMessage = errorMessages[jqXHR.status] || errorMessages[exception] ||
-		[`<h3>${nuTranslate('Uncaught Error.')}</h3>`, jqXHR.responseText]
+		[`<h3>${nuTranslate('Uncaught Error.')}</h3>`, nuFormatAjaxErrorRemoveJSON(jqXHR.responseText)]
 
 	return errorMessage;
 
@@ -636,8 +657,8 @@ function nuPopup(formId, recordId, filter) {
 
 function nuOptionsListAction(f, r, filter, e) {
 
-	const isCtrlOrMetaPressed = e ? (nuIsMacintosh() ? e.metaKey : e.ctrlKey) : false;
-	if (!isCtrlOrMetaPressed) {
+	const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(e);
+	if (!isCtrlOrCmdPressed) {
 		nuPopup(f, r, filter);
 	} else {
 		nuForm(f, r, filter, '', '');
@@ -794,7 +815,7 @@ function nuReformat(element) {
 		return currentValue;
 	}
 	const reapplyFormat = function (value, format) {
-		let rawValue = nuFORM.removeFormatting(value, format);
+		let rawValue = nuFORM.removeFormatting(value, format, element.id);
 		return nuFORM.addFormatting(rawValue, format);
 	};
 
@@ -830,7 +851,8 @@ function nuBindCtrlEvents() {
 
 	const nuCtrlKeydownListener = function (e) {
 
-		if (e.key === 'F3' || ((nuIsMacintosh() ? e.metaKey : e.ctrlKey) && e.key === 'f')) { // exclude Ctrl + f
+		const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(e);
+		if (e.key === 'F3' || (isCtrlOrCmdPressed && e.key === 'f')) { // exclude Ctrl + f
 			window.nuNEW = 0;
 		} else {
 			if (e.key == 'Control') {
@@ -877,7 +899,8 @@ function nuBindCtrlEvents() {
 
 		}
 
-		if ((nuIsMacintosh() ? e.metaKey : e.ctrlKey) && e.shiftKey) {
+		const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(e);
+		if (isCtrlOrCmdPressed && e.shiftKey) {
 
 			window.nuNEW = 0;
 
@@ -1053,14 +1076,32 @@ function nuPreview(a) {
 
 function nuPopEvent(e, formId, nuEvent) {
 
+	const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(e);
 	const recordId = nuRecordId();
+	const id = `${recordId}_${nuEvent}`;
+	let filter;
 
-	if (formId === 'nuphp') {
-		nuPopup('nuphp', recordId + '_' + nuEvent, 'justphp');
-	} else if (formId === 'nuselect') {
-		nuPopup('nuselect', recordId + '_' + nuEvent, 'justsql');
+	switch (formId) {
+		case 'nuphp':
+			filter = 'justphp';
+			break;
+		case 'nuselect':
+			filter = 'justsql';
+			break;
+		default:
+			console.warn(`nuPopEvent: unknown formId "${formId}"`);
+			return;
+	}
+	if (!isCtrlOrCmdPressed) {
+		nuPopup(formId, id, filter);
+	} else {
+		nuForm(formId, id, filter, '', '');
 	}
 
+}
+
+function nuIsCtrlOrCmdPressed(e) {
+	return e ? (nuIsMacintosh() ? e.metaKey : e.ctrlKey) : false;
 }
 
 function nuPopPHP(e, nuEvent) {
@@ -1558,23 +1599,37 @@ function nuRemoveHolders(...args) {
 
 function nuAttachFontAwesome(id, iconClass, size = 'medium', appendToEnd = false) {
 
-	const sizeMap = {
-		small: '12px',
-		medium: '16px',
-		large: '24px'
-	};
+	const $target = $(typeof id === 'string' ? `#${id}` : id);
+	if (!$target.length) return;
+	const text = $target.text().trim();
 
-	const actualSize = sizeMap[size] || size;
+	if (!text) {
+		$target.css('padding', '0 9px');
+	}
 
-	let target = typeof id === 'string' ? `#${id}` : id;
-	const iconHtml = `<i style="font-size:${actualSize};" class="fa-fw ${iconClass}"></i>`;
-	let targetObj = $(target);
-	if (targetObj.length === 0) return;
+	const fontSizeStyle =
+		size === 'small' ? 'font-size: small;'
+			: size === 'large' ? 'font-size: x-large;'
+				: size === 'medium' ? ''
+					: `font-size: ${size};`;
 
-	const needsSpace = targetObj.text().trim().length > 0 ? '&nbsp;' : '';
-	const content = appendToEnd ? needsSpace + iconHtml : iconHtml + needsSpace;
+	const marginStyle = text
+		? (appendToEnd ? 'margin-left: 3px;' : 'margin-right: 3px;')
+		: '';
 
-	appendToEnd ? targetObj.append(content) : targetObj.prepend(content);
+	const combinedStyle = `${fontSizeStyle}${marginStyle}`;
+	const styleAttr = combinedStyle ? ` style="${combinedStyle}"` : '';
+	const iconHtml = `<i${styleAttr} class="fa-width-auto ${iconClass}"></i>`;
+	const sep = text ? '&nbsp;' : '';
+	const content = appendToEnd
+		? sep + iconHtml
+		: iconHtml + sep;
+
+	if (appendToEnd) {
+		$target.append(content);
+	} else {
+		$target.prepend(content);
+	}
 
 }
 
@@ -1671,7 +1726,7 @@ function nuButtonLoading(buttonId, spinning = true, autoEnableAfterSeconds = 0) 
 		if (!button.querySelector('[nu-data-spinner]')) {
 			// create the spinner <i>
 			const spinner = document.createElement('i');
-			spinner.className = 'fa-fw fa fa-spinner fa-spin';
+			spinner.className = 'fa-width-auto fa fa-spinner fa-spin';
 			spinner.setAttribute('nu-data-spinner', 'true');
 
 			// decide where to put it:
@@ -1896,7 +1951,8 @@ function nuClosePopup() {
 
 function nuStopClick(e) {
 
-	if (window.nuCLICKER != '' && ((nuIsMacintosh() ? e.metaKey : e.ctrlKey) == false)) {
+	const isCtrlOrCmdPressed = nuIsCtrlOrCmdPressed(e);
+	if (window.nuCLICKER != '' && !isCtrlOrCmdPressed) {
 		$(e.target).prop('onclick', null).off('click');
 	}
 }
@@ -1969,8 +2025,18 @@ function nuEmbedObject(json, containerId, width, height) {
 }
 
 function nuVendorLogin(appId, table) {
+
 	const tableName = table || nuSERVERRESPONSE.table;
-	window.open("core/nuvendorlogin.php?sessid=" + window.nuSESSION + "&appId=" + appId + "&table=" + tableName);
+	const params = new URLSearchParams({
+		sessid: window.nuSESSION,
+		appId: appId,
+		table: tableName,
+		timezone: nuSERVERRESPONSE.timezone
+	});
+
+	const url = `core/nuvendorlogin.php?${params.toString()}`;
+	window.open(url);
+
 }
 
 function nuIsMobile() {
@@ -1978,7 +2044,12 @@ function nuIsMobile() {
 }
 
 function nuIsMacintosh() {
-	return /mac/i.test(navigator.userAgentData ? navigator.userAgentData.platform : navigator.platform);
+
+	if (navigator.userAgentData?.platform) {
+		return /mac/i.test(navigator.userAgentData.platform);
+	}
+	return /macintosh|mac os x/i.test(navigator.userAgent);
+
 }
 
 function nuTransformScale() {
@@ -2070,10 +2141,10 @@ function nuImportUsersFromCSV(file, delimiter) {
 
 	file = nuDefine(file, 'user_import.csv');
 
-	nuSetProperty('NUIMPORTUSERS_file', file);
-	nuSetProperty('NUIMPORTUSERS_delimiter', delimiter);
+	nuSetProperty('nu_import_users_file', file);
+	nuSetProperty('nu_import_users_delimiter', delimiter);
 
-	nuRunPHP('NUIMPORTUSERS', '', 0);
+	nuRunPHP('nu_import_users', '', 0);
 
 }
 
@@ -2082,7 +2153,7 @@ function nuIsIframe() {
 }
 
 function nuIsPopup() {
-	return window.frameElement && $(window.frameElement).closest('.nuDragDialog').length > 0;
+	return !!(window.frameElement && $(window.frameElement).closest('.nuDragDialog').length > 0);
 }
 
 function nuPreventButtonDblClick() {
@@ -2157,20 +2228,20 @@ function nuSetPlaceholder(i, placeholder = null, translate = true) {
 
 }
 
-function nuSetToolTip(i, message, labelHover) {
+function nuSetToolTip(id, message, labelHover) {
 
 	const setToolTip = selector => {
 		$(selector)
 			.on("mouseenter", function () {
-				$(this).attr("title", message);
+				$(this).attr("title", nuTranslate(message));
 			})
 			.on("mouseleave", function () {
 				$(this).removeAttr("title");
 			});
 	};
 
-	setToolTip("#" + i);
-	if (labelHover) setToolTip("#label_" + i);
+	setToolTip("#" + id);
+	if (labelHover) setToolTip("#label_" + id);
 
 }
 
@@ -2885,7 +2956,7 @@ function nuRunBackup() {
 
 	if (confirm(nuTranslate("Perform the Backup now?"))) {
 		nuMessage(`${nuTranslate('Information')}`, `${nuTranslate('Backup is running')}` + "...");
-		nuRunPHPHidden("NUBACKUP");
+		nuRunPHPHidden("nu_backup");
 	}
 
 }
@@ -2903,6 +2974,79 @@ function nuAddCSSStyle(styleString, id = 'nucssstyle') {
 	css.appendChild(document.createTextNode(styleString));
 	document.head.appendChild(css);
 
+}
+
+function nuAddStyleFromArray(id, obj) {
+
+	var arr = JSON.parse(obj.style);
+
+	for (let key in arr) {
+
+		if (Object.prototype.hasOwnProperty.call(arr, key)) {
+
+			let obj2;
+			if (key == 'label') {
+				obj2 = $('#' + 'label' + '_' + id);
+			} else {
+				obj2 = $('#' + id + ' .' + key);
+				if (obj2.length === 0) {
+					obj2 = $('#' + id);
+				}
+			}
+
+			if (obj.style_type == 'CSS') {
+
+				let css = obj2[0].getAttribute("style");
+				css = css === null ? arr[key] : css += ';' + arr[key];
+				obj2[0].setAttribute("style", css);
+
+			} else if (obj.style_type == 'Class') {
+				nuAddRemoveClasses(obj2, arr[key]);
+			}
+
+		}
+
+	}
+
+}
+
+function nuAddRemoveClasses($id, style) {
+
+	const classes = style.split(/\s+/).filter(Boolean);
+	classes.forEach(className => {
+		if (className.startsWith('-')) {
+			$id.removeClass(className.substring(1));
+		} else {
+			$id.addClass(className);
+		}
+	});
+
+}
+
+function nuAddStyle(id, obj) {
+	const $id = $('#' + id);
+
+	if (obj.style_type !== '' && obj.style !== '') {
+
+		if (obj.style_type == 'CSS') {
+
+			if (obj.style.startsWith('{')) {
+				nuAddStyleFromArray(id, obj);
+			} else {
+				let css = $id[0].getAttribute("style");
+				css = css === null ? obj.style : css + obj.style;
+				$id[0].setAttribute("style", css);
+			}
+		} else if (obj.style_type == 'Class') {
+
+			if (obj.style.startsWith('{')) {
+				nuAddStyleFromArray(id, obj);
+			} else {
+				nuAddRemoveClasses($id, obj.style);
+			}
+
+		}
+	}
 }
 
 function nuObjectClassList(id) {

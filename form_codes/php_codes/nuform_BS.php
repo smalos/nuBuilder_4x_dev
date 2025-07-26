@@ -8,8 +8,6 @@ if ('#sfo_description#' == '') {
 }
 
 
-
-
 if ($o == 'browseedit' || $o == 'subform' || $o == 'browse') {
 
     if ($o != 'browse') {

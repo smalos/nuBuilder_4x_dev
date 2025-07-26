@@ -1,10 +1,2 @@
-
-$(function() {
-   
-    nuAddBrowseTitleSelect(0, getLanguage()); 
-    $('#nuBrowseTitle0_select').parent().off("touchstart");
- 
-    nuAddBrowseTitleSelect(3, ["","✔"], 50);
-    $('#nuBrowseTitle3_select').parent().off("touchstart");
-
-});
+nuAddBrowseFilter('nu5bad6cb3772dd22').nuSearchablePopup({ items: nuTranslationFilterGetLanguage() });
+nuAddBrowseFilter('nu5fd8d2459834722').nuSearchablePopup({ items:["✔"] });

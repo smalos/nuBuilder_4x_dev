@@ -13,7 +13,7 @@ function nuFormProperties($formId, $columns = '') {
 function nuBeforeBrowse($formId) {
 
 	$_POST['nuMessages'] = [];
-	$procedure = nuProcedure('nuBeforeBrowse');
+	$procedure = nuProcedure('nu_before_save');
 
 	if ($procedure != '') {
 		eval ($procedure);
@@ -92,7 +92,7 @@ function nuBeforeEdit($FID, $RID) {
 
 				}
 
-				$je = addslashes(json_encode($jd));
+				$je = nuAddSlashes(json_encode($jd));
 				$S = "UPDATE `$r->sfo_table` SET $logfield = '$je' WHERE `$r->sfo_primary_key` = ? ";
 				$T = nuRunQuery($S, [$RID]);
 
@@ -106,7 +106,7 @@ function nuBeforeEdit($FID, $RID) {
 
 
 	if ($recordID != '' || $formType == 'launch') {
-		$p = nuProcedure('nuBeforeEdit');
+		$p = nuProcedure('nu_before_edit');
 		if ($p != '') {
 			eval ($p);
 		}
@@ -323,32 +323,36 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 	if ($row->sob_all_type == 'editor' || ($row->sob_all_type == 'input' && $fileTarget == 1)) {
 		$object->html = nuReplaceHashVariables($row->sob_html_code);
 	}
-	if ($row->sob_all_type == 'html') {
-		if ($row->sob_html_chart_type == '') {
-			$object->html = nuReplaceHashVariables($row->sob_html_code);
-		} else {
-			$object->html = '';
-			$htmljs = addslashes($row->sob_html_javascript);
-			$verticalLabel = $row->sob_html_vertictal_label ?? '';
-			$horizontalLabel = $row->sob_html_horizontal_label ?? '';
-			$title = $row->sob_html_title ?? '';
-			$chart_options = [
-				'p' => ['type' => 'PieChart', 'stacked' => false, 'chart_type' => 'pie'],
-				'l' => ['type' => 'ComboChart', 'stacked' => false, 'chart_type' => 'lines'],
-				'b' => ['type' => 'ComboChart', 'stacked' => false, 'chart_type' => 'bars'],
-				'bs' => ['type' => 'ComboChart', 'stacked' => true, 'chart_type' => 'bars'],
-				'bh' => ['type' => 'BarChart', 'stacked' => false, 'chart_type' => 'bars'],
-				'bhs' => ['type' => 'BarChart', 'stacked' => true, 'chart_type' => 'bars']
-			];
-			$chart_type = $row->sob_html_chart_type ?? '';
-			if (array_key_exists($chart_type, $chart_options)) {
-				$type = $chart_options[$chart_type]['type'];
-				$stacked = $chart_options[$chart_type]['stacked'];
-				$chart_type = $chart_options[$chart_type]['chart_type'];
-				$htmlj = "\nnuChart('$row->sob_all_id', '$type', '$htmljs', '$title', '$horizontalLabel', '$verticalLabel', '$chart_type', $stacked);";
-				nuAddJavaScript($htmlj);
-			}
+
+	if ($row->sob_all_type == 'chart') {
+
+		// $object->html = '';
+		$htmljs = nuAddSlashes($row->sob_html_javascript ?? '');
+		$verticalLabel = $row->sob_html_vertictal_label ?? '';
+		$horizontalLabel = $row->sob_html_horizontal_label ?? '';
+		$title = $row->sob_html_title ?? '';
+		$chart_options = [
+			'p' => ['type' => 'PieChart', 'stacked' => false, 'chart_type' => 'pie'],
+			'l' => ['type' => 'ComboChart', 'stacked' => false, 'chart_type' => 'lines'],
+			'b' => ['type' => 'ComboChart', 'stacked' => false, 'chart_type' => 'bars'],
+			'bs' => ['type' => 'ComboChart', 'stacked' => true, 'chart_type' => 'bars'],
+			'bh' => ['type' => 'BarChart', 'stacked' => false, 'chart_type' => 'bars'],
+			'bhs' => ['type' => 'BarChart', 'stacked' => true, 'chart_type' => 'bars']
+		];
+
+		$chart_type = $row->sob_html_chart_type ?? '';
+		if (array_key_exists($chart_type, $chart_options)) {
+			$type = $chart_options[$chart_type]['type'];
+			$stacked = $chart_options[$chart_type]['stacked'];
+			$chart_type = $chart_options[$chart_type]['chart_type'];
+			$htmlj = "\nnuChart('$row->sob_all_id', '$type', '$htmljs', '$title', '$horizontalLabel', '$verticalLabel', '$chart_type', $stacked);";
+			nuAddJavaScript($htmlj);
 		}
+
+	}
+
+	if ($row->sob_all_type == 'html') {
+		$object->html = nuReplaceHashVariables($row->sob_html_code);
 	}
 
 	if ($row->sob_all_type == 'image') {
@@ -358,7 +362,20 @@ function nuGetFormModifyObject($object, $formObject, $row, $recordId, $data, $nu
 	if ($row->sob_all_type == 'select') {
 		$object->multiple = $row->sob_select_multiple;
 		$object->select2 = $row->sob_select_2 ?? null;
-		$object->options = nuSelectOptions($row->sob_select_sql, $object->object_id);
+
+		$object->options = null;
+		$selectProcedure = $row->sob_select_procedure ?? '';
+		if ($selectProcedure) {
+			$code = nuProcedure($selectProcedure);
+			if ($code !== '') {
+				nuEval($selectProcedure, true);
+				$object->options = $_POST['nuRunPHPHiddenResult'];
+			}
+		} else {
+
+			$object->options = nuSelectOptions($row->sob_select_sql, $object->object_id);
+		}
+
 	}
 
 	if ($row->sob_all_type == 'run') {
@@ -1390,12 +1407,12 @@ function nuBrowseWhereClause($searchFields, $searchString, $returnArray = false)
 			if (substr($wordSearches[$i], 0, 1) == '-' and strlen($wordSearches[$i]) > 1) {				//-- check for a preceeding minus
 
 				$task[] = 'exclude';
-				$SEARCHES[] = $quo . '%' . addslashes(substr($wordSearches[$i], 1)) . '%' . $quo;		//-- add word to exclude
+				$SEARCHES[] = $quo . '%' . nuAddSlashes(substr($wordSearches[$i], 1)) . '%' . $quo;		//-- add word to exclude
 
 			} else {
 
 				$task[] = 'include';
-				$SEARCHES[] = $quo . '%' . addslashes($wordSearches[$i]) . '%' . $quo;					//-- add word to include
+				$SEARCHES[] = $quo . '%' . nuAddSlashes($wordSearches[$i]) . '%' . $quo;					//-- add word to include
 				$highlight[] = $wordSearches[$i];
 
 			}
@@ -1527,7 +1544,7 @@ function nuGatherFormAndSessionData($home, $globalAccess) {
 			$p = nuProcedureAccessList($access);
 
 			if (!in_array($formAndSessionData->record_id, $p)) { 		//form_id is record_id for getphp^
-				$stmt = nuRunQuery("SELECT sph_code FROM zzzzsys_php WHERE zzzzsys_php_id = ?", [$formAndSessionData->record_id]);
+				$stmt = nuRunQuery("SELECT sph_code FROM zzzzsys_php WHERE zzzzsys_php_id = ? AND IFNULL(sph_status,'1') = '1'", [$formAndSessionData->record_id]);
 				nuDisplayErrorAccessDenied($callType, $stmt);
 			}
 
@@ -1836,7 +1853,7 @@ function nuFormDimensions($formId) {
 		}
 
 		$maxEditHeight = max($maxEditHeight, $obj->sob_all_top + $objectHeight);
-		$maxGridRowHeight = max($maxGridRowHeight, $objectHeight, 27);
+		$maxGridRowHeight = max($maxGridRowHeight, $objectHeight, 29);
 	}
 
 	// Calculate browse dimensions
@@ -1967,7 +1984,7 @@ function nuPreloadImages($a) {
 		$r = db_fetch_object($t);
 
 		$tr = nuTrim($r->sfi_code);
-		$js = $js . "\nnuImages['$tr'] = '" . addslashes($r->sfi_json) . "';";
+		$js = $js . "\nnuImages['$tr'] = '" . nuAddSlashes($r->sfi_json) . "';";
 
 	}
 

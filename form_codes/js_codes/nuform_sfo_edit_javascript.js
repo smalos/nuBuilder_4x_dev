@@ -1,3 +1,8 @@
+if (!nuDevMode()) {
+  nuHideTabById('nu687b3c9ebc3e813'); // Hide Custom Code 2
+}
+
+
 if ($('#zzzzsys_tab_sf000syt_access').val() !== '') {
     nuMessage(nuTranslate('Validation Error'), nuTranslate('The first tab must not be set to hidden'));
 }
@@ -15,11 +20,11 @@ nuAccessFormSetButtonIcons();
 function nuFormColorObjectTypes() {
 
     // Color Types
-    $('select[id$=sob_all_type]').find('option').each(function(index, element) {
+    $('select[id$=sob_all_type]').find('option').each(function (index, element) {
         $(element).addClass('nu_' + element.value);
     });
 
-    $('select[id$=sob_all_type]').each(function(index, element) {
+    $('select[id$=sob_all_type]').each(function (index, element) {
 
         $(element).removeClass();
         $(element).addClass('nu_' + element.value);
@@ -48,21 +53,21 @@ function nuFormSetControlsVisibility() {
         nuEnable(['js_edit', 'js_browse', 'js_browse_edit']);
     } else
         if (t == 'browse') {
-        nuDisable([pe, be, bs, as, bd, ad, 'js_edit']);
-        nuEnable(['js_browse', 'js_browse_edit']);
-    } else
-        if (t == 'edit') {
-        nuDisable([pb, pb, bb, 'js_browse']);
-        nuEnable(['js_edit', 'js_browse_edit']);
-    } else
-        if (t == 'launch') {
-        nuDisable([pb, bb, bs, as, bd, ad, 'js_browse', 'js_edit']);
-        nuEnable('js_browse_edit');
-    } else
-        if (t == 'subform') {
-        nuDisable([pb, bb, be, bs, as, bd, ad, js, 'js_browse', 'js_edit', 'js_browse_edit']);
-        $('#js_browse_edit').html('Launch');
-    }
+            nuDisable([pe, be, bs, as, bd, ad, 'js_edit']);
+            nuEnable(['js_browse', 'js_browse_edit']);
+        } else
+            if (t == 'edit') {
+                nuDisable([pb, pb, bb, 'js_browse']);
+                nuEnable(['js_edit', 'js_browse_edit']);
+            } else
+                if (t == 'launch') {
+                    nuDisable([pb, bb, bs, as, bd, ad, 'js_browse', 'js_edit']);
+                    nuEnable('js_browse_edit');
+                } else
+                    if (t == 'subform') {
+                        nuDisable([pb, bb, be, bs, as, bd, ad, js, 'js_browse', 'js_edit', 'js_browse_edit']);
+                        $('#js_browse_edit').html('Launch');
+                    }
 
     for (let i = 1; i <= 3; i++) {
         nuShow('nuTab' + i, t !== 'subform' || i == 1);
@@ -88,11 +93,11 @@ function nuFormJSMod(i) {
 
 if (nuFormType() == 'edit') {
 
-    $('#sfo_code_snippet_sql_lookupbutton').on('click', function() {
+    $('#sfo_code_snippet_sql_lookupbutton').on('click', function () {
         nuSetSnippetFormFilter(0, 0, 1, 0); // Custom Code
     });
 
-    $('#sfo_code_snippet_lookupbutton').on('click', function() {
+    $('#sfo_code_snippet_lookupbutton').on('click', function () {
         nuSetSnippetFormFilter(1, 0, 0, 0); // SQL
     });
 
@@ -165,7 +170,6 @@ if (nuFormType() == 'edit') {
 
     nuFormHighlightJSButtons();
 
-
 }
 
 if (window.filter == 'justjs') {
@@ -180,7 +184,6 @@ if (window.filter == 'justjs') {
     nuSetTitle($('#sfo_description').val());
 
 }
-
 
 $('#user_home')
 .css({
@@ -217,32 +220,25 @@ function nuFormTypeChanged() {
         nuDisable([pe, be, bs, as, bd, ad]);
     } else
         if (t == 'edit') {
-        nuDisable([pb, pb, bb]);
-    } else
-        if (t == 'launch') {
-        nuDisable([pb, bb, bs, as, bd, ad]);
-        nuSetValue('js_browse_edit', 'Launch');
-    } else
-        if (t == 'subform') {
-        nuDisable([pb, bb, be, bs, as, bd, ad]);
-        nuDisable('sfo_javascript');
-    }
+            nuDisable([pb, pb, bb]);
+        } else
+            if (t == 'launch') {
+                nuDisable([pb, bb, bs, as, bd, ad]);
+                nuSetValue('js_browse_edit', 'Launch');
+            } else
+                if (t == 'subform') {
+                    nuDisable([pb, bb, be, bs, as, bd, ad]);
+                    nuDisable('sfo_javascript');
+                }
 
     var h = $('#sfo_type').addClass('nuEdited');
 
     var o = [];
-    o.browse = [0,
-        1,
-        2];
-    o.edit = [0,
-        2];
-    o.browseedit = [0,
-        1,
-        2];
-    o.launch = [0,
-        2];
-    o.subform = [0,
-        1];
+    o.browse = [0, 1, 2];
+    o.edit = [0, 2];
+    o.browseedit = [0, 1, 2];
+    o.launch = [0, 2];
+    o.subform = [0, 1];
 
     $('#sfo_type').removeClass();
     $('#sfo_type').addClass('nu_' + $('#sfo_type').val());
@@ -251,8 +247,10 @@ function nuFormTypeChanged() {
         $('#sfo_type').addClass('nuEdited');
     }
 
-    $("#sfo_type > option").each(function() {
-        $(this).addClass('nu_' + this.value);
+    $("#sfo_type > option").each(function () {
+        if ($(this).val().trim() !== "") {
+            $(this).addClass('nu_' + this.value);
+        }
     });
 
     for (var i = 0; i < 7; i++) {
@@ -303,7 +301,8 @@ function nuFormOnDisplayBlur(event) {
         const title = dispValue.replaceAll('_', ' ').nuCapitalise().nuToTitleCase();
 
         let objTitle = nuSubformRowObject(id, 'sbr_title');
-        if (objTitle.val() == '') objTitle.val(title).change();
+        if (objTitle.val() == '')
+            objTitle.val(title).change();
     }
 
 }
@@ -313,21 +312,24 @@ function nuFormOnTitleDisplayChanged(event) {
     var obj;
     var id = event.target.id;
 
-    if (nuSubformRowObject(id, 'sbr_display').val().trim() == '' && nuSubformRowObject(id, 'sbr_title').val().trim()) return;
+    if (nuSubformRowObject(id, 'sbr_display').val().trim() == '' && nuSubformRowObject(id, 'sbr_title').val().trim())
+        return;
 
     obj = nuSubformRowObject(id, 'sbr_width');
-    if (obj.val() == '') obj.val(100).change();
+    if (obj.val() == '')
+        obj.val(100).change();
 
     obj = nuSubformRowObject(id, 'sbr_align');
-    if (obj.prop("selectedIndex") < 2) obj.prop("selectedIndex", 1).change();
+    if (obj.prop("selectedIndex") < 2)
+        obj.prop("selectedIndex", 1).change();
 
     obj = nuSubformRowObject(id, 'sbr_order');
     if (obj.val() == '') {
 
         var max = 0;
-        $('[data-nu-field=sbr_order]').each(function() {
+        $('[data-nu-field=sbr_order]').each(function () {
             var v = parseInt($(this).val());
-            max = (v > max) ? v: max;
+            max = (v > max) ? v : max;
         });
 
         obj.val(max + 10).change();
@@ -340,15 +342,16 @@ function nuFormOnTabsTitleChanged(event) {
     var obj;
     var id = event.target.id;
 
-    if (nuSubformRowObject(id, 'syt_title').val().trim() == '' && nuSubformRowObject(id, 'syt_title').val().trim()) return;
+    if (nuSubformRowObject(id, 'syt_title').val().trim() == '' && nuSubformRowObject(id, 'syt_title').val().trim())
+        return;
 
     obj = nuSubformRowObject(id, 'syt_order');
     if (obj.val() == '') {
 
         var max = 0;
-        $('[data-nu-field=syt_order]').each(function() {
+        $('[data-nu-field=syt_order]').each(function () {
             var v = parseInt($(this).val());
-            max = (v > max) ? v: max;
+            max = (v > max) ? v : max;
         });
 
         obj.val(max + 10).change();
@@ -368,16 +371,16 @@ function nuFromDefaultDescription() {
 
 function nuFormUpdateAclCount() {
     const l = $("[data-nu-field='slf_zzzzsys_access_id']").length - 2;
-    const t = l <= 0 ? '': ' (' + l + ')';
+    const t = l <= 0 ? '' : ' (' + l + ')';
     $('#nuTab3').html(nuTranslate('Access Levels') + t);
 }
 
 function nuFormUpdateDisplayDatalists(i) {
 
     const a = nuFORM.SQLFields($('#sfo_browse_sql').val());
-    const selector = i === undefined ? "[id$='sbr_display']": "#" + i;
+    const selector = i === undefined ? "[id$='sbr_display']" : "#" + i;
 
-    $(selector).each(function() {
+    $(selector).each(function () {
         nuAddDatalist($(this).attr('id'), a);
     });
 }
@@ -392,6 +395,9 @@ function nuBeforeSave() {
         return false;
     }
 
+    nuFormCopyAllTextareaValuesBack();
+    window.nuActiveNavButton = nuGetActiveNavButton();
+
     return true;
 
 }
@@ -405,7 +411,7 @@ function nuFormJSSelectCustomCode(t, obj) {
 
     $('[data-custom-code-textarea]').nuHide();
     nuShow(obj);
-    $('#' +obj).trigger('focus');
+    $('#' + obj).trigger('focus');
 
     nuFormHighlightJSButtons()
 
@@ -423,29 +429,89 @@ function nuFormHighlightJSButtons() {
 /*
 
 function nuOnMobileViewComplete() {
-    
-    const elements = [
-        { input: '#sfo_browse_javascript' },
-        { input: '#sfo_edit_javascript' },
-        { input: '#sfo_style' },
-    ];
 
-    const inputAnchorTop = $('#sfo_javascript').nuCSSNumber('top');
+const elements = [{ input: '#sfo_browse_javascript' },{ input: '#sfo_edit_javascript' },{ input: '#sfo_style' },
+];
 
-    elements.forEach(({ input, offsety = 0 }) => {
-        $(input).css('top', inputAnchorTop + offsety);
-		$('label_' + input).css('top', inputAnchorTop + offsety);
-    });
-    
+const inputAnchorTop = $('#sfo_javascript').nuCSSNumber('top');
+
+elements.forEach(({ input, offsety = 0 }) => {
+$(input).css('top', inputAnchorTop + offsety);
+$('label_' + input).css('top', inputAnchorTop + offsety);
+});
+
 }
-*/
+ */
 
 function nuOnMobileBeforeObjectPosition(id, element, top) {
 
-	if (id === 'sfo_edit_javascript' || id === 'sfo_javascript' || id === 'sfo_style') {
-		top = 100;
-	}
-	
-	return { top };
-	
+    if (id === 'sfo_edit_javascript' || id === 'sfo_javascript' || id === 'sfo_style') {
+        top = 100;
+    }
+
+    return {
+        top
+    };
+
+}
+
+function nuFormImportACLAfterRun() {
+    nuClosePopup();
+    nuGetBreadcrumb();
+}
+
+function nuTabsAccesLevelsSetMarker() {
+    nuTabSetMarker('nu5fdb9ff026348', 'accform000slf_zzzzsys_access_idcode');
+}
+
+nuTabsAccesLevelsSetMarker();
+nuTabCustomCodeSetMarker();
+
+function nuTabCustomCodeSetMarker() {
+    const marker = nuGetValue('sfo_javascript').trim() !== '' ||
+        nuGetValue('sfo_browse_javascript').trim() !== '' ||
+        nuGetValue('sfo_edit_javascript').trim() !== ''
+        nuTabSetMarker('nu5bad6cb37026348', marker);
+}
+
+nuTabsAccesLevelsSetMarker();
+
+// Custom Code 2:
+
+
+function nuFormCopyAllTextareaValues() {
+    document.getElementById('nu-code-textarea-browse-edit').value =
+        document.getElementById('sfo_javascript').value;
+
+    document.getElementById('nu-code-textarea-browse').value =
+        document.getElementById('sfo_browse_javascript').value;
+
+    document.getElementById('nu-code-textarea-edit').value =
+        document.getElementById('sfo_edit_javascript').value;
+}
+
+if (nuDevMode()) {
+  nuFormCopyAllTextareaValues();
+  var activeNavButton = window.nuActiveNavButton;
+  nuSelectNavButton(activeNavButton);
+}
+
+function nuFormCopyAllTextareaValuesBack() {
+    if (!nuDevMode()) return;
+
+    const mappings = [
+        ['nu-code-textarea-browse-edit', 'sfo_javascript'],
+        ['nu-code-textarea-browse', 'sfo_browse_javascript'],
+        ['nu-code-textarea-edit', 'sfo_edit_javascript']
+    ];
+
+    mappings.forEach(([sourceId, targetId]) => {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+
+        if (source && source.classList.contains('nuEdited') && target) {
+            target.value = source.value;
+            target.classList.add('nuEdited'); // Add nuEdited class to the target
+        }
+    });
 }

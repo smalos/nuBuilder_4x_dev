@@ -11,7 +11,7 @@ function nuCheckCSV() {
 
     if (csvTransfer === 'export') {
         if (nuFORM.getJustTables().includes(csvFrom)) {
-            return nuRunPHP('NUCSVTRANSFER');
+            return nuRunPHP('nu_csv_transfer');
         }
         return nuMessage(nuTranslate('No such tablename') + '...');
     }
@@ -36,7 +36,7 @@ function nuCheckCSV() {
             ]);
         }
 
-        return nuRunPHP('NUCSVTRANSFER');
+        return nuRunPHP('nu_csv_transfer');
     }
 
 }

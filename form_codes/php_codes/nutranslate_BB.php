@@ -1,5 +1,5 @@
 function sqlLanguage() {
-    $sql = "SELECT DISTINCT trl_language FROM `zzzzsys_translate` ";
+    $sql = "SELECT DISTINCT trl_language FROM `zzzzsys_translate` ORDER BY trl_language ";
     return $sql;
 }
 
@@ -17,7 +17,7 @@ $language = getBase64JsonDTString(sqlLanguage());
 
 $js = "
 
-   function getLanguage() {
+   function nuTranslationFilterGetLanguage() {
       return JSON.parse(atob('$language'));
    }
  

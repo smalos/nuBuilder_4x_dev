@@ -17,8 +17,8 @@ function nuEmailTemplateAddSelectedField() {
     if (selObjectId !== '') {
         const activeObjectId = nuEmailTemplateGetActiveObjectId();
         const isBody = activeObjectId == 'emt_body';
-        const label = isBody ? '<b>' + selObjectLabel + ': </b>': '';
-        nuInsertAtCaret(activeObjectId, label + "#" + selObjectId + "#" + (isBody ? '\n': ''));
+        const label = isBody ? '<b>' + selObjectLabel + ': </b>' : '';
+        nuInsertAtCaret(activeObjectId, label + "#" + selObjectId + "#" + (isBody ? '\n' : ''));
         $('#' + activeObjectId).trigger('change');
     }
 }
@@ -62,7 +62,7 @@ function nuOnClone() {
     const code = emt_code.value;
 
     if (nuEmailTemplateIsTemplate()) {
-        nuSetValue('emt_code', code.substring(0, code.length-8));
+        nuSetValue('emt_code', code.substring(0, code.length - 9));
         nuSetValue('emt_group', '');
         nuSetValue('emt_template', false);
         nuEnableAllObjects();

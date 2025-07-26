@@ -50,8 +50,9 @@ if ($refreshCache && !$globalAccess) {
 	nuUpdateFormSchema(true);
 }
 
-if (empty($user))
+if (empty($user)) {
 	nuDie(nuTranslate('Your session has timed out.'));
+}
 
 $formAndSessionData = nuGatherFormAndSessionData($user['HOME_ID'], $globalAccess);
 $sessionData = $_SESSION['nubuilder_session_data'];
@@ -87,7 +88,7 @@ if (count($formAndSessionData->errors) == 0) {
 	if ($callType == 'logout')
 		nuLogout();
 	elseif ($callType == 'login')
-		nuRunLoginProcedure('nuStartup');
+		nuRunLoginProcedure('nu_startup');
 	elseif ($callType == 'ssologin')
 		nuSsoLoginCheckParams();
 
@@ -160,7 +161,11 @@ if ($callType != 'logout') {
 		$f->forms[0]->errors = nuObjKey($_POST, 'nuErrors');
 		$f->forms[0]->messages = nuObjKey($_POST, 'nuMessages');
 		$f->forms[0]->errors_validation_title = nuObjKey($_POST, 'nuErrorValidationTitle');
-		$f->forms[0]->nu_debug = $GLOBALS['ERRORS'] ?? null;
+
+		if ($globalAccess) {
+			$f->forms[0]->nu_debug_last = nuGetLastDebugMessages();
+			$f->forms[0]->nu_debug = $GLOBALS['ERRORS'] ?? null;
+		}
 
 		$f->forms[0]->log_again = nuObjKey($_POST, 'nuLogAgain');
 		$f->forms[0]->global_access = $globalAccess ? '1' : '0';
@@ -175,6 +180,7 @@ if ($callType != 'logout') {
 		$f->forms[0]->style = nuObjKey($GLOBALS, 'STYLE');
 		$f->forms[0]->javascript_bc = nuObjKey($GLOBALS, 'EXTRAJS_BC');
 		$f->forms[0]->target = nuObjKey($state, 'target');
+		$f->forms[0]->timezone = $setup->set_timezone;
 
 		$buttons = nuButtons($formId, $state);
 		$f->forms[0]->buttons = $buttons[0];

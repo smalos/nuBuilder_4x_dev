@@ -21,6 +21,7 @@ function nuAlterSystemTables() {
 		"ALTER TABLE `zzzzsys_object` ADD `sob_all_style` VARCHAR(1000) NULL DEFAULT NULL AFTER `sob_all_style_type`;",
 		"ALTER TABLE `zzzzsys_object` ADD `sob_all_json` MEDIUMTEXT NULL DEFAULT NULL AFTER `sob_image_zzzzsys_file_id`;",
 		"ALTER TABLE `zzzzsys_object` ADD `sob_all_access_condition` VARCHAR(1000) NULL DEFAULT NULL AFTER `sob_all_access`;",
+		"ALTER TABLE `zzzzsys_object` ADD `sob_select_procedure` VARCHAR(25) NULL DEFAULT NULL AFTER `sob_select_sql`;",
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_browse_title_multiline` VARCHAR(1) NULL DEFAULT '0' AFTER `sfo_browse_rows_per_page`;",
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_browse_autoresize_columns` VARCHAR(1) NULL DEFAULT NULL AFTER `sfo_browse_title_multiline`;",
 		"ALTER TABLE `zzzzsys_form` ADD `sfo_breadcrumb_title` VARCHAR(100) NULL DEFAULT NULL AFTER `sfo_description`;",
@@ -54,26 +55,51 @@ function nuAlterSystemTables() {
 		"ALTER TABLE `zzzzsys_php` ADD `sph_global` VARCHAR(1) NULL DEFAULT '0' AFTER `sph_system`;",
 		"ALTER TABLE `zzzzsys_php` ADD `sph_template` VARCHAR(1) NULL DEFAULT '0' AFTER `sph_global`;",
 		"ALTER TABLE `zzzzsys_php` ADD `sph_demo` VARCHAR(1) NULL DEFAULT '1' AFTER `sph_global`;",
+		"ALTER TABLE `zzzzsys_php` ADD `sph_status` VARCHAR(1) NULL DEFAULT NULL AFTER `sph_group`;",
+		"ALTER TABLE `zzzzsys_php` ADD `sph_category` VARCHAR(100) NULL DEFAULT NULL AFTER `sph_group`;",
 		"ALTER TABLE `zzzzsys_setup` ADD `set_smtp_use_ssl` VARCHAR(1) NULL DEFAULT '1' AFTER `set_smtp_use_authentication`;",
 		"ALTER TABLE `zzzzsys_format` ADD `srm_default` VARCHAR(1) NULL DEFAULT NULL AFTER `srm_type`;",
 		"ALTER TABLE `zzzzsys_report` CHANGE `sre_zzzzsys_php_id` `sre_zzzzsys_php_id` VARCHAR(200) NULL DEFAULT NULL;",
 		"ALTER TABLE `zzzzsys_select` ADD `sse_code` VARCHAR(50) NULL DEFAULT NULL AFTER `zzzzsys_select_id`;",
-		"ALTER TABLE `zzzzsys_code_snippet` CHANGE `cot_updated_on` `cot_updated_on` TIMESTAMP on update CURRENT_TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP;",
+		"ALTER TABLE `zzzzsys_code_snippet` CHANGE `cot_updated_on` `cot_updated_on` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;",
 		"ALTER TABLE `zzzzsys_code_snippet` ADD `cot_group` VARCHAR(80) NULL DEFAULT NULL AFTER `cot_description`;",
+		"ALTER TABLE `zzzzsys_code_snippet`  ADD `cot_template` VARCHAR(1) NULL DEFAULT NULL AFTER `cot_scope`",
 		"ALTER TABLE `zzzzsys_cloner` ADD `clo_tables_include` MEDIUMTEXT NULL DEFAULT NULL AFTER `clo_iframe_forms`;",
 		"ALTER TABLE `zzzzsys_cloner` ADD `clo_tables_exclude` MEDIUMTEXT NULL DEFAULT NULL AFTER `clo_tables_include`;",
 		"ALTER TABLE `zzzzsys_email_template` ADD `emt_template` VARCHAR(1) NULL DEFAULT '0' AFTER `emt_group`;",
+		"ALTER TABLE `zzzzsys_email_template` ADD `emt_category` VARCHAR(100) NULL DEFAULT NULL AFTER `emt_group`;",
 		"ALTER TABLE `pdf_temp` ADD `pdf_code` VARCHAR(100) NULL DEFAULT NULL AFTER `pdf_added_by`;",
 		"ALTER TABLE `pdf_temp` ADD `pdf_tag` VARCHAR(100) NULL DEFAULT NULL AFTER `pdf_code`;",
 		"ALTER TABLE `zzzzsys_email_log` CHANGE `eml_created_at` `eml_created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP;",
 		"ALTER TABLE `zzzzsys_email_log` CHANGE `eml_sent_at` `eml_sent_at` TIMESTAMP NULL DEFAULT NULL;",
 		"ALTER TABLE `zzzzsys_config` ADD `cfg_title` VARCHAR(50) NULL DEFAULT NULL AFTER `cfg_category`;",
 		"ALTER TABLE `zzzzsys_prompt_generator` ADD `pge_tag` VARCHAR(3000) NULL DEFAULT NULL AFTER `pge_prompt`;",
-		"ALTER TABLE `zzzzsys_prompt_generator` ADD `sph_template` VARCHAR(1) NULL DEFAULT NULL AFTER `pge_tag`;",
+		"ALTER TABLE `zzzzsys_prompt_generator` ADD `pge_template` VARCHAR(1) NULL DEFAULT NULL AFTER `pge_tag`;",
 		"ALTER TABLE `zzzzsys_prompt_generator` DROP `sph_template`;",
-		"ALTER TABLE `zzzzsys_prompt_generator` ADD `pge_instruction` VARCHAR(3000) NULL DEFAULT NULL AFTER `sph_template`;",
+		"ALTER TABLE `zzzzsys_prompt_generator` ADD `pge_instruction` VARCHAR(3000) NULL DEFAULT NULL AFTER `pge_template`;",
 		"ALTER TABLE `zzzzsys_item` ADD `itm_group` VARCHAR(100) NULL DEFAULT NULL AFTER `itm_description`;",
-		"ALTER TABLE `zzzzsys_note` ADD `not_text` longtext NULL DEFAULT NULL AFTER `not_content`;"
+		"ALTER TABLE `zzzzsys_note` ADD `not_text` longtext NULL DEFAULT NULL AFTER `not_content`;",
+
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'NUAUTHENTICATION2FA', 'nu_authentication_2fa') WHERE IFNULL(`sph_code`, '') LIKE '%NUAUTHENTICATION2FA%';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'NUCHECKPASSWORDPOLICY', 'nu_check_password_policy') WHERE IFNULL(`sph_code`, '') LIKE '%NUCHECKPASSWORDPOLICY%';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'NUDEBUGRESULTADDED', 'nu_debug_result_added') WHERE IFNULL(`sph_code`, '') LIKE '%NUDEBUGRESULTADDED%';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'NUSENDWELCOMEEMAIL', 'nu_send_welcome_email') WHERE IFNULL(`sph_code`, '') LIKE '%NUSENDWELCOMEEMAIL%';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'NUUPLOADFILE', 'nu_upload_file') WHERE IFNULL(`sph_code`, '') LIKE '%NUUPLOADFILE%';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuBeforeSave', 'nu_before_save') WHERE IFNULL(`sph_code`, '') = 'nuBeforeSave';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuAfterSave', 'nu_after_save') WHERE IFNULL(`sph_code`, '') = 'nuAfterSave';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuBeforeEdit', 'nu_before_edit') WHERE IFNULL(`sph_code`, '') = 'nuBeforeEdit';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuBeforeBrowse', 'nu_before_browse') WHERE IFNULL(`sph_code`, '') = 'nuBeforeBrowse';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuBeforeDelete', 'nu_before_delete') WHERE IFNULL(`sph_code`, '') = 'nuBeforeDelete';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuAfterDelete', 'nu_after_delete') WHERE IFNULL(`sph_code`, '') = 'nuAfterDelete';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuStartup', 'nu_startup') WHERE IFNULL(`sph_code`, '') = 'nuStartup';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuCheckPasswordPolicy', 'nu_check_password_policy') WHERE IFNULL(`sph_code`, '') = 'nuCheckPasswordPolicy';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuInvalidLogin', 'nu_invalid_login') WHERE IFNULL(`sph_code`, '') = 'nuInvalidLogin';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuAfterUpdate', 'nu_after_update') WHERE IFNULL(`sph_code`, '') = 'nuAfterUpdate';",
+		"UPDATE `zzzzsys_php` SET `sph_code` = REPLACE(`sph_code`, 'nuSendWelcomeEmail', 'nu_send_welcome_email') WHERE IFNULL(`sph_code`, '') = 'nuSendWelcomeEmail';",
+		"UPDATE `zzzzsys_object` SET sob_html_code = REPLACE(sob_html_code, 'procedure: ''NUUPLOADFILE_TEMPLATE''', 'procedure: ''nu_upload_file_template''') WHERE IFNULL(sob_html_code, '') LIKE '%NUUPLOADFILE_TEMPLATE%';",
+		"UPDATE `zzzzsys_object` SET sob_html_code = REPLACE(sob_html_code, 'procedure: ''NUUPLOADFILE''', 'procedure: ''nu_upload_file''') WHERE IFNULL(sob_html_code, '') LIKE '%NUUPLOADFILE%';",
+		"UPDATE `zzzzsys_object` SET sob_all_type = 'chart' WHERE sob_all_type = 'html' AND IFNULL(sob_html_chart_type,'') <> '' "
+
 	];
 
 	foreach ($alterTableSQL as $sqlStatement) {
@@ -112,9 +138,9 @@ function nuAlterSystemTables() {
 
 function nuCopySystemTables() {
 
-	nuDropDatabaseObject('zzzzsys_report_data', ['VIEW', 'TABLE']);
-	nuDropDatabaseObject('zzzzsys_run_list', ['VIEW', 'TABLE']);
-	nuDropDatabaseObject('zzzzsys_object_list', ['VIEW', 'TABLE']);
+	nuDropDatabaseObject('zzzzsys_report_data', ['TABLE', 'VIEW']);
+	nuDropDatabaseObject('zzzzsys_run_list', ['TABLE', 'VIEW']);
+	nuDropDatabaseObject('zzzzsys_object_list', ['TABLE', 'VIEW']);
 
 	$t = nuSystemList();
 
@@ -476,11 +502,10 @@ function nuOtherUpdates() {
 function nuGetSupportedLanguagesAsJson() {
 
 	$languages = [
-		"Afrikaans", "Arabic", "Armenian", "Catalan", "Chinese",
-		"Czech", "Danish", "Dutch", "French", "German", "Greek",
-		"Hindi", "Hungarian", "Italian", "Japanese", "Malay", "Polish",
-		"Portuguese", "Romanian", "Russian", "Slovak", "Spanish",
-		"Tamil", "Vietnamese"
+		"Afrikaans", "Arabic", "Armenian", "Catalan", "Chinese", "Czech", "Danish", "Dutch",
+		"French", "German", "Greek", "Hindi", "Hungarian", "Italian", "Japanese", "Malay",
+		"Norwegian", "Polish", "Portuguese (Brazil)", "Portuguese", "Romanian", "Russian",
+		"Slovak", "Spanish", "Tamil", "Turkish", "Vietnamese"
 	];
 
 	return json_encode($languages);

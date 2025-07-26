@@ -17,3 +17,11 @@ function nuAccessAddSfFilter() {
     nuSubformAddFilter(sfFilter);
 
 }
+
+function nuTabsSetMarker() {
+   nuTabSetMarker('nu5bad6cb36af0c58', 'accform000slf_zzzzsys_form_idcode'); // Forms
+   nuTabSetMarker('nu5bad6cb36c16b42', 'accphp000slp_zzzzsys_php_idcode'); // Procedures
+   nuTabSetMarker('nu5bad6cb36c39fc8', 'accreport000sre_zzzzsys_report_idcode'); // Reports
+}
+
+nuTabsSetMarker();

@@ -35,7 +35,7 @@ function nuInit() {
     nuMoveFieldPrefixToSubform();
     nuSetValue('fastform_type', 'browseedit');
 
-    nuAddActionButton('nuRunPHPHidden', 'Build Fast Form', 'nuRunPHPHidden("RUNFF", true);');
+    nuAddActionButton('BuildFastForm');
     nuSetToolTip('fastform_table', nuFFGetMessageTableEmpty(), true);
     nuSubformEnableMultiPaste("obj_sf", "#obj_sf000ff_label", null, callbackPasted);
     nuSetFFTypeOptionsColor('obj_sf000ff_type');
@@ -150,7 +150,8 @@ function nuSetFFTable() {
     .prop('disabled', !tableExists)
     .toggleClass('nuReadonly', tableExists);
 
-    nuShow(['fastform_prefix', 'check_nulog'], !tableExists);
+    nuShow('fastform_prefix', !tableExists);
+    nuShow('check_nulog', !tableExists && nuGetValue('fastform_type') !== 'launch');
 
     let c = $('#nuFFAvailableColumns');
 
@@ -228,7 +229,7 @@ function nuGetFFDataType(h) {
 
 function nuEnableFFDataType() {
 
-    $("[data-nu-field='ff_datatype']").not(".nuTabHolder").each(function() {
+    $("[data-nu-field='ff_datatype']").not(".nuSubformTitleHolder").each(function() {
 
         var typeId = nuSubformRowObject(this.id, 'ff_type').attr('id');
         var sel = $("#" + typeId + " option:selected").text();

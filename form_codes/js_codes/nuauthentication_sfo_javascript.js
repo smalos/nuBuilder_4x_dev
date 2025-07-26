@@ -1,7 +1,7 @@
 function nuGet2FAProcedure() {
     const d = nuDevMode();
-    const p = 'nuAuthentication2FA';
-    return d ? p + '_Template': p;
+    const p = 'nu_authentication_2fa';
+    return d ? p + '_template': p;
 }
 
 function nu2FAVerify() {

@@ -3,6 +3,8 @@ scaleImages();
 $('#nuBrowseTitle3').css('text-align', 'left');
 nuSetNoSearchColumns([2, 3]);
 
+nuBrowseStyleBadge(4); // Group
+
 $('[data-nu-column="0"]').each(function(index) {
     var code = '#nucell_' + index + '_';
     window.nuImages[$(code + '0').text()] = $(code + '2').text();

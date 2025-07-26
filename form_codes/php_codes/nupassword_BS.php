@@ -43,7 +43,7 @@ if ($check == false) {
 
 //--
 
-$p    = nuProcedure('nuCheckPasswordPolicy');
+$p    = nuProcedure('nu_check_password_policy');
 
 if($p != ''){
 

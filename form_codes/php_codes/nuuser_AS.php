@@ -33,8 +33,8 @@ function nuUserSavedInfo() {
 }
 
 if ('#user_send_welcome_email#' == '1') {
-    $result = nuRunProcedure('nuSendWelcomeEmail');
+    $result = nuRunProcedure('nu_send_welcome_email');
     if ($result === false) {
-        nuRunProcedure('NUSENDWELCOMEEMAIL_Template');
+        nuRunProcedure('nu_send_welcome_email_template');
     }
 }
