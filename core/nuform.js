@@ -355,26 +355,6 @@ function nuUpdateDebugButtonTitle() {
 
 	const debugMessages = nuSERVERRESPONSE?.nu_debug;
 	const lastMessages = nuDebugLastMessages();
-	let title = nuTranslate("No messages");
-
-	if (Array.isArray(debugMessages) && debugMessages.length > 0) {
-		$("#nuDebugButton").addClass("nuDebugButtonHighlight");
-		title = debugMessages.join(" ");
-
-	} else {
-		title = lastMessages;
-	}
-
-	$("#nuDebugButton").attr("title", title);
-
-}
-
-function nuUpdateDebugButtonTitle() {
-
-	if (!nuGlobalAccess()) return;
-
-	const debugMessages = nuSERVERRESPONSE?.nu_debug;
-	const lastMessages = nuDebugLastMessages();
 
 	let titleParts = [];
 
@@ -4848,11 +4828,11 @@ function nuResizeBrowseColumns(force) {
 	} else {
 
 		const browseFooterWidth = nuTotalWidth('nuBrowseFooter') + 22;
-		const bodyWidth = `${browseFooterWidth}px`;
 
 		$('#nuDragDialog', window.parent.document).css('width', browseFooterWidth + 14);
 		$('#nuWindow', window.parent.document).css('width', browseFooterWidth);
 
+		// const bodyWidth = `${browseFooterWidth}px`;
 		// document.body.style.width = bodyWidth;
 
 	}
@@ -5056,7 +5036,7 @@ function nuBrowseTable() {
 	}
 
 
-	const footerHeight = nuBrowseCreateFooter(currentForm, topOffset, leftOffset, rowHeight);
+	nuBrowseCreateFooter(currentForm, topOffset, leftOffset, rowHeight);
 
 	nuHighlightSearch();
 	nuBrowseBorders();
